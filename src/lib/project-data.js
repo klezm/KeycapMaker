@@ -336,12 +336,12 @@ export function parseProjectManifest(payload, fallbackName = DEFAULT_PROJECT_NAM
       ? manifest.keycaps.map((entry, index) => {
           const normalizedEntry = getPlainObject(entry);
           if (!normalizedEntry) {
-            throw new Error(`Project内のキーキャップ定義 ${index + 1} が不正です。`);
+            throw new Error(`Project keycap definition ${index + 1} is invalid.`);
           }
 
           const jsonPath = normalizeProjectAssetPath(normalizedEntry.jsonPath);
           if (!jsonPath) {
-            throw new Error(`Project内のキーキャップ定義 ${index + 1} に jsonPath がありません。`);
+            throw new Error(`Project keycap definition ${index + 1} is missing jsonPath.`);
           }
 
           return {
