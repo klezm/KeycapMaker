@@ -90,7 +90,7 @@ function createSlic3rPeModelSettingsXml(meshes) {
 
 function createModelXml(meshes, assemblyName) {
   if (meshes.length === 0) {
-    throw new Error("3MF に含めるメッシュがありません。");
+    throw new Error("No meshes to include in 3MF.");
   }
 
   const colorResources = meshes

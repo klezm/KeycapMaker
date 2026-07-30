@@ -318,7 +318,7 @@ test("現行形式 JSON の top-level に残った未対応パラメータも報
   assert.equal(bindingReport.unboundParams[0].value, 7);
 });
 
-test("プロジェクト内 JSON の未対応パラメータを保持したまま既知パラメータを更新する", () => {
+test("Project内 JSON の未対応パラメータを保持したまま既知パラメータを更新する", () => {
   const existingPayload = {
     shapeProfile: "typewriter",
     name: "legacy source",

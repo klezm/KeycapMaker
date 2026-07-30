@@ -1,3 +1,3 @@
 # scad/base
 
-キーキャップ全体の基礎形状と、export 向けのトップレベルエントリを配置する場所です。
+This is the place to put the basic shape of the entire keycap and the top-level entries for export.

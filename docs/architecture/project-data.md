@@ -1,35 +1,35 @@
-# プロジェクトデータ仕様
+# Project Data Specification
 
-## 目的
+## Purpose
 
-プロジェクトは、編集中のキーキャップを複数まとめて保持する作業単位です。単体の編集データ JSON は現在表示しているキーキャップだけを復元する形式であり、プロジェクトはその JSON とプレビュー画像を束ねるディレクトリ形式として扱います。
+A project is a working unit that holds multiple keycaps currently being edited. A single edit data JSON is a format that restores only the keycap currently displayed. A project is treated as a directory format that bundles those JSONs and preview images.
 
-## ディレクトリ構成
+## Directory Structure
 
-プロジェクトは次の構成を正とします。
+A project is considered valid with the following structure:
 
 ```text
-プロジェクト名/
+Project Name/
 ├── KeycapMaker.json
 ├── keycaps/
 │   ├── <keycap>.json
-│   └── <keycap>.png または <keycap>.svg
+│   └── <keycap>.png or <keycap>.svg
 └── 3mf/
     └── <keycap>.3mf
 ```
 
 - `KeycapMaker.json`
-  プロジェクト manifest。プロジェクト名、キーキャップ一覧、現在選択中のキーキャップ ID、各キーキャップの JSON / preview path を保持します。
+  Project manifest. Holds the project name, keycap list, currently selected keycap ID, and the JSON / preview paths for each keycap.
 - `keycaps/*.json`
-  既存の編集再開用 JSON と同じ canonical editor data です。
+  Canonical editor data, same as the existing JSON for resuming edits.
 - `keycaps/*.(png|svg|webp|jpg)`
-  プロジェクトセグメントの一覧に表示するプレビュー画像です。通常は現在の Three.js preview を縮小した PNG を保存し、preview が取得できない場合は SVG placeholder を保存します。
+  Preview image to display in the list in the project segment. Usually saves a scaled-down PNG of the current Three.js preview. If a preview cannot be obtained, saves an SVG placeholder.
 - `3mf/*.3mf`
-  各キーキャップの印刷用 3MF です。プロジェクト保存時に各 `keycaps/*.json` の編集値から生成し、ZIP に同梱します。
+  3MF for printing each keycap. Generated from the edit values of each `keycaps/*.json` during project saving and bundled in the ZIP.
 
 ## Manifest
 
-`KeycapMaker.json` の現在の schema は次の形です。
+The current schema for `KeycapMaker.json` is as follows:
 
 ```json
 {
@@ -57,67 +57,67 @@
 }
 ```
 
-ルール:
+Rules:
 
-- `kind` は `keycap-maker/project` 固定です。
-- `schemaVersion` は `1` です。互換性のない変更を入れる場合だけ更新します。
-- `jsonPath`、`previewPath`、`threeMfPath` はプロジェクトディレクトリからの相対パスです。
-- キーキャップ名を変更した場合、`jsonPath`、`previewPath`、`threeMfPath` は現在の保存名に追従します。
-- `displayOrder` はプロジェクトセグメントの表示順です。保存時は現在の一覧順に 0 始まりで振り直します。
-- `previewViewState` は一覧用 preview を撮影したときのカメラ方向、距離、表示オフセットです。省略可能です。
-- キーキャップ本体の編集値は manifest に複製せず、各 `keycaps/*.json` を正とします。
-- `activeKeycapId` が存在する場合は読み込み直後の現在キーキャップとして使います。存在しない場合は一覧の先頭を使います。
-- プロジェクトは常に1件以上のキーキャップを持ちます。初期表示時は現在の編集値から最初のキーキャップを作成して active にし、0件のプロジェクトを読み込んだ場合も同様に1件を補完します。最後の1件は削除できません。
+- `kind` is fixed to `keycap-maker/project`.
+- `schemaVersion` is `1`. It is updated only when introducing incompatible changes.
+- `jsonPath`, `previewPath`, `threeMfPath` are relative paths from the project directory.
+- If the keycap name changes, `jsonPath`, `previewPath`, `threeMfPath` will track the current save name.
+- `displayOrder` is the display order in the project segment. When saving, it is reassigned starting from 0 according to the current list order.
+- `previewViewState` is the camera direction, distance, and view offset when the preview for the list was captured. It is optional.
+- Edit values of the keycap itself are not duplicated in the manifest; each `keycaps/*.json` is the source of truth.
+- If `activeKeycapId` exists, it is used as the current keycap immediately after loading. If it doesn't exist, the first item in the list is used.
+- A project always has one or more keycaps. Upon initial display, the first keycap is created from the current edit values and made active. If a project with 0 items is loaded, 1 item is similarly supplemented. The last remaining item cannot be deleted.
 
-## UI 動作
+## UI Behavior
 
-セグメントコントロールの一番左に `プロジェクト` を置きます。プロジェクトセグメントは次を持ちます。
+Place `Project` on the far left of the segment control. The project segment holds:
 
-- プロジェクト名
-- キーキャップ一覧
-  - preview 画像とキーキャップ名を表示する
-  - 押下したキーキャップを現在の編集対象へ入れ替える
-  - 表示順を持ち、順序ハンドルを掴むドラッグ & ドロップで並び替えられる。ドラッグ中は drop 前に一覧順を即時更新し、既存カードは移動アニメーションで詰める。各カードの順序番号は drag 開始時点の値を保持し、drop / cancel 後に最終順へ更新する
-  - 個別の書き出しボタンから JSON / 3MF / STEP / STL の選択オーバーレイを開く
-  - 編集中のキーキャップのコピーを追加する
-- プロジェクトを保存
+- Project Name
+- Keycap List
+  - Displays the preview image and keycap name.
+  - Clicking a keycap swaps it into the current edit target.
+  - Has a display order, and can be reordered by grabbing and dragging the order handle. During drag, the list order is updated immediately before dropping, and existing cards move with animation. Each card retains its order number at the start of the drag, and is updated to its final order after drop / cancel.
+  - Opens a selection overlay for JSON / 3MF / STEP / STL export from individual export buttons.
+  - Add a copy of the keycap currently being edited.
+- Save Project
 
-プロジェクト一覧から選択したキーキャップを編集した場合、その active keycap の JSON はプロジェクト内で追従します。単体 JSON をドラッグして読み込んだ場合は、読み込んだ内容をキーキャップ一覧へ新規追加し、そのキーキャップを active keycap にします。読み込み済みプロジェクトの既存一覧は保持します。
+If a keycap selected from the project list is edited, the JSON of that active keycap will track within the project. If a single JSON is dragged and dropped, the loaded content is added as a new item to the keycap list, and that keycap becomes the active keycap. The existing list of the loaded project is retained.
 
-一覧用 preview は撮影時の `previewViewState` を保持します。active keycap のパラメータ変更による preview 再生成が完了したときだけ、同じ `previewViewState` でその1件の一覧画像を再撮影します。現在操作中のカメラ状態へ戻してから描画を続けるため、撮影角度そのものは変更しません。非 active keycap の画像更新は並列実行しません。
+The preview for the list retains the `previewViewState` from when it was captured. Only when preview regeneration due to parameter changes of the active keycap is completed, the list image for that single item is recaptured with the same `previewViewState`. The capture angle itself is not changed, as drawing continues after returning to the camera state currently being manipulated. Image updates for inactive keycaps are not executed in parallel.
 
-従来の書き出しセグメントは持たず、ユーザー向けの JSON / 3MF / STEP / STL 書き出しはプロジェクト内キーキャップの個別オーバーレイから実行します。
+There is no traditional export segment; user-facing JSON / 3MF / STEP / STL exports are executed from individual overlays of keycaps in the project.
 
-## ドラッグ & ドロップ
+## Drag & Drop
 
-ドロップされた item がディレクトリの場合:
+If the dropped item is a directory:
 
-1. `KeycapMaker.json` を探す
-2. manifest を検証する
-3. `keycaps/*.json` を既存の編集データ JSON と同じ parser で読み込む
-4. `previewPath` の画像を一覧表示用に読み込む
-5. active keycap または先頭の keycap を現在の編集対象にする
+1. Look for `KeycapMaker.json`
+2. Validate the manifest
+3. Read `keycaps/*.json` with the same parser as existing edit data JSON
+4. Read the image at `previewPath` for list display
+5. Make the active keycap or the first keycap the current edit target
 
-ドロップされた item が JSON ファイルの場合:
+If the dropped item is a JSON file:
 
-- 編集データ JSON として読み込み、現在の編集値へ反映します。
-- 読み込んだ内容をキーキャップ一覧へ追加し、追加したキーキャップを現在の編集対象にします。
-- すでにプロジェクトを読み込んでいる場合も、既存のプロジェクト一覧は保持します。
-- 現在の形状へ bind できないパラメータが含まれている場合も、元 JSON の該当フィールドは project keycap の `editorDataPayload` に保持します。該当キーキャップを active にした時点で JSON 読み込みレポートを再計算して表示し、レポート内の `×` からその path を JSON から削除できます。
+- Load it as edit data JSON and reflect it in the current edit values.
+- Add the loaded content to the keycap list, and make the added keycap the current edit target.
+- Even if a project is already loaded, retain the existing project list.
+- Even if it contains parameters that cannot be bound to the current shape, the corresponding fields of the original JSON are kept in `editorDataPayload` of the project keycap. A JSON load report is recalculated and displayed when that keycap is made active, and that path can be deleted from the JSON via the `x` in the report.
 
-## 保存
+## Saving
 
-プロジェクト保存は常に ZIP ダウンロードとして扱います。ZIP 内部には同じディレクトリ構成で `KeycapMaker.json`、`keycaps/`、`3mf/` を格納します。各キーキャップについて、編集再開用 JSON、一覧用 preview、印刷用 3MF を同梱します。
+Saving a project is always treated as a ZIP download. Inside the ZIP, `KeycapMaker.json`, `keycaps/`, and `3mf/` are stored with the same directory structure. For each keycap, the JSON for resuming edits, the preview for the list, and the 3MF for printing are bundled.
 
-ディレクトリへの直接書き込みは行いません。GitHub Pages 上の静的配信アプリとして、保存時のブラウザ差分や File System Access API の権限差分を避けるためです。
+Direct writing to directories is not performed. This is to avoid browser differences during saving and permission differences with the File System Access API as a statically delivered app on GitHub Pages.
 
-保存済み ZIP はドラッグ & ドロップで直接読み込めます。読み込み時は archive 内から `KeycapMaker.json` を探し、同じ root 配下の `keycaps/` を展開してプロジェクトとして復元します。拡張子は `.zip` と、誤って `.zlp` になったファイル名も受け付けます。
+A saved ZIP can be loaded directly via drag & drop. When loading, it looks for `KeycapMaker.json` inside the archive, extracts `keycaps/` under the same root, and restores it as a project. Accepts `.zip` extension and filenames accidentally named `.zlp`.
 
-## 実装位置
+## Implementation Locations
 
 - `src/lib/project-data.js`
-  project manifest、path、preview placeholder、project keycap entry の正規化。
+  Normalization of project manifest, paths, preview placeholders, and project keycap entries.
 - `src/main.js`
-  プロジェクトセグメント UI、ディレクトリ / ZIP drag & drop、ZIP 保存。
+  Project segment UI, directory / ZIP drag & drop, ZIP saving.
 - `test/project-data.test.js`
-  manifest round-trip、path 正規化、preview data URL、非プロジェクト JSON の拒否を確認する。
+  Checks manifest round-trip, path normalization, preview data URLs, and rejection of non-project JSONs.

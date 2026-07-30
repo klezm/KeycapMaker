@@ -1,352 +1,345 @@
-# 判断記録
+# Decision Log
 
-採用済みの設計判断を時系列で残す。日々の進捗メモではなく、今後の保守や拡張で前提になる内容だけを書く。
+Keep a chronological record of adopted design decisions. Write only the assumptions that will serve as prerequisites for future maintenance and expansion, not daily progress memos.
 
-## 2026-07-15 - dishDepth の負値を既存曲面の盛り上がりとして扱う
+## 2026-07-15 - Treat negative values of dishDepth as a bulge for existing curved surfaces
 
-- 結論:
-  `topSurfaceShape` / `topHatSurfaceShape` の `cylindrical` / `spherical` は、正の `dishDepth` を従来どおり凹み、負値を同じ曲面の鏡像となる盛り上がりとして扱う。入力範囲は両形状とも `-1.5mm` から `+1.5mm` とし、既定値の cylindrical `0.5mm`、spherical `1.0mm` は維持する。凸面は丸め後の実上面境界を起点とし、既存サイドウォール勾配を上方へ延長した envelope で切って、垂直なリップや余分な外形を作らない。内側天井と stem 取付高さは負値で持ち上げない
-- 理由:
-  円柱面 / 球面の一般的な曲率と正値側の形状を変えず、キー寸法・上面すぼまり・JIS Enter footprint・上端Rへ追従する凸面を同じパラメータで表現するため。単純な球 / 円柱と垂直 prism の和では側面境界に段差が生じるため、側面の連続 envelope が必要になる
-- 置換:
-  2026-05-03 の「凹み専用の非負値」を置き換え、2026-04-23 の当初の符号契約を、側面接続・legend・homing bar・stem の追従を含めて再採用する
-- 関連:
+- Conclusion:
+  For `cylindrical` / `spherical` of `topSurfaceShape` / `topHatSurfaceShape`, treat a positive `dishDepth` as a traditional indentation, and a negative value as a bulge that is a mirror image of the same curved surface. The input range is `-1.5mm` to `+1.5mm` for both shapes, maintaining the default values of `0.5mm` for cylindrical and `1.0mm` for spherical. The convex surface starts from the actual top boundary after rounding and is cut by an envelope extending the existing sidewall gradient upwards, avoiding vertical lips or extra outer shapes. Inner ceiling and stem mounting height are not lifted by negative values.
+- Reason:
+  To express a convex surface tracking key dimensions, top surface tapering, JIS Enter footprint, and top edge R with the same parameters without changing the general curvature of cylindrical/spherical surfaces or the positive-side shape. Since a simple union of a sphere/cylinder and a vertical prism causes a step at the side boundary, a continuous envelope of the side is required.
+- Replacement:
+  Replaces the "non-negative values dedicated to indentation" from 2026-05-03, and re-adopts the initial sign contract of 2026-04-23, including the tracking of side connections, legends, homing bars, and stems.
+- Related:
   [../architecture/scad-and-export.md](../architecture/scad-and-export.md)
 
-## 2026-06-25 - icon provider は latest CDN と runtime sanitizer を使う
+## 2026-06-25 - Use latest CDN and runtime sanitizer for icon providers
 
-- 結論:
-  ブラウザ実行時は Lucide、Material Symbols、Font Awesome Free Solid、Remix Icon を jsDelivr の `latest` package から読み込む。取得した SVG node / body / path data は sanitizer で許可タグ・属性・path data だけに絞り、Lucide は OpenSCAD へ渡す前に stroke primitives を filled path に変換する。CDN が利用できない環境では installed package 由来の fallback data を同じ sanitizer / 変換処理に通す
-- 理由:
-  icon set の更新追従を手動生成ファイルの更新から切り離し、常に最新カタログを扱えるようにするため。以前の Lucide 事前生成 stroke-to-fill では open stroke の round cap が崩れ、`power` のようなアイコン端部が欠ける形状になったため、取得後の sanitizer と変換処理を単一経路にして再発を防ぐ
-- 関連:
+- Conclusion:
+  When running in the browser, load Lucide, Material Symbols, Font Awesome Free Solid, and Remix Icon from jsDelivr's `latest` packages. The acquired SVG node/body/path data is filtered to allowed tags, attributes, and path data using a sanitizer. For Lucide, stroke primitives are converted to filled paths before passing to OpenSCAD. In environments where the CDN is unavailable, fallback data derived from installed packages is passed through the same sanitizer/conversion process.
+- Reason:
+  To decouple icon set updates from manually generated files and always handle the latest catalogs. Previous pre-generation of Lucide stroke-to-fill caused open stroke round caps to break, resulting in shapes with missing ends like the `power` icon. Using a single path for sanitizer and conversion post-acquisition prevents recurrences.
+- Related:
   [../architecture/scad-and-export.md](../architecture/scad-and-export.md)
 
-## 2026-06-23 - icon legend は Lucide SVG runtime asset として扱う
+## 2026-06-23 - Treat icon legends as Lucide SVG runtime assets
 
-- 結論:
-  legend は `text` と `icon` の content type を持つ。まず Lucide に対応し、UI では文字と独立したアイコンセット・アイコン名を選択する。SCAD bridge は選択した Lucide SVG を `/icons/lucide/*.svg` の runtime asset として渡し、SCAD 側で `import()` した 2D 形状を legend volume として押し出す。既存 JSON に icon 用フィールドがない場合は `text` として読み込み、文字印字の互換性を維持する
-- 理由:
-  font と icon は選択対象もライセンスも形状生成経路も異なるため、font 選択に混ぜず content type で分ける方が拡張しやすい。Lucide はアイコン名検索とSVGデータ取得がしやすく、静的配信のブラウザ内OpenSCAD runtimeへasset注入する既存経路にも合うため
-- 関連:
+- Conclusion:
+  Legends have a content type of `text` and `icon`. Initially supporting Lucide, the UI selects an icon set and icon name independent of text. The SCAD bridge passes the selected Lucide SVG as a runtime asset to `/icons/lucide/*.svg`, and extrudes the 2D shape `import()`ed on the SCAD side as a legend volume. If existing JSON lacks icon fields, it is loaded as `text`, maintaining compatibility with text printing.
+- Reason:
+  Since fonts and icons have different selection targets, licenses, and shape generation paths, separating them by content type is easier to expand than mixing them into font selection. Lucide is easy for icon name searches and SVG data acquisition, fitting well with the existing route of injecting assets into the statically delivered in-browser OpenSCAD runtime.
+- Related:
   [../architecture/scad-and-export.md](../architecture/scad-and-export.md)
 
-## 2026-06-24 - icon legend provider を複数セット対応へ拡張
+## 2026-06-24 - Expand icon legend providers to support multiple sets
 
-- 結論:
-  `src/lib/keycap-icons.js` に icon provider registry を置き、UI と SCAD bridge は `legendIconSet` / `legendIconName` から共通 API で icon metadata、検索、SVG runtime asset を取得する。追加 provider は Material Symbols、Font Awesome Free Solid、Remix Icon。runtime asset path は `/icons/{set}/{name}.svg` とする
-- 理由:
-  アイコンセットごとにデータ形式、viewBox、ライセンス表記が異なるため、UI や SCAD bridge へ個別分岐を増やすより provider に閉じ込める方が拡張とライセンス表示を保ちやすい。既存 JSON は default `lucide` / `circle` を維持するため互換性を壊さない
-- 関連:
+- Conclusion:
+  Place an icon provider registry in `src/lib/keycap-icons.js`, and the UI and SCAD bridge acquire icon metadata, searches, and SVG runtime assets using a common API based on `legendIconSet` / `legendIconName`. Additional providers are Material Symbols, Font Awesome Free Solid, and Remix Icon. The runtime asset path is `/icons/{set}/{name}.svg`.
+- Reason:
+  Since the data format, viewBox, and license notation vary per icon set, encapsulating them in providers makes expansion and maintaining license displays easier than adding individual branches to the UI or SCAD bridge. Existing JSON maintains the default `lucide` / `circle`, so compatibility is not broken.
+- Related:
   [../architecture/scad-and-export.md](../architecture/scad-and-export.md)
 
-## 2026-06-16 - ユーザー追加 font はブラウザ内のマイフォントとして扱う
+## 2026-06-20 - Separate STEP export from single-material shapes
 
-- 結論:
-  ユーザーが TTF / OTF を選択またはドラッグ & ドロップした場合、その font file は同梱 asset へ追加せず、ブラウザ内の `マイフォント` registry に保持する。preview / export 時だけ OpenSCAD runtime へ `/fonts/user/` asset として渡し、編集データ JSON には file bytes の hash 由来の `user-font:*` key だけを保存する。未読み込みの `user-font:*` は既定 font へ黙って置換せず、同じ font file の再追加を促す。
-- 理由:
-  GitHub Pages 配信アプリとしてサーバー保存を前提にせず、ユーザーのローカル font を使う要件と、font 再配布・同梱ライセンス確認の責務境界を分けるため
-
-## 2026-06-03 - STEP export はブラウザ側で faceted B-rep を生成する
-
-- 結論:
-  個別書き出しに `STEP` を追加し、`single_material_shape` target の OFF メッシュからブラウザ側で STEP AP214 の `FACETED_BREP_SHAPE_REPRESENTATION` を生成する。色、legend、part 分離は保持せず、必要な場合は 3MF を使う
-- 理由:
-  同梱している OpenSCAD WASM runtime は native STEP export に対応していないが、GitHub Pages 前提とクライアントサイド完結を維持しながら CAD 交換用の `.step` を提供するため。faceted B-rep は OpenSCAD が生成したメッシュ品質に依存するが、STL より STEP を要求する製造・CAD 連携に対応できる
-- 関連:
+- Conclusion:
+  Add an option to save CAD exchange STEP via browser-side `FACETED_BREP_SHAPE_REPRESENTATION` output using OFF meshes derived from the `single_material_shape` target.
+- Reason:
+  The bundled OpenSCAD WASM runtime does not support native STEP export, but we want to provide `.step` for CAD exchange while maintaining a client-side only app delivered via GitHub Pages. Faceted B-rep depends on the mesh quality generated by OpenSCAD, but can accommodate manufacturing and CAD integrations that require STEP rather than STL.
+- Related:
   [../architecture/scad-and-export.md](../architecture/scad-and-export.md)
 
-## 2026-05-03 - dishDepth は凹み専用の非負値に戻す
+## 2026-05-03 - Revert dishDepth to a non-negative value dedicated to indentation
 
-- 状態:
-  2026-07-15 の判断で置換済み
+- Status:
+  Replaced by the decision on 2026-07-15.
 
-- 結論:
-  `topSurfaceShape` の `cylindrical` / `spherical` は既存の実用的な正値の凹み挙動を正とし、`dishDepth` は 0 以上だけを受ける。過大な正値はキートップの最高点が下がらない範囲へ丸め、浅い値でも凹みの開始位置は上面 footprint 基準で固定する。負値による盛り上がりは扱わず、将来の専用パラメータとして別設計にする
-- 理由:
-  負値の盛り上がりを同じ `dishDepth` に載せると、サイドウォールとキートップ上面の接点や legend / homing bar の追従が崩れ、正値側の既存挙動も壊れやすいため
-- 関連:
+- Conclusion:
+  `cylindrical` / `spherical` of `topSurfaceShape` treat the existing practical positive indentation behavior as correct, and `dishDepth` accepts only 0 or more. Excessive positive values are rounded to a range where the highest point of the keytop does not drop, and even for shallow values, the start position of the indentation is fixed based on the top footprint. Bulges by negative values are not handled and will be designed separately as dedicated parameters in the future.
+- Reason:
+  Placing a negative-value bulge on the same `dishDepth` breaks the contact points between the sidewall and keytop surface, and the tracking of legends / homing bars, and is prone to breaking the existing behavior of positive values.
+- Related:
   [../architecture/scad-and-export.md](../architecture/scad-and-export.md)
 
-## 2026-04-30 - プロジェクトは ZIP 内 manifest で複数キーキャップを束ねる
+## 2026-04-30 - Projects bundle multiple keycaps in a manifest within a ZIP
 
-- 結論:
-  複数キーキャップの保存単位をプロジェクトと呼び、`KeycapMaker.json` manifest と `keycaps/` 配下の編集データ JSON / preview 画像で構成する。保存は ZIP ダウンロードに統一し、単体 JSON の drag & drop は読み込んだ内容をプロジェクトのキーキャップ一覧へ追加して active にする。読み込み済みプロジェクトの既存一覧は保持する
-- 補足:
-  一覧用 preview は撮影時のカメラ状態 `previewViewState` を manifest に保持し、active keycap のパラメータ変更時は同じ角度で一覧画像を再撮影する
-- 理由:
-  既存の編集データ JSON を破壊せずに、キーキャップ集合と一覧用 preview を静的配信アプリ内で扱えるようにするため
-- 関連:
+- Conclusion:
+  The saving unit for multiple keycaps is called a project, consisting of a `KeycapMaker.json` manifest and edit data JSONs / preview images under `keycaps/`. Saving is unified to a ZIP download, and dragging and dropping a single JSON adds the loaded content to the project's keycap list and makes it active. The existing list of an already loaded project is retained.
+- Supplement:
+  The list preview retains the camera state `previewViewState` at the time of shooting in the manifest, and when parameters of an active keycap change, the list image is re-shot at the same angle.
+- Reason:
+  To allow keycap collections and list previews to be handled within a statically delivered app without destroying existing edit data JSONs.
+- Related:
   [../architecture/project-data.md](../architecture/project-data.md)
 
-## 2026-04-25 - GitHub Pages デプロイは main と Web 資源変更に限定する
+## 2026-04-25 - GitHub Pages deployment is limited to main and Web resource changes
 
-- 結論:
-  `main` と `dev` は継続運用するブランチとして削除せず、通常開発は `dev` に集約する。`.github/workflows/deploy-pages.yml` は `main` への push と手動実行を入口にし、job 側でも `refs/heads/main` を条件にする。自動デプロイ対象パスは `src/` の実装ファイル、`public/`、`scad/**/*.scad`、`index.html`、Vite / npm 設定に限定する
-- 理由:
-  feature branch の作業や docs だけの更新を GitHub Pages へ反映せず、配信物に関係する変更だけをデプロイするため
+- Conclusion:
+  `main` and `dev` will be maintained without deletion as continuously operating branches, and normal development will be consolidated into `dev`. `.github/workflows/deploy-pages.yml` uses pushes to `main` and manual execution as entry points, and conditions `refs/heads/main` on the job side as well. Automatic deployment target paths are limited to implementation files in `src/`, `public/`, `scad/**/*.scad`, `index.html`, and Vite / npm settings.
+- Reason:
+  To avoid reflecting feature branch work or docs-only updates to GitHub Pages, and to deploy only changes related to delivery assets.
 
-## 2026-04-25 - typewriter の取り付け高さは本体上面基準で持つ
+## 2026-04-25 - Mount height of typewriter is based on the top surface of the body
 
-- 結論:
-  typewriter shape では `topCenterHeight` をキートップ本体の厚みとして維持し、装着時の高さ調整は `typewriterMountHeight` として本体上面中央から取り付け部分下端までの距離で持つ
-- 理由:
-  薄いキートップ本体の厚みと stem の有効長を分けることで、上面の見た目を変えずにスイッチ上での高さを調整できるため
+- Conclusion:
+  In the typewriter shape, `topCenterHeight` is maintained as the thickness of the keycap body, and height adjustment when mounted is handled as `typewriterMountHeight`, the distance from the center of the body's top surface to the bottom edge of the mount part.
+- Reason:
+  By separating the thickness of the thin keytop body and the effective length of the stem, the height on the switch can be adjusted without changing the appearance of the top surface.
 
-## 2026-04-24 - typewriter rim の body 側座面は微小 clearance で削る
+## 2026-04-24 - The seat on the body side of the typewriter rim is carved with a minute clearance
 
-- 結論:
-  typewriter rim は visible rim と同じ体積を body から引かず、body 側だけ 0.03 mm 大きい rim clearance volume で座面を削る
-- 理由:
-  body と rim が同一面を共有すると、preview と export の separate volume 境界で body 色が rim 表面に薄く残るため
+- Conclusion:
+  The typewriter rim does not subtract the same volume as the visible rim from the body, but carves the seat with a rim clearance volume 0.03 mm larger on the body side only.
+- Reason:
+  If the body and rim share the same face, the body color thinly remains on the rim surface at the separate volume boundary of preview and export.
 
-## 2026-04-23 - custom-shell のキートップは flat / cylindrical / spherical を切り替え可能にする
+## 2026-04-23 - The custom-shell keytop can switch between flat / cylindrical / spherical
 
-- 結論:
-  custom-shell のキートップ形状は `topSurfaceShape` で切り替え、`dishDepth` はプラスで凹み、マイナスで盛り上がりとして扱う。cylindrical は固定向きとし、`topPitchDeg` / `topRollDeg` を変えても dish 自体の曲率は維持したまま傾ける
-- 補足:
-  `dishDepth` のマイナス盛り上がり部分は 2026-05-03 に一度取り下げたが、側面接続と従属形状の追従を実装したうえで 2026-07-15 に再採用した
-- 理由:
-  フラットだけではキートップの触感と見た目の幅が狭く、cylindrical / spherical の一般的な差を小さな UI 拡張で表現できるため
+- Conclusion:
+  The keytop shape of the custom-shell is switched with `topSurfaceShape`, and `dishDepth` is treated as an indentation for positive and a bulge for negative. Cylindrical has a fixed orientation, and tilting it with `topPitchDeg` / `topRollDeg` keeps the dish's curvature intact.
+- Supplement:
+  The negative bulge part of `dishDepth` was withdrawn once on 2026-05-03, but re-adopted on 2026-07-15 after implementing side connection and tracking of dependent shapes.
+- Reason:
+  Because flat alone has a narrow range of feel and appearance for the keytop, and the general differences between cylindrical / spherical can be expressed with small UI extensions.
 
-## 2026-04-23 - typewriter のキートップ形状は flat / spherical に限定する
+## 2026-04-23 - Typewriter keytop shapes are limited to flat / spherical
 
-- 結論:
-  typewriter shape では `topSurfaceShape` に `flat` と `spherical` だけを出し、state / import でも `cylindrical` は受けず profile default へ丸める
-- 理由:
-  今回の要件は typewriter へ spherical を追加することであり、custom-shell 向けに定義した cylindrical をそのまま露出すると UI と保存データの意味がぶれるため
+- Conclusion:
+  For the typewriter shape, only `flat` and `spherical` are exposed in `topSurfaceShape`, and `cylindrical` is rounded to the profile default in state / import.
+- Reason:
+  The requirement this time was to add spherical to typewriter, and exposing cylindrical defined for custom-shell as is would blur the meaning of the UI and saved data.
 
-## 2026-04-16 - 静的配信前提の採用
+## 2026-04-16 - Adoption of static delivery premise
 
-- 結論:
-  GitHub Pages 前提、クライアントサイド完結の構成で進める
-- 理由:
-  配信と運用を静的ホスティングだけで閉じたいから
+- Conclusion:
+  Proceed with a structure assuming GitHub Pages and complete client-side execution.
+- Reason:
+  To contain delivery and operation solely within static hosting.
 
-## 2026-04-16 - フロントエンド基盤として Vite を採用
+## 2026-04-16 - Adoption of Vite as the frontend base
 
-- 結論:
-  Vite を採用し、GitHub Pages 用 base は `GITHUB_REPOSITORY` から自動解決する
-- 理由:
-  ローカル開発と Pages デプロイの両方を単純に扱えるから
+- Conclusion:
+  Adopt Vite, automatically resolving the GitHub Pages base from `GITHUB_REPOSITORY`.
+- Reason:
+  To simply handle both local development and Pages deployment.
 
-## 2026-04-16 - OpenSCAD WASM runtime を同梱
+## 2026-04-16 - Bundling OpenSCAD WASM runtime
 
-- 結論:
-  `public/vendor/openscad/` に OpenSCAD Playground 系の prebuilt WASM runtime を同梱する
-- 理由:
-  外部依存なしでブラウザ内実行を維持するため
+- Conclusion:
+  Bundle the OpenSCAD Playground series prebuilt WASM runtime in `public/vendor/openscad/`.
+- Reason:
+  To maintain in-browser execution without external dependencies.
 
-## 2026-04-16 - 3MF はブラウザ側で組み立てる
+## 2026-04-16 - 3MF is assembled on the browser side
 
-- 結論:
-  OpenSCAD runtime から OFF を出力し、ブラウザ側で 3MF パッケージを生成する
-- 理由:
-  bundled runtime と整合する export 経路を安定して持つため
+- Conclusion:
+  Output OFF from OpenSCAD runtime and generate 3MF packages on the browser side.
+- Reason:
+  To have a stable export route matching the bundled runtime.
 
-## 2026-04-16 - separate volume を基本契約にする
+## 2026-04-16 - Separate volume as the base contract
 
-- 結論:
-  body / legend を別体積で扱える構造を基本契約とし、色だけに依存しない
-- 理由:
-  スライサー互換性や製造上の意味づけを安定させやすいため
+- Conclusion:
+  Make a structure that can treat the body / legend as separate volumes the basic contract, and do not rely solely on color.
+- Reason:
+  To stabilize slicer compatibility and significance in manufacturing.
 
-## 2026-04-16 - SCAD ベース構造を分離
+## 2026-04-16 - Separation of SCAD base structure
 
-- 結論:
-  `scad/base/keycap.scad` を入口として、shell / legend / stem / preset を分離する
-- 理由:
-  preview / export の責務分離と UI からの bridge を扱いやすくするため
+- Conclusion:
+  Separate shell / legend / stem / presets using `scad/base/keycap.scad` as the entry point.
+- Reason:
+  To make handling the preview / export responsibility separation and the bridge from the UI easier.
 
-## 2026-04-16 - UI と preview の基本構成
+## 2026-04-16 - Basic structure of UI and preview
 
-- 結論:
-  `src/main.js` を中心に、同じ入力 state から preview と export を駆動する
-- 理由:
-  入力責務を一元化し、preview と export の不整合を減らすため
+- Conclusion:
+  Drive preview and export from the same input state, centered on `src/main.js`.
+- Reason:
+  To centralize input responsibilities and reduce inconsistencies between preview and export.
 
-## 2026-04-16 - GitHub Pages デプロイフローの固定
+## 2026-04-16 - Fixing the GitHub Pages deployment flow
 
-- 結論:
-  `.github/workflows/deploy-pages.yml` で `npm ci -> npm run build -> deploy` を固定する
-- 理由:
-  配信経路をリポジトリ内に閉じるため
+- Conclusion:
+  Fix `npm ci -> npm run build -> deploy` in `.github/workflows/deploy-pages.yml`.
+- Reason:
+  To contain the delivery route within the repository.
 
-## 2026-04-18 - 最終ベース形状へ更新
+## 2026-04-18 - Update to final base shape
 
-- 結論:
-  単純 shell を、最終モデル由来の profile shell / Choc v2 stem / homing bar 構成へ置き換えた
-- 理由:
-  現実のキーキャップ形状に寄せつつ、モジュール境界を維持するため
+- Conclusion:
+  Replaced the simple shell with a profile shell / Choc v2 stem / homing bar configuration derived from the final model.
+- Reason:
+  To bring it closer to real keycap shapes while maintaining module boundaries.
 
-## 2026-04-18 - homing bar と legend を分離
+## 2026-04-18 - Separation of homing bar and legend
 
-- 結論:
-  homing bar は body 側オプション、legend は別 volume として並立させる
-- 理由:
-  触覚マーカーと印字は製造上も UI 上も別責務だから
+- Conclusion:
+  Make the homing bar an option on the body side and the legend a separate volume side-by-side.
+- Reason:
+  Because tactile markers and printing have different responsibilities in manufacturing and the UI.
 
-## 2026-04-18 - `user_*` は wrapper SCAD で注入
+## 2026-04-18 - `user_*` is injected via wrapper SCAD
 
-- 結論:
-  browser runtime の `-D` 上書きに頼らず、実行ごとに wrapper SCAD を生成する
-- 理由:
-  preview / export の両経路で同じパラメータを確実に反映するため
+- Conclusion:
+  Instead of relying on `-D` overrides in the browser runtime, generate a wrapper SCAD for each execution.
+- Reason:
+  To ensure the same parameters are reflected in both preview / export paths.
 
-## 2026-04-18 - legend を `text()` ベースへ移行
+## 2026-04-18 - Migration of legends to `text()` base
 
-- 結論:
-  legend は `text()` ベースとし、同梱 font asset の family / face を切り替えて使う
-- 理由:
-  UI から任意文字列と複数書体を扱えるようにするため
+- Conclusion:
+  Legends are based on `text()`, switching the family / face of bundled font assets.
+- Reason:
+  To be able to handle arbitrary strings and multiple typefaces from the UI.
 
-## 2026-04-18 - legend の高さ 0 は flush として扱う
+## 2026-04-18 - Legend height 0 is treated as flush
 
-- 結論:
-  `文字の高さ = 0` は無効値ではなく、表面と同じ高さで見える状態とする
-- 理由:
-  エンドユーザ向け UI として意味が分かりやすいため
+- Conclusion:
+  `Text Height = 0` is not an invalid value, but a state seen at the same height as the surface.
+- Reason:
+  Because the meaning is easier to understand as an end-user UI.
 
-## 2026-04-18 - top dish に沿う legend 露出
+## 2026-04-18 - Legend exposure along the top dish
 
-- 結論:
-  legend は flat な押し出しをそのまま置かず、dish と同じカーブ帯で切り抜く
-- 理由:
-  flush legend が body に埋もれて欠けるのを防ぐため
+- Conclusion:
+  Legends are not placed as flat extrusions, but cut out in the same curve band as the dish.
+- Reason:
+  To prevent flush legends from being buried and chipped by the body.
 
-## 2026-04-19 - legend 拡張の優先順位
+## 2026-04-19 - Priorities for legend extension
 
-- 結論:
-  複数 top legend より前に、配置面の責務分離を優先する
-- 理由:
-  現在の legend placement は top dish に密結合しており、side legend の導入ボトルネックになっているため
-- 関連:
+- Conclusion:
+  Prioritize separating the responsibilities of placement surfaces before handling multiple top legends.
+- Reason:
+  Because the current legend placement is tightly coupled to the top dish, making it a bottleneck for introducing side legends.
+- Related:
   [../backlog/legend-extensibility-todo.md](../backlog/legend-extensibility-todo.md)
 
-## 2026-04-21 - 丸みのある legend 書体は OpenSCAD 内で高精細化する
+## 2026-04-21 - High definition of rounded legend typefaces within OpenSCAD
 
-- 結論:
-  legend の `text()` は preview / export ごとに `$fn` を上げ、小さい文字サイズでは内部だけ拡大してから縮小する
-- 理由:
-  bundled OpenSCAD runtime では小さい `text()` が粗く多角形化されやすく、丸みのある書体で角張りが目立ったため
-- 関連:
+- Conclusion:
+  For legend `text()`, increase `$fn` for each preview / export, and for small text sizes, internally expand and then shrink.
+- Reason:
+  Because small `text()` in the bundled OpenSCAD runtime tends to be roughly polygonized, making jaggedness noticeable in rounded typefaces.
+- Related:
   [../backlog/legend-svg-path-option.md](../backlog/legend-svg-path-option.md)
 
-## 2026-04-21 - legend に擬似的な太らせ補正は入れない
+## 2026-04-21 - No pseudo-fattening correction for legends
 
-- 結論:
-  legend の glyph outline には外周 `offset()` をかけず、選択したフォントの輪郭をそのまま使う
-- 理由:
-  ユーザーが意図していない太らせが見た目に混ざると、選択したフォントとの差が分かりにくくなるため
+- Conclusion:
+  Do not apply outer circumference `offset()` to the legend's glyph outline, but use the outline of the selected font as is.
+- Reason:
+  If unintended fattening visually mixes in, it becomes difficult to see the difference from the selected font.
 
-## 2026-04-21 - legend の style 選択は font spec を優先する
+## 2026-04-21 - Style selection for legends prioritizes font specs
 
-- 結論:
-  bold / italic / slanted のような style は、font が持つ named style や separate face を優先し、擬似 style はユーザー操作なしでは付けない
-- 理由:
-  選択した font の仕様をそのまま使う方が、見た目の由来が明確で保守しやすいため
+- Conclusion:
+  For styles like bold / italic / slanted, prioritize named styles or separate faces the font has, and do not add pseudo-styles without user action.
+- Reason:
+  Using the specifications of the selected font as is makes the origin of the appearance clearer and easier to maintain.
 
-## 2026-04-21 - variable font は static face より優先して導入する
+## 2026-04-21 - Variable fonts prioritize static faces
 
-- 結論:
-  `M PLUS 1 Variable` を同梱し、native style を UI から選べるようにする。static font は font 名検索から face を直接選ぶ
-- 理由:
-  variable font がある family では、1 ファイルで named style を扱える方が UI と asset 管理を単純化できるため
+- Conclusion:
+  Bundle `M PLUS 1 Variable` and allow native styles to be selected from the UI. Static fonts have their face selected directly from font name searches.
+- Reason:
+  For families with variable fonts, handling named styles in a single file simplifies the UI and asset management.
 
-## 2026-04-21 - 版権依存しない世界観フォントは OFL 配布物を優先する
+## 2026-04-21 - Worldview fonts without copyright dependence prioritize OFL distributions
 
-- 結論:
-  映画や漫画の固有ロゴ書体は避け、再配布条件が明確な Google Fonts の `Bangers`、`Creepster`、`Rye`、`Orbitron` を legend 用に同梱する
-- 理由:
-  GitHub Pages 配信で同梱でき、コミック、ホラー、西部劇、SF の方向性を追加しつつ、権利関係を proprietary franchise font に寄せずに済むため
+- Conclusion:
+  Avoid specific logo typefaces of movies and comics, and bundle Google Fonts' `Bangers`, `Creepster`, `Rye`, and `Orbitron` with clear redistribution terms for legends.
+- Reason:
+  Because they can be bundled via GitHub Pages delivery, adding directions for comics, horror, westerns, and sci-fi without leaning on proprietary franchise font rights.
 
-## 2026-04-21 - Art Gothic 系は近似の OFL 書体で扱う
+## 2026-04-21 - Art Gothic lineage is handled with approximate OFL typefaces
 
-- 結論:
-  `Art Gothic` という固有ファミリー自体は同梱せず、Google Fonts の `Grenze Gotisch` と `MedievalSharp` を近似候補として追加する
-- 理由:
-  リポジトリ内で再配布条件を明確に保ったまま、`Art Gothic` 検索 needs と gothic display の方向性を満たしたいため
+- Conclusion:
+  Do not bundle the specific `Art Gothic` family itself, but add Google Fonts' `Grenze Gotisch` and `MedievalSharp` as approximate candidates.
+- Reason:
+  To meet the `Art Gothic` search needs and the direction of gothic display while keeping redistribution conditions clear within the repository.
 
-## 2026-04-21 - 外部配布の和文 display font は出典メモを同梱する
+## 2026-04-21 - Externally distributed Japanese display fonts include source notes
 
-- 結論:
-  MODI 工場の `黒薔薇シンデレラ` を追加し、配布元 URL と M+ FONTS 派生の注記を `public/fonts/KurobaraCinderella-MODI.txt` に残す
-- 理由:
-  Google Fonts 配布物ではない日本語 font は参照元が散らばりやすく、ライセンス確認の経路を repo 内に残した方が保守しやすいため
+- Conclusion:
+  Add `Kurobara Cinderella` from MODI Factory, leaving the distributor URL and note of M+ FONTS derivation in `public/fonts/KurobaraCinderella-MODI.txt`.
+- Reason:
+  Because Japanese fonts not distributed by Google Fonts tend to have scattered sources, keeping the license confirmation route in the repo is easier to maintain.
 
-## 2026-04-21 - 明示操作の輪郭補正だけを geometry で許可する
+## 2026-04-21 - Only explicit contour correction operations are permitted in geometry
 
-- 結論:
-  font-native な style 選択とは別に、`legendOutlineDelta` をユーザー入力の明示操作として提供し、このときだけ `offset()` で輪郭補正する
-- 理由:
-  native style だけでは足りない微調整 needs を残しつつ、無断補正は避けたいため
+- Conclusion:
+  Separate from font-native style selection, provide `legendOutlineDelta` as an explicit operation from user input, and apply contour correction with `offset()` only at this time.
+- Reason:
+  To leave fine-tuning needs that native styles alone cannot cover, while avoiding unrequested corrections.
 
-## 2026-04-21 - underline は font metadata に従う
+## 2026-04-21 - Underline follows font metadata
 
-- 結論:
-  `legendUnderlineEnabled` が有効なときは、font file の `post` / `head` / `hhea` から `UnderlinePosition` / `UnderlineThickness` と line box 中心を読み、center 揃え text の座標へ変換して下線位置と太さを決める。metadata を取得できない場合、任意の固定値へフォールバックしない
-- 理由:
-  underline も選択した font の仕様に寄せた方が、見た目の由来が明確で、任意の装飾が混ざらないため
+- Conclusion:
+  When `legendUnderlineEnabled` is active, read `UnderlinePosition` / `UnderlineThickness` and the center of the line box from the font file's `post` / `head` / `hhea`, convert to coordinates of centered text, and determine the underline position and thickness. If metadata cannot be obtained, do not fallback to arbitrary fixed values.
+- Reason:
+  Matching underlines to the specifications of the selected font makes the origin of the appearance clearer and prevents arbitrary decorations from mixing in.
 
-## 2026-04-21 - font 選択 UI はブラウザ標準 datalist に依存しない
+## 2026-04-21 - Font selection UI does not rely on browser standard datalists
 
-- 結論:
-  font 選択は自前の検索 popover で実装し、虫眼鏡ボタンから検索 textbox と scrollable list を開く。候補は各 font 自身で表示し、入力中にリアルタイム絞り込みする
-- 理由:
-  datalist では option の見た目制御が弱く、font そのものを preview しながら選ぶ体験を作りにくいため
+- Conclusion:
+  Implement font selection with a custom search popover, opening a search textbox and scrollable list from a magnifying glass button. Candidates are displayed in each font itself, and filtered in real-time as you type.
+- Reason:
+  Because datalists have weak control over the appearance of options, making it hard to create an experience of selecting fonts while previewing them.
 
-## 2026-04-22 - shape ごとの editor 初期値は JSON に集約する
+## 2026-04-22 - Editor default values for each shape are consolidated into JSON
 
-- 結論:
-  shape ごとの初期値、geometry defaults、表示グループ定義は `src/data/keycap-shapes/*.json` に集約し、`scad/base/keycap.scad` は SCAD 側のフェイルセーフ default を持たず explicit `user_*` を受ける
-- 理由:
-  editor と SCAD の責務境界を明確にし、shape 追加時の初期値と UI 構成を 1 か所の JSON で保守できるようにするため
+- Conclusion:
+  Consolidate default values, geometry defaults, and display group definitions for each shape into `src/data/keycap-shapes/*.json`, and have `scad/base/keycap.scad` receive explicit `user_*` without SCAD-side fail-safe defaults.
+- Reason:
+  To clarify the responsibility boundary between the editor and SCAD, and allow maintaining initial values and UI structures when adding shapes in a single JSON file.
 
-## 2026-04-22 - typewriter key rim は separate volume にする
+## 2026-04-22 - Typewriter key rims are made separate volumes
 
-- 結論:
-  typewriter shape の key rim は top parameter として扱い、body から flush な seat を差し引いたうえで `rim` part として preview / 3MF へ出す
-- 理由:
-  rim を body と別色で扱う要件では、色 metadata だけでなく mesh 自体を分離した方が preview / export / slicer の整合を保ちやすいため
+- Conclusion:
+  Treat typewriter shape key rims as top parameters, subtract a flush seat from the body, and output it to preview / 3MF as a `rim` part.
+- Reason:
+  For the requirement to handle rims in a different color from the body, separating the mesh itself, not just color metadata, makes it easier to maintain consistency between preview / export / slicer.
 
-## 2026-04-25 - 3MF export は part を components 親 object に束ねる
+## 2026-04-25 - 3MF export bundles parts into components parent objects
 
-- 結論:
-  3MF の body / rim / homing / legend は separate volume の object resource として残し、`build` にはそれらを `components` で束ねた親 object を 1 件だけ置く
-- 理由:
-  Bambu Studio が小さい legend / homing を独立造形物として判定するのを避けつつ、フィラメント切り替え用の part 分離と相対位置を維持するため
+- Conclusion:
+  Leave 3MF body / rim / homing / legend as separate volume object resources, and place only one parent object bundling them in `components` in `build`.
+- Reason:
+  To prevent Bambu Studio from judging small legend / homing parts as independent objects, while maintaining part separation and relative positions for filament switching.
 
-## 2026-04-25 - 3MF part 名は標準属性と slicer metadata の両方に入れる
+## 2026-04-25 - 3MF part names are placed in both standard attributes and slicer metadata
 
-- 結論:
-  標準3MFの子 object `name` / `partnumber` を維持しつつ、Bambu Studio / OrcaSlicer 用に `Metadata/model_settings.config`、PrusaSlicer / Slic3r PE 用に `Metadata/Slic3r_PE_model.config` を追加する
-- 理由:
-  components の子 part 名表示は標準3MFだけでは slicer 実装依存になり、Bambu / Orca / Prusa 系では Slic3r 由来の model config metadata が part / volume 名の復元に使われるため
+- Conclusion:
+  While maintaining standard 3MF child object `name` / `partnumber`, add `Metadata/model_settings.config` for Bambu Studio / OrcaSlicer, and `Metadata/Slic3r_PE_model.config` for PrusaSlicer / Slic3r PE.
+- Reason:
+  Display of child part names in components depends on slicer implementation for standard 3MF alone, and Bambu / Orca / Prusa series use Slic3r-derived model config metadata to restore part / volume names.
 
-## 2026-04-25 - 3MF 親 object 名は UI の名称を使う
+## 2026-04-25 - 3MF parent object names use UI names
 
-- 結論:
-  components 親 object の `name` と Bambu Studio / OrcaSlicer 用 `Metadata/model_settings.config` の親 object metadata には、UI の `名称` を入れる
-- 理由:
-  ファイル名だけでなくスライサー内の object list でもユーザーが付けた名前で識別できるようにするため
+- Conclusion:
+  Place the `Name` from the UI into the `name` of the components parent object and the parent object metadata of `Metadata/model_settings.config` for Bambu Studio / OrcaSlicer.
+- Reason:
+  To allow users to identify parts by the names they gave, not just by filename, but also in object lists within slicers.
 
-## 2026-04-26 - STL export は単色形状オプションにする
+## 2026-04-26 - STL export is made a single-color shape option
 
-- 結論:
-  STL は推奨 export ではなくオプション扱いにし、`single_material_shape` target から色と legend を含まない単一メッシュとして出力する
-- 理由:
-  STL は標準的に色、material、part 分離、アセンブリ情報を保持しないため、KeycapMaker の separate volume / 色分け / legend 要件には 3MF の方が適している。一方で slicer や製造要件によって STL が必要な場合があるため、単色形状としての保存経路を用意する
+- Conclusion:
+  STL is treated as an option rather than a recommended export, output as a single mesh without color and legends from the `single_material_shape` target.
+- Reason:
+  Since STL standardly does not hold color, material, part separation, and assembly information, 3MF is more suitable for KeycapMaker's separate volume / color separation / legend requirements. However, since STL may be required depending on slicers or manufacturing requirements, a saving route as a single-color shape is provided.
 
-## 2026-04-25 - font asset は軽量 provenance note を必須にする
+## 2026-04-25 - Font assets mandate lightweight provenance notes
 
-- 結論:
-  同梱 font は `public/fonts/` にライセンス本文または配布元条件メモを置き、あわせて `*-SOURCE.txt` または同等の provenance note に配布元 URL、review date、bundled filename、metadata、SHA-256 を残す
-- 理由:
-  Web 配信された過去版が残る可能性を前提に、ライセンス変更や配布元変更が起きても、どの版をどの条件で取り込んだかを軽量に追跡できるようにするため
+- Conclusion:
+  For bundled fonts, place the license text or distributor conditions memo in `public/fonts/`, and together leave the distributor URL, review date, bundled filename, metadata, and SHA-256 in `*-SOURCE.txt` or equivalent provenance note.
+- Reason:
+  Assuming past web-delivered versions might remain, this allows lightweight tracking of which version was incorporated under which conditions, even if licenses or distributors change.
 
-## 2026-04-25 - oversized legend はキー footprint でクリップしない
+## 2026-04-25 - Oversized legends are not clipped by the key footprint
 
-- 結論:
-  legend の作業領域はキーキャップ上面の footprint を上限にせず、文字数と文字サイズに応じた十分大きい surface-fitting 領域を JS bridge から SCAD へ渡す。文字がキー上面からはみ出す場合も、自動縮小せず legend part の overhang として扱う
-- 理由:
-  ユーザーが意図的に大きな文字や複数文字を置く創作余地を残し、フォント測定差やキー幅による意図しない欠けを避けるため
+- Conclusion:
+  The workspace for legends is not capped by the footprint of the keycap top; a sufficiently large surface-fitting area corresponding to the number and size of characters is passed from the JS bridge to SCAD. Even if characters overhang the keytop, they are treated as an overhang of the legend part without automatic shrinking.
+- Reason:
+  To leave creative room for users to intentionally place large or multiple characters, and to avoid unintended clipping due to font measurement differences or key widths.

@@ -1,13 +1,13 @@
-# design ディレクトリ案内
+# design Directory Guide
 
-`docs/design/` は画面デザインの正本を置く場所です。実装時に見た目や構造で迷った場合は、まずここを参照します。
+`docs/design/` is the place to put the source of truth for screen design. If you are unsure about the appearance or structure during implementation, refer to this first.
 
-## 収録内容
+## Contents
 
-- `Keycap_maker.pen`: Pencil の編集元ファイルです。デザイン変更時の正本として扱います
-- `assets/`: `.pen` が参照する関連アセットを保持します。現在のレンダリング画像 `keycap-render.png` もここに置きます
+- `Keycap_maker.pen`: Pencil original edit file. Treated as the source of truth when changing the design.
+- `assets/`: Holds related assets referenced by `.pen`. The current rendering image `keycap-render.png` is also placed here.
 
-## 運用ルール
+## Operation Rules
 
-- 画面デザインを変更した場合は、`.pen` を先に更新し、その変更に対応するプレビュー画像も必要に応じて更新します
-- 実装側の UI はこのディレクトリの内容に合わせ、差分が出た場合は `docs/design/` を基準に判断します
+- When changing the screen design, update `.pen` first, and update the preview image corresponding to that change as necessary.
+- Match the UI on the implementation side with the contents of this directory, and if differences arise, judge based on `docs/design/`.

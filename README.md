@@ -1,57 +1,57 @@
 # KeycapMaker
 
-GitHub Pages で配信する、キーキャップ編集 Web アプリのためのリポジトリです。
+This is a repository for a keycap editing web app delivered via GitHub Pages.
 
-現在の目的は、既存実装を継続して保守・拡張できる状態を維持することです。アプリ本体、SCAD 資産、実運用向けのドキュメントをこのリポジトリ内で完結させます。
+The current goal is to maintain the existing implementation in a state where it can continue to be maintained and expanded. The app itself, SCAD assets, and documents for actual operation are all contained within this repository.
 
-## 最初に読む資料
+## Documents to Read First
 
-- 文書案内: [docs/README.md](docs/README.md)
-- アプリ全体像: [docs/architecture/overview.md](docs/architecture/overview.md)
-- SCAD / export 契約: [docs/architecture/scad-and-export.md](docs/architecture/scad-and-export.md)
-- プロジェクトデータ仕様: [docs/architecture/project-data.md](docs/architecture/project-data.md)
-- 開発運用: [docs/guide/development.md](docs/guide/development.md)
+- Document Guide: [docs/README.md](docs/README.md)
+- App Overview: [docs/architecture/overview.md](docs/architecture/overview.md)
+- SCAD / Export Contract: [docs/architecture/scad-and-export.md](docs/architecture/scad-and-export.md)
+- Project Data Specification: [docs/architecture/project-data.md](docs/architecture/project-data.md)
+- Development Operations: [docs/guide/development.md](docs/guide/development.md)
 
-## 補助資料
+## Supplementary Materials
 
-- デザイン正本: [docs/design/README.md](docs/design/README.md)
-- 手動確認手順: [docs/guide/manual-verification.md](docs/guide/manual-verification.md)
-- 判断記録: [docs/decisions/decision-log.md](docs/decisions/decision-log.md)
-- 用語集: [docs/reference/glossary.md](docs/reference/glossary.md)
-- 印字拡張 TODO: [docs/backlog/legend-extensibility-todo.md](docs/backlog/legend-extensibility-todo.md)
+- Design Source: [docs/design/README.md](docs/design/README.md)
+- Manual Verification Procedure: [docs/guide/manual-verification.md](docs/guide/manual-verification.md)
+- Decision Log: [docs/decisions/decision-log.md](docs/decisions/decision-log.md)
+- Glossary: [docs/reference/glossary.md](docs/reference/glossary.md)
+- Legend Extensibility TODO: [docs/backlog/legend-extensibility-todo.md](docs/backlog/legend-extensibility-todo.md)
 
-## リポジトリの前提
+## Repository Assumptions
 
-- 配信先は GitHub Pages であり、サーバーサイド前提では進めない
-- 動的処理はクライアントサイドで実行する
-- ブラウザ内で OpenSCAD WASM ランタイムを実行する
-- プレビュー経路と export 経路は責務分離する
-- キーキャップ本体と印字は別体積で扱える構成を維持する
-- 現在のユーザー向け書き出しは `3MF`、CAD 交換用の `STEP`、単色形状用の `STL`、編集再開用の `JSON` である
-- 色情報は補助的に扱い、製造上の意味づけは separate volume を優先する
+- The deployment destination is GitHub Pages, so we do not assume server-side operations.
+- Dynamic processing is executed on the client side.
+- Run OpenSCAD WASM runtime inside the browser.
+- Preview routes and export routes are separated in responsibility.
+- Maintain a structure where the keycap body and the legend can be treated as separate volumes.
+- Current exports for users are `3MF`, `STEP` for CAD exchange, `STL` for single-color shapes, and `JSON` for resuming editing.
+- Color information is treated supplementarily, and manufacturing significance prioritizes separate volume.
 
-## ディレクトリ概要
+## Directory Overview
 
-- `src/`: Web アプリ本体の実装
-- `public/`: GitHub Pages でそのまま配信する静的アセット
-- `scad/`: キーキャップ形状の SCAD 資産
-- `docs/`: 実装手順、調査資料、仕様メモ
-- `.github/workflows/`: GitHub Actions と GitHub Pages デプロイ設定の置き場
+- `src/`: Implementation of the web app itself
+- `public/`: Static assets delivered as-is via GitHub Pages
+- `scad/`: SCAD assets of keycap shapes
+- `docs/`: Implementation procedures, research materials, specification memos
+- `.github/workflows/`: Location of GitHub Actions and GitHub Pages deployment settings
 
-## 開発
+## Development
 
-- 依存関係の導入: `npm install`
-- 開発サーバー: `npm run dev`
-- 本番ビルド確認: `npm run build`
-- ビルド成果物の確認: `npm run preview`
+- Install dependencies: `npm install`
+- Development server: `npm run dev`
+- Production build check: `npm run build`
+- Check build artifacts: `npm run preview`
 
-## ブランチ運用
+## Branch Operations
 
-- `main`: GitHub Pages へ公開される安定ブランチ。削除しない
-- `dev`: 通常開発の統合ブランチ。削除しない
-- `feat/*`: 個別作業用の短期ブランチ。必要に応じて `dev` へ取り込む
-- `dev` の内容を `main` へ push / merge したタイミングで、デプロイ対象パスに変更がある場合だけ GitHub Pages デプロイを実行する
-- `dev` や `feat/*` への push、または `docs/` など Web 配信資源に関係しない変更だけの push ではデプロイしない
+- `main`: Stable branch published to GitHub Pages. Do not delete.
+- `dev`: Integration branch for regular development. Do not delete.
+- `feat/*`: Short-term branch for individual work. Incorporate into `dev` as necessary.
+- At the time of push / merge of the contents of `dev` to `main`, GitHub Pages deployment is executed only when there are changes in the deployment target paths.
+- Deployments are not executed on push to `dev` or `feat/*`, or on push with only changes unrelated to web delivery resources such as `docs/`.
 
 ```mermaid
 gitGraph
@@ -71,7 +71,7 @@ gitGraph
   merge main id: "sync main"
 ```
 
-## デプロイ
+## Deployment
 
-- GitHub Pages 用ワークフロー: [.github/workflows/deploy-pages.yml](.github/workflows/deploy-pages.yml)
-- 初回公開時は、GitHub 側で Pages の利用設定と公開 URL の確認が必要です
+- Workflow for GitHub Pages: [.github/workflows/deploy-pages.yml](.github/workflows/deploy-pages.yml)
+- Upon initial publication, GitHub requires confirmation of Pages usage settings and the public URL.

@@ -1,76 +1,76 @@
-# legend 拡張 TODO
+# Legend Extension TODO
 
-## 目的
+## Purpose
 
-将来の side legend、キートップ上の複数 legend、legend ごとの色や書体差し替えを追加するときに、現在の SCAD / UI / export 構造のどこが詰まりやすいかを先に整理し、段階的に進める方針を残す。
+To outline the strategy for adding side legends, multiple legends on the keycap top, and per-legend color or typeface overrides in the future, by identifying potential bottlenecks in the current SCAD / UI / export structure and proceeding in stages.
 
-## 現状判断
+## Current Assessment
 
-- body と legend は separate volume として扱っており、その点では疎結合
-- 文字形状の生成は `scad/modules/legend_block.scad` に分離されている
-- キートップ legend の露出面は `scad/base/keycap.scad` で top dish 前提の surface fitting を使う
-- UI と bridge はキートップ中央の `user_legend_*`、キートップ四隅の `user_top_legend_*`、固定 4 面の `user_side_legend_*` を持つ
-- 3MF 生成器は可変個 mesh を扱えるため、ボトルネックは主に UI / bridge / SCAD 配置面の層にある
+- Body and legend are treated as separate volumes, loosely coupled in that regard.
+- Text shape generation is separated in `scad/modules/legend_block.scad`.
+- The exposed surface of the top legend uses surface fitting assuming a top dish in `scad/base/keycap.scad`.
+- The UI and bridge have `user_legend_*` for the center of the keytop, `user_top_legend_*` for the four corners, and `user_side_legend_*` for the fixed 4 sides.
+- Since the 3MF generator can handle a variable number of meshes, the bottlenecks are mainly in the UI / bridge / SCAD placement surface layers.
 
-## 結論
+## Conclusion
 
-- 単一 top legend:
-  現状の構成で維持できる
-- 複数 top legend:
-  中央 / 右上 / 右下 / 左上 / 左下の固定スロットまでは対応済み。任意個の `legendItems[]` 形式は未対応
-- side legend:
-  front / back / left / right の固定 4 面は対応済み。各側面の中央基準面の傾きには追従し、壁の内側面まで自動で埋め込む。任意面、複数 side legend、角丸や欠き込みへの厳密追従は未対応
+- Single top legend:
+  Can be maintained with the current structure.
+- Multiple top legends:
+  Fixed slots for center / top right / bottom right / top left / bottom left are already supported. Arbitrary `legendItems[]` format is not yet supported.
+- Side legend:
+  Fixed 4 sides (front / back / left / right) are already supported. They track the inclination of the center reference plane of each side and automatically embed up to the inner surface of the wall. Arbitrary sides, multiple side legends, and strict tracking of rounded corners or notches are not supported.
 
-## 主な詰まりどころ
+## Main Bottlenecks
 
-### 1. 面種別の抽象がない
+### 1. Lack of Surface Type Abstraction
 
-- `keycap_legend()` が top dish の露出帯を直接使っている
-- front / back / left / right への拡張点がない
+- `keycap_legend()` directly uses the exposure band of the top dish.
+- No extension points for front / back / left / right.
 
-### 2. データモデルは固定 legend 前提
+### 2. Data Model Assumes Fixed Legends
 
-- `src/main.js` の UI はキートップ 5 スロットと sidewall 4 面の固定項目を持つ
-- 任意個の `legendItems[]` にはまだ移行していない
+- The UI in `src/main.js` has fixed items for 5 keytop slots and 4 sidewall sides.
+- Has not yet migrated to an arbitrary `legendItems[]` array.
 
-### 3. レイヤー管理が固定名
+### 3. Layer Management uses Fixed Names
 
-- preview / export は `body` / `homing` / `legend` の固定ジョブを前提にしている
-- legend が複数になると part 管理の一般化が必要
+- Preview / export assume fixed jobs: `body` / `homing` / `legend`.
+- Generalization of part management is required when there are multiple legends.
 
-### 4. フォント読み込みが単一書体前提
+### 4. Font Loading Assumes a Single Typeface
 
-- runtime asset は選択中の 1 書体分だけ積む
-- legend ごとに書体を変えるなら使用フォント集合の収集が必要
+- Runtime assets are loaded only for the currently selected typeface.
+- If the typeface can change per legend, a mechanism to collect the set of used fonts is necessary.
 
-## 推奨方針
+## Recommended Strategy
 
-### Phase 1. 配置面の責務分離
+### Phase 1. Separation of Responsibilities for Placement Surfaces
 
-- top dish の露出帯を legend 共通ロジックから分離する
-- `keycap_dish_band()` を top 配置面実装として切り出せる状態にする
+- Separate the top dish exposure band from common legend logic.
+- Make it possible to extract `keycap_dish_band()` as a top placement surface implementation.
 
-### Phase 2. `legendItems[]` への移行
+### Phase 2. Migration to `legendItems[]`
 
-- 単数の `legend*` 項目を複数 item モデルへ寄せる
-- JSON 読み込み時は既存単数形式から移行できるようにする
+- Move singular `legend*` items to a multiple-item model.
+- Allow migration from existing singular formats when loading JSON.
 
-### Phase 3. part / layer 管理の一般化
+### Phase 3. Generalization of part / layer management
 
-- 固定レイヤー名ではなく、将来の可変個 part を preview / export に流す
-- overlay 判定は `name` 固定ではなく属性で扱う
+- Flow a variable number of future parts to preview / export instead of fixed layer names.
+- Handle overlay detection by attributes, not fixed `name`s.
 
-### Phase 4. side legend の導入
+### Phase 4. Introduction of side legend
 
-- `front` / `back` / `left` / `right` 用の配置面モジュールを追加する
-- 角丸や傾斜に対する許容範囲を仕様化する
+- Add placement surface modules for `front` / `back` / `left` / `right`.
+- Specify tolerances for rounded corners and slopes.
 
-### Phase 5. サンプルと検証の追加
+### Phase 5. Addition of Samples and Verification
 
-- 任意個 top legend に移行する場合は追加サンプルを増やす。固定 5 スロット用サンプルは `scad/samples/keycap-top-legends.scad` で対応済み
-- side legend 用サンプルを追加する
-- preview / export / Bambu Studio での確認観点を追加する
+- If migrating to an arbitrary number of top legends, add more samples. Samples for the fixed 5 slots are already covered in `scad/samples/keycap-top-legends.scad`.
+- Add samples for side legends.
+- Add verification points for preview / export / Bambu Studio.
 
-## 最初の一手
+## First Move
 
-最初に着手するなら Phase 1 の「配置面の責務分離」を優先する。現行 UI を壊さず、複数 legend と side legend の両方に効くため。
+If starting, prioritize Phase 1: "Separation of Responsibilities for Placement Surfaces". It won't break the current UI and benefits both multiple legends and side legends.

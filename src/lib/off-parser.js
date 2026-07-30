@@ -17,7 +17,7 @@ export function parseOff(content) {
   } else if (countsLine.startsWith("OFF")) {
     countsLine = countsLine.slice(3).trim();
   } else {
-    throw new Error("OFF ヘッダが見つかりません。");
+    throw new Error("OFF ヘッダがNot found。");
   }
 
   const [vertexCount, faceCount] = countsLine.split(/\s+/).map(Number);

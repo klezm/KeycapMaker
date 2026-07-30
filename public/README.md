@@ -1,25 +1,25 @@
-# public ディレクトリ案内
+# public Directory Guide
 
-`public/` は GitHub Pages でそのまま配信する静的アセットの置き場です。
+`public/` is the storage for static assets to be delivered as-is on GitHub Pages.
 
-## 配置候補
+## Deployment Candidates
 
-- Wasm バイナリ
-- フォントファイル
-- アイコンや画像
-- 配信時にビルドでそのまま参照する補助ファイル
+- Wasm binaries
+- Font files
+- Icons and images
+- Auxiliary files directly referenced in the build at delivery time
 
-`text()` を利用するフォントを同梱する場合も、このディレクトリ配下の配置方針を先に決めてください。
+When bundling fonts that use `text()`, first decide the placement policy under this directory.
 
-## 現在の同梱物
+## Current Bundled Items
 
 - `vendor/openscad/`: OpenSCAD WASM runtime
-- `assets/j-stem-lp01/`: J-STEM-LP01 の公式 STEP と preview 用 OFF 派生メッシュ
+- `assets/j-stem-lp01/`: Official STEP and OFF derivative meshes for preview of J-STEM-LP01
 - `fonts/MPLUS1-Variable.ttf`: `M PLUS 1` variable font
-- `fonts/MPLUS1p-Regular.ttf`: 標準ゴシック
+- `fonts/MPLUS1p-Regular.ttf`: Standard Gothic
 - `fonts/NotoSans-Variable.ttf`: `Noto Sans` variable font
 - `fonts/NotoSansJP-Variable.ttf`: `Noto Sans JP` variable font
-- `fonts/MPLUSRounded1c-Regular.ttf`: 丸みのあるゴシック
-- `fonts/DotGothic16-Regular.ttf`: ドット風ゴシック
-- `fonts/*-OFL.txt`: 各フォントのライセンス
-- `fonts/*-SOURCE.txt`: 一部フォントの出典・メタデータ確認メモ
+- `fonts/MPLUSRounded1c-Regular.ttf`: Rounded Gothic
+- `fonts/DotGothic16-Regular.ttf`: Dot-style Gothic
+- `fonts/*-OFL.txt`: Licenses for each font
+- `fonts/*-SOURCE.txt`: Source/metadata check memos for some fonts

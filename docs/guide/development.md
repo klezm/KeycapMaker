@@ -1,92 +1,93 @@
-# 開発運用
+# Development Guide
 
-## 基本コマンド
+## Basic Commands
 
-- 依存関係の導入: `npm install`
-- 開発サーバー: `npm run dev`
-- 本番ビルド確認: `npm run build`
-- ビルド成果物の確認: `npm run preview`
+- Install dependencies: `npm install`
+- Development server: `npm run dev`
+- Production build check: `npm run build`
+- Check build artifacts: `npm run preview`
+- Run tests: `npm run test`
 
-## よく触る場所
+## Frequently Modified Areas
 
-### UI と保存形式
+### UI and Save Formats
 
 - `src/main.js`
-  入力項目、export 導線、JSON 入出力、状態管理
+  Input fields, export flow, JSON I/O, state management
 - `src/lib/project-data.js`
-  プロジェクト manifest とプロジェクト内キーキャップ定義
+  Project manifest and project inner keycap definitions
 - `src/data/keycap-shape-registry.js`
-  shape JSON の集約、selector、profile 切り替え
+  Aggregation of shape JSON, selector, profile switching
 - `src/data/keycap-shapes/*.json`
-  shape ごとの初期値、geometry defaults、表示グループ
+  Initial values for each shape, geometry defaults, display groups
 
-### SCAD 形状
+### SCAD Geometry
 
 - `scad/base/keycap.scad`
-  export 入口と whole-key orchestration
+  Export entry and whole-key orchestration
 - `scad/modules/`
-  shell、legend、stem、homing bar
+  Shell, legend, stem, homing bar
 - `scad/presets/`
-  stem nominal constant や sample 用 parameter set
+  Stem nominal constants and sample parameter sets
 
-### runtime / preview / export
+### Runtime / Preview / Export
 
 - `src/lib/keycap-scad-bundle.js`
-  JS と SCAD の橋渡し
+  Bridge between JS and SCAD
 - `src/lib/openscad-client.js`
-  OpenSCAD worker 実行
+  OpenSCAD worker execution
 - `src/lib/preview-scene.js`
   Three.js preview
 - `src/lib/export-3mf.js`
-  3MF 生成
+  3MF generation
 - `src/lib/export-step.js`
-  STEP AP214 faceted B-rep 生成
+  STEP AP214 faceted B-rep generation
 
-### 配信アセット
+### Delivery Assets
 
 - `public/vendor/openscad/`
-  bundled OpenSCAD runtime
+  Bundled OpenSCAD runtime
 - `public/fonts/`
-  legend 用フォント
+  Fonts for legends
 
-## 変更時の確認
+## Verification upon Modification
 
-最低限、次を通す。
+At a minimum, run the following:
 
 1. `npm run build`
-2. ブラウザでアプリを開き、preview が表示されることを確認
+2. Open the app in the browser and confirm that the preview is displayed
 
-変更内容に応じて追加確認する。
+Perform additional checks depending on the modifications:
 
-- UI 変更:
-  パラメータ編集、JSON 保存 / 読み込み、プロジェクト保存 / 読み込み、メッセージ表示
-- SCAD 変更:
-  representative な形状変更が preview に反映されること
-- export 変更:
-  3MF 保存、STEP / STL 保存、part 数、Bambu Studio 読み込み
-- フォント変更:
-  実文字表示、font 検索、native style の有効 / 無効、runtime asset 読み込み
+- UI modifications:
+  Parameter editing, JSON save/load, Project save/load, message display
+- SCAD modifications:
+  Confirm that representative shape changes are reflected in the preview
+- Export modifications:
+  3MF save, STEP/STL save, part count, loading in Bambu Studio
+- Font modifications:
+  Actual text display, font search, enabling/disabling native styles, loading runtime assets
 
-## ドキュメント更新先
+## Document Update Locations
 
-- 構成や責務が変わった:
+- When structure or responsibilities change:
   `docs/architecture/`
-- 運用手順や確認手順が変わった:
+- When operation or verification procedures change:
   `docs/guide/`
-- 採用済み判断:
+- Adopted decisions:
   `docs/decisions/decision-log.md`
-- 未着手 TODO:
+- Unstarted TODOs:
   `docs/backlog/`
-- UI デザイン正本:
+- Source of truth for UI design:
   `docs/design/`
 
-## 人間確認が必要な事項
+## Items Requiring Human Verification
 
-- OpenSCAD runtime 同梱のライセンス影響
-- フォント同梱のライセンス影響
-- Bambu Studio での読み込み結果
-- GitHub Pages 上での公開確認
+- License impact of bundling the OpenSCAD runtime
+- License impact of bundling fonts
+- Loading results in Bambu Studio
+- Publication verification on GitHub Pages
 
-## 補足
+## Supplementary Information
 
-- 3MF / STEP / STL は user-facing export だが、スライサーや CAD importer 互換性の確認は別手順で扱う
+- 3MF / STEP / STL are user-facing exports, but checking slicer and CAD importer compatibility is handled as a separate procedure.

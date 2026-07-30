@@ -1,67 +1,67 @@
-# scad ディレクトリ案内
+# scad Directory Guide
 
-`scad/` にはキーキャップ形状に関する SCAD 資産を置きます。ここでは、プレビュー用と本番出力用の責務分離、および body / legend を別体積で扱える構造を維持します。stem は `MX / Choc v1 / Choc v2 / Alps` の mount 差分と、J-STEM-LP01 受け座の差し引き形状を `modules/` に分離して扱います。
+`scad/` contains SCAD assets related to keycap shapes. Here, we maintain a separation of responsibilities for preview and production output, as well as a structure where the body and legend can be treated as separate volumes. The stems (MX / Choc v1 / Choc v2 / Alps mount differences) and the subtracted shape for the J-STEM-LP01 socket are separated into `modules/`.
 
-## サブディレクトリの役割
+## Subdirectory Roles
 
-- `base/`: キーキャップ全体の基礎形状と export エントリを置く
-- `modules/`: stem、legend、形状差分などの再利用モジュールを置く
-- `presets/`: stem nominal constant や sample 用 parameter set を置く
-- `samples/`: 形状回帰確認に使うサンプルを置く
+- `base/`: Contains the basic shape of the entire keycap and export entries.
+- `modules/`: Contains reusable modules such as stem, legend, and shape differences.
+- `presets/`: Contains stem nominal constants and parameter sets for samples.
+- `samples/`: Contains samples used for shape regression checks.
 
-## 現在の主要ファイル
+## Current Main Files
 
-- `base/keycap.scad`: `export_target` で `preview / body / body_core / top_hat / rim / homing / legend / top_legend_* / side_legend_* / single_material_shape / j_stem_lp01_reference` を切り替える基礎エントリ
-- `modules/keycap_shell.scad`: `top_center_height + pitch / roll` 基準の外形シェル、dish、内側 hollow
-- `modules/keycap_jis_enter.scad`: JIS / ISO 系の縦長 Enter footprint 用シェル、typewriter variant、内側 hollow
-- `modules/stem_mx.scad`: MX 互換 stem ボディ
-- `modules/stem_choc_v1.scad`: Kailh Choc v1 向け 2 本爪 stem
-- `modules/stem_choc_v2.scad`: Kailh Choc v2 向け MX 互換 stem
-- `modules/stem_alps.scad`: Alps / Matias 向け stem
-- `modules/stem_j_stem_lp01.scad`: J-STEM-LP01 上面を受ける裏側掘り込み形状と、旧SCAD参照モデル。アプリの参照 preview は `public/assets/j-stem-lp01/` の公式 STEP 由来 OFF を使い、色選択でクリアのみ半透明、白とオレンジは不透明にする
-- `modules/homing_bar.scad`: body 側に追加するオプションの homing bar 形状
-- `modules/legend_block.scad`: フォント非依存の legend ボリューム
-- `modules/keycap_typewriter.scad`: 薄いタイプライター風キートップ外形
-- `presets/stem-nominals.scad`: stem 形状の nominal 寸法
-- `samples/keycap-1u.scad`: 回帰確認用の最小キーキャップサンプル
-- `samples/keycap-jis-enter.scad`: JIS / ISO 系の縦長 Enter footprint 確認用サンプル
-- `samples/keycap-jis-enter-top-hat.scad`: JIS Enter footprint に沿った top-hat 確認用サンプル
-- `samples/keycap-typewriter-jis-enter.scad`: typewriter style の JIS Enter footprint 確認用サンプル
-- `samples/keycap-typewriter.scad`: タイプライター風キートップの確認用サンプル
-- `samples/keycap-typewriter-mount-height.scad`: typewriter shape の上面基準取り付け高さ確認用サンプル
-- `samples/keycap-typewriter-rim.scad`: typewriter shape の key rim 分離確認用サンプル
-- `samples/keycap-typewriter-rim-tilted.scad`: pitch / roll 付き typewriter key rim の接合確認用サンプル
-- `samples/keycap-legend-seat.scad`: flush legend の座面切り抜き確認用サンプル
-- `samples/keycap-multi-character-legend.scad`: 複数文字でも明示サイズを保つか確認するサンプル
-- `samples/keycap-top-legends.scad`: キートップ上の中央 / 右上 / 右下 / 左上 / 左下 legend 配置確認用サンプル
-- `samples/keycap-rounded-legend.scad`: 丸みのある書体の legend 品質確認用サンプル
-- `samples/keycap-homing-bar.scad`: homing bar 単体出力の確認用サンプル
-- `samples/keycap-stem-clip.scad`: 強い左右傾斜でも stem が内側天井で止まるか確認するサンプル
-- `samples/keycap-j-stem-lp01.scad`: J-STEM-LP01 受け座の裏側掘り込み確認用サンプル
-- `samples/keycap-surface-quality.scad`: 角丸、dish、stem 外周の曲面品質をまとめて確認するサンプル
-- `samples/keycap-convex-surfaces.scad`: cylindrical / spherical の `dishDepth = -1.5mm`、幅広キー、上端R、JIS Enter の凸面確認用サンプル
-- `samples/keycap-top-corner-radii.scad`: custom shell 上面の4隅R個別指定確認用サンプル
-- `samples/keycap-top-orientation.scad`: 上面中央高さ固定 + pitch / roll の確認用サンプル
-- `samples/keycap-top-offset.scad`: stem 原点を固定したキートップ中心の XY offset 確認用サンプル
-- `samples/keycap-top-edge-rounded.scad`: custom shell のキートップ上端R確認用サンプル
-- `samples/keycap-shoulder-rounded.scad`: custom shell の本体 shoulder R 確認用サンプル
-- `samples/keycap-shoulder-rounded-hollow.scad`: custom shell の丸い shoulder と内側 hollow 追従確認用サンプル
-- `samples/keycap-shoulder-concave.scad`: custom shell のマイナス本体 shoulder R 確認用サンプル
-- `samples/keycap-top-hat.scad`: custom shell の top-hat キートップと底面R確認用サンプル
-- `samples/keycap-top-hat-separated.scad`: custom shell の top-hat 別パーツ target 確認用サンプル
-- `samples/keycap-top-hat-spherical.scad`: custom shell の spherical top-hat 上面確認用サンプル
-- `samples/keycap-top-hat-top-radii.scad`: custom shell の top-hat 上面4隅R個別指定確認用サンプル
-- `samples/keycap-top-hat-recess.scad`: custom shell のマイナス高さ top-hat 凹み確認用サンプル
-- `samples/keycap-top-hat-rounded-shoulder.scad`: custom shell の top-hat shoulder R 確認用サンプル
-- `samples/keycap-top-hat-concave-shoulder.scad`: custom shell のマイナス top-hat shoulder R 確認用サンプル
-- `samples/stem-mounts.scad`: mount 差分の回帰確認用サンプル
+- `base/keycap.scad`: Basic entry to switch between `preview / body / body_core / top_hat / rim / homing / legend / top_legend_* / side_legend_* / single_material_shape / j_stem_lp01_reference` with `export_target`.
+- `modules/keycap_shell.scad`: Outer shell based on `top_center_height + pitch / roll`, dish, and inner hollow.
+- `modules/keycap_jis_enter.scad`: Shell for vertically long JIS / ISO Enter footprint, typewriter variant, and inner hollow.
+- `modules/stem_mx.scad`: MX compatible stem body.
+- `modules/stem_choc_v1.scad`: 2-prong stem for Kailh Choc v1.
+- `modules/stem_choc_v2.scad`: MX compatible stem for Kailh Choc v2.
+- `modules/stem_alps.scad`: Stem for Alps / Matias.
+- `modules/stem_j_stem_lp01.scad`: Backside carved shape to receive J-STEM-LP01 top surface, and old SCAD reference model. The app's reference preview uses the official STEP-derived OFF in `public/assets/j-stem-lp01/`, making only clear translucent by color selection, and white/orange opaque.
+- `modules/homing_bar.scad`: Optional homing bar shape added to the body side.
+- `modules/legend_block.scad`: Font-independent legend volume.
+- `modules/keycap_typewriter.scad`: Thin typewriter-style keycap outer shape.
+- `presets/stem-nominals.scad`: Nominal dimensions for stem shapes.
+- `samples/keycap-1u.scad`: Minimum keycap sample for regression checks.
+- `samples/keycap-jis-enter.scad`: Sample for vertically long JIS / ISO Enter footprint check.
+- `samples/keycap-jis-enter-top-hat.scad`: Sample for top-hat check along JIS Enter footprint.
+- `samples/keycap-typewriter-jis-enter.scad`: Sample for typewriter style JIS Enter footprint check.
+- `samples/keycap-typewriter.scad`: Sample for typewriter-style keycap check.
+- `samples/keycap-typewriter-mount-height.scad`: Sample for checking mounting height based on typewriter shape top surface.
+- `samples/keycap-typewriter-rim.scad`: Sample for checking key rim separation of typewriter shape.
+- `samples/keycap-typewriter-rim-tilted.scad`: Sample for checking joint of typewriter key rim with pitch / roll.
+- `samples/keycap-legend-seat.scad`: Sample for checking flush legend seat cutout.
+- `samples/keycap-multi-character-legend.scad`: Sample to check if explicit size is maintained even with multiple characters.
+- `samples/keycap-top-legends.scad`: Sample for checking center / top-right / bottom-right / top-left / bottom-left legend placement on the keycap top.
+- `samples/keycap-rounded-legend.scad`: Sample for checking legend quality of rounded fonts.
+- `samples/keycap-homing-bar.scad`: Sample for checking homing bar standalone output.
+- `samples/keycap-stem-clip.scad`: Sample to check if the stem stops at the inner ceiling even with strong left/right tilt.
+- `samples/keycap-j-stem-lp01.scad`: Sample for checking the backside carving of the J-STEM-LP01 socket.
+- `samples/keycap-surface-quality.scad`: Sample for checking curved surface quality of rounded corners, dish, and stem outer circumference.
+- `samples/keycap-convex-surfaces.scad`: Sample for checking convex surfaces of cylindrical / spherical `dishDepth = -1.5mm`, wide keys, top edge R, and JIS Enter.
+- `samples/keycap-top-corner-radii.scad`: Sample for checking individual specification of 4 corner R on custom shell top surface.
+- `samples/keycap-top-orientation.scad`: Sample for checking fixed top center height + pitch / roll.
+- `samples/keycap-top-offset.scad`: Sample for checking XY offset of keycap center with fixed stem origin.
+- `samples/keycap-top-edge-rounded.scad`: Sample for checking top edge R of custom shell.
+- `samples/keycap-shoulder-rounded.scad`: Sample for checking body shoulder R of custom shell.
+- `samples/keycap-shoulder-rounded-hollow.scad`: Sample for checking rounded shoulder and inner hollow tracking of custom shell.
+- `samples/keycap-shoulder-concave.scad`: Sample for checking negative body shoulder R of custom shell.
+- `samples/keycap-top-hat.scad`: Sample for checking top-hat keycap and bottom R of custom shell.
+- `samples/keycap-top-hat-separated.scad`: Sample for checking top-hat separate part target of custom shell.
+- `samples/keycap-top-hat-spherical.scad`: Sample for checking spherical top-hat top surface of custom shell.
+- `samples/keycap-top-hat-top-radii.scad`: Sample for checking individual specification of top-hat top surface 4 corner R of custom shell.
+- `samples/keycap-top-hat-recess.scad`: Sample for checking negative height top-hat recess of custom shell.
+- `samples/keycap-top-hat-rounded-shoulder.scad`: Sample for checking top-hat shoulder R of custom shell.
+- `samples/keycap-top-hat-concave-shoulder.scad`: Sample for checking negative top-hat shoulder R of custom shell.
+- `samples/stem-mounts.scad`: Sample for regression checking of mount differences.
 
-## 運用方針
+## Operation Policy
 
-- preview 用と export 用で重さや精度を分けてよい
-- 色指定だけに依存せず、body と legend の分離可能性を維持する
-- typewriter shape の key rim は body と別体積で扱い、3MF 側でも独立 part を維持する
-- top-hat は通常 body と一体で扱い、分離色が有効な場合だけ `top_hat` target と 3MF part を追加する。STEP / STL 用の `single_material_shape` では分離色の有無にかかわらず一体化する
-- homing bar は body 側の触覚マーカーとして扱い、legend とは別責務にする
-- ブラウザ内 OpenSCAD runtime へ UI パラメータを渡すときは、shape JSON から解決した明示値を wrapper SCAD の `user_*` へ注入する
-- `text()` を使う場合はフォント依存を明示し、アセット配置とライセンスを確認する
+- Weight and precision may be separated for preview and export.
+- Do not rely solely on color specifications; maintain the separability of body and legend.
+- Treat the key rim of the typewriter shape as a separate volume from the body, and maintain it as an independent part on the 3MF side as well.
+- The top-hat is usually treated as integrated with the body, adding the `top_hat` target and 3MF part only when separate colors are enabled. For `single_material_shape` for STEP / STL, it is integrated regardless of the presence or absence of separate colors.
+- Treat the homing bar as a tactile marker on the body side, and separate its responsibility from the legend.
+- When passing UI parameters to the in-browser OpenSCAD runtime, inject the explicit values resolved from the shape JSON into `user_*` of the wrapper SCAD.
+- When using `text()`, clarify font dependencies and check asset placement and licenses.

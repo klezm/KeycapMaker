@@ -1,42 +1,42 @@
-# 高精細 preview mode 案
+# High-Quality Preview Mode Idea
 
-## 背景
+## Background
 
-現在の preview は、Three.js 側の滑らかな法線処理と、SCAD 側の feature 半径に応じた分割数調整で見た目を改善している。一方で、常時 export 相当の密度に寄せると、ブラウザ内 OpenSCAD runtime の反応速度が落ちやすい。
+The current preview improves appearance through smooth normal processing on the Three.js side and adjusting the number of divisions based on the feature radius on the SCAD side. On the other hand, if we constantly push the density closer to that of the export, the response speed of the in-browser OpenSCAD runtime tends to drop.
 
-そのため、通常の `preview` と `export` の間に、任意で選べる高精細 preview 段階を追加する案を未採用の検討事項として残す。
+Therefore, an idea to add an optionally selectable high-quality preview stage between the normal `preview` and `export` remains as an unadopted consideration.
 
-## 案の概要
+## Outline of the Idea
 
-- 現在の `preview` は軽さ優先のまま維持する
-- `high_preview` を追加し、SCAD の曲線分割数だけを `preview` より高くする
-- Three.js 側の描画経路は共通にし、主に OpenSCAD 生成側の品質段階を増やす
-- UI では常設ではなく、必要時だけ切り替えられる形を優先する
+- Keep the current `preview` prioritized for lightness.
+- Add `high_preview` and increase only the number of SCAD curve divisions compared to `preview`.
+- Share the drawing path on the Three.js side, mainly increasing the quality stages on the OpenSCAD generation side.
+- In the UI, prioritize a form that can be toggled only when necessary, rather than being permanent.
 
-## 期待できる利点
+## Expected Benefits
 
-- 通常操作時の応答性を壊さず、仕上がり確認時だけ密度を上げられる
-- `export` を毎回回さなくても、曲面や小さい円弧の最終見え方に近い確認がしやすい
-- quality 段階の責務が `preview / high_preview / export` で整理しやすい
+- Can increase density only when checking the final finish, without breaking responsiveness during normal operation.
+- Easy to check the look close to the final result of curved surfaces and small arcs without running `export` every time.
+- Quality stage responsibilities can be easily organized into `preview / high_preview / export`.
 
-## 主な懸念
+## Main Concerns
 
-- SCAD 側の quality 分岐が増え、各モジュールの責務が少し複雑になる
-- UI に品質切り替えを出す場合、設定項目が増える
-- preview と export の見た目差をどこまで許容するか、運用ルールが必要になる
-- ブラウザ環境によっては `high_preview` が重すぎるケースがありうる
+- The number of quality branches on the SCAD side increases, slightly complicating the responsibilities of each module.
+- If a quality toggle is exposed in the UI, the number of settings increases.
+- Operation rules are needed to determine how much visual difference between preview and export is acceptable.
+- Depending on the browser environment, `high_preview` might be too heavy.
 
-## このリポジトリで追加検討が必要な点
+## Points Needing Further Consideration in this Repository
 
-- `scad/base/keycap.scad` と `scad/modules/*.scad` の `quality` 契約を 3 段階へ広げるか
-- `src/lib/keycap-scad-bundle.js` から preview job ごとに品質を渡す橋渡し方法
-- UI での露出方法を常設にするか、一時的な確認用トグルにするか
-- 手動確認手順と回帰サンプルで、どの品質段階を既定確認対象にするか
+- Whether to expand the `quality` contract of `scad/base/keycap.scad` and `scad/modules/*.scad` to 3 stages.
+- The bridging method from `src/lib/keycap-scad-bundle.js` to pass quality per preview job.
+- Whether to expose it permanently in the UI or as a temporary toggle for confirmation.
+- Which quality stage should be the default target for manual verification procedures and regression samples.
 
-## 現時点の判断
+## Current Decision
 
-未採用。まずは現在の `preview` を軽量な既定値として維持し、次のいずれかが起きたら再検討する。
+Not adopted. For now, we will maintain the current `preview` as a lightweight default and reconsider if any of the following occur:
 
-- 通常 preview では曲面確認が足りず、export との往復が頻発する
-- より細かい曲線や大型 R を持つ形状を追加し、現行の preview 密度では判断しづらくなる
-- feature ごとに preview 密度差が大きくなり、2 段階では吸収しにくくなる
+- Curved surface checks are insufficient in normal preview, causing frequent round trips to export.
+- Shapes with finer curves or larger radii are added, making it difficult to judge with the current preview density.
+- The difference in preview density per feature becomes too large to be easily absorbed in 2 stages.

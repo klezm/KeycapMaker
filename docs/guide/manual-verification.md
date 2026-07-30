@@ -1,185 +1,64 @@
-# 手動確認手順
+# Manual Verification Procedure
 
-## 目的
+Since this is a client-side app integrating Three.js, OpenSCAD WASM runtime, and a complex UI, run through these manual tests to verify the core flows when making significant changes.
 
-geometry contract、runtime、export を変更したときに、ブラウザ上とスライサー上で最低限確認すべき項目をまとめる。
+## Verification Scenarios
 
-## ブラウザ確認
+### 1. Basic Flow
 
-### 1. 初期表示
+- Change the `Shape Profile` and verify that the preview shape matches the profile name
+- Edit numeric parameters and ensure the preview shape reflects the changes without errors
+- Change `Homing Bar` to `bar` or `bump` and confirm it appears in the preview
+- Export a 3MF, STEP, and STL file and verify they download correctly
+- Reload the page, import the exported 3MF (if supported by a slicer) and verify it looks correct
+- Drag & Drop an exported JSON to restore the editing state
 
-- アプリがエラーなしで開く
-- 初回 preview が表示される
-- カラーピッカーやセクション切り替えが壊れていない
+### 2. Detailed Verification
 
-### 2. 編集操作
+- **Preview Quality**
+  - Verify that curves and corners look smooth (based on `quality` settings)
+  - Verify that no visual artifacts or intersecting meshes appear that shouldn't
+- **Text & Legends**
+  - Change the legend text and check if it reflects correctly on the keycap
+  - Switch fonts and ensure the font changes in the preview
+  - Check the `Legend Size` parameter behavior
+  - Test legends on different sides (if implemented)
+  - Try Japanese text (e.g. `あ`) with the appropriate font
+- **Typewriter Profile**
+  - Select the `typewriter` profile
+  - Toggle the key rim on/off
+  - Adjust top/bottom height of the rim
+- **Custom Shell**
+  - Check `Flat`, `Cylindrical`, `Spherical` top surface shapes
+  - Try negative `Depth` values for convex shapes
+- **Export Consistency**
+  - Export a 3MF file with legends and homing bars
+  - Verify in a slicer that parts are separated (body, legends, homing, rim) and named correctly
 
-代表値として次を変え、preview が破綻しないことを確認する。
+### 3. Editor Data JSON
 
-- `横幅`
-- `上面中央の高さ`
-- `キーリムを付ける`
-- `キーリムの幅`
-- `上方向の高さ`
-- `下方向の高さ`
-- `手前から奥の傾斜`
-- `左右の傾斜`
-- `傾きの入力方法`
-- `キートップ形状`
-- `深さ`
-- typewriter shape の `上面基準の高さ`
-- `上面のすぼまり`
-- `印字を入れる`
-- `入れる文字`
-- `印字の内容` を `文字` から `アイコン` へ切り替えると、文字入力・書体・下線欄が隠れ、アイコンセットとアイコン検索欄が表示される
-- `アイコン` の虫眼鏡ボタンで検索 textbox と scrollable な選択欄が開く
-- `volume` などを入力すると選択中アイコンセットの候補がリアルタイムで絞り込まれ、候補を選ぶと選択中アイコン名と preview が更新される
-- アイコンセットを Material Symbols、Font Awesome Free Solid、Remix Icon へ切り替えても、検索候補、外部カタログリンク、ライセンス表記が選択中セットに連動する
-- アイコン印字でも `印字の大きさ`、`太さ補正`、`文字の高さ`、位置、色が反映される
-- 文字を `A` から `Shift` や `ShiftLock` へ増やしても、`文字の大きさ` を触らない限り印字サイズが自動で変わらない
-- `文字の大きさ` を変えたときだけ印字サイズが変わる
-- `書体`
-- `書体` の下に選択中フォントのページを開くリンクが favicon とページ名つきで表示され、新しいタブで配布・紹介ページへ遷移する
-- `書体` の虫眼鏡ボタンで検索 textbox と scrollable な選択欄が開く
-- font 選択欄の一番上に `組み込みフォント` / `マイフォント` の segment control が表示される
-- `組み込みフォント` segment には bundled font だけが表示され、`ローカルフォントを追加` は表示されない
-- `マイフォント` segment の `ローカルフォントを追加` から TTF / OTF を選択すると、選択した font が `マイフォント` として追加され、現在の印字へ反映される
-- TTF / OTF ファイルを画面へドラッグ & ドロップすると、プロジェクト / JSON 読み込みではなく `マイフォント` へ追加される
-- マイフォント選択中はローカルファイル名が表示され、プロジェクト ZIP や JSON に font 本体を同梱しない説明が表示される
-- マイフォント選択中に `削除` を押すと、その font を使っている印字は既定 font へ戻る
-- 保存済み JSON が未読み込みの `user-font:*` を参照している場合、既定 font へ黙って置換されず、同じ TTF / OTF の再追加を促す表示になる
-- 選択欄の各 font 名がその font で表示される
-- `M PLUS` などを入力すると候補がリアルタイムで絞り込まれる
-- 候補から `M PLUS 1 Variable` を選べる
-- `Noto Sans` / `Noto Sans JP` で検索して候補が出る
-- `Bangers` / `Creepster` / `Rye` / `Orbitron` で検索して候補が出る
-- `Art Gothic` で検索したとき `Grenze Gotisch Regular` と `MedievalSharp Regular` が候補に出る
-- `黒薔薇` で検索したとき `黒薔薇シンデレラ` が候補に出る
-- `黒薔薇シンデレラ` を選択中だけ、実際に使う著作権・ライセンス表記文が表示される
-- `黒薔薇シンデレラ` の `コピー` ボタンで表記文をクリップボードへ出せる
-- `M PLUS 1 Variable` 選択時に `フォント内スタイル` が有効になり、`Bold` などの named style へ切り替えられる
-- `Noto Sans Variable` / `Noto Sans JP Variable` 選択時に `フォント内スタイル` が有効になり、`Bold` などの named style へ切り替えられる
-- static font を選んだとき `フォント内スタイル` が非活性になる
-- `Orbitron Regular` を選んでも `フォント内スタイル` は有効化されず、Regular face のまま扱われる
-- `下線を付ける` をオンにしたとき、font ごとの下線位置と太さが変わり、特に `M PLUS 1 Variable / Thin / A` で線が文字中央へ食い込まない
-- `太さ補正 = 0` のとき、font を替えても意図しない太らせが入らない
-- `太さ補正` をプラス / マイナスへ振ったときだけ輪郭が変わる
-- `Bangers / A`、`Creepster / A`、`Rye / A`、`Orbitron / A` を切り替えても preview が崩れない
-- `Grenze Gotisch / A`、`MedievalSharp / A` を切り替えても preview が崩れない
-- `黒薔薇シンデレラ / 鍵 / あ / 黒` 前後で preview が崩れない
-- `書体 = M PLUS Rounded 1c Regular`、文字 = `B / O / S` 前後で曲線が過度に角張らない
-- 2u 以上のキーで `デジタル` や `ShiftLock` の `文字の大きさ` を大きくしても、legend がキー上面の footprint で切られず、はみ出した状態で表示される
-- `目印を付ける`
-- `stemType`
-- typewriter shape で rim を有効にしたとき、body と rim が別色で破綻なく分かれて見える
-- typewriter shape の `上面基準の高さ` を増減したとき、キートップ本体の厚みは変わらず、取り付け部分だけが上下方向に変わる
-- `上方向の高さ = 0`、`下方向の高さ = 0` のとき、rim がキートップと面一で欠けや浮きが出ない
-- `上方向の高さ = 0`、`下方向の高さ = 0` でも、typewriter rim の側面が body に埋もれず連続して露出する
-- typewriter rim の外側表面に body 色の薄い筋や被りが出ない
-- `上方向の高さ` または `下方向の高さ` を増やしたときだけ、外寸が増えて対応方向へ rim が伸びる
-- `左右の傾斜` を 28-32 度前後まで上げても、stem が上面へ露出しない
-- `キートップ形状 = フラット / シンドリカル / スフェリカル` を切り替えても preview が破綻しない
-- typewriter shape では `キートップ形状 = フラット / スフェリカル` を切り替えられ、`シンドリカル` は選択肢へ出ない
-- `深さ` は cylindrical / spherical とも `-1.5mm` から `+1.5mm` まで入力でき、正値では凹み、負値では同じ cylindrical / spherical 曲面の盛り上がりになり、0 へ戻すとフラット相当へ戻る
-- `キートップ形状 = シンドリカル / スフェリカル` の `深さ` の絶対値を浅くしても、曲面の開始位置が中心へ寄らず、外周基準のまま高さだけ変わる
-- `深さ = +0.5 / -0.5` など絶対値が同じ正負を切り替え、中心の落ち込み量と盛り上がり量が鏡像になり、円柱面 / 球面の曲率と向きが変わらない
-- 1u、2u 以上の幅広キー、縦長キー、JIS Enter で負の `深さ` を指定し、上面の大きさに追従して自然な凸面になり、キー外寸が増えない
-- 負の `深さ` と `キートップ上端R` を併用し、丸め後の側面 / 上面境界から凸面が始まり、外周に垂直なリップ、二段の平面、余分な高さが出ない
-- 負の `深さ` でも内側天井と stem 取付位置はフラット時と同じで、stem が上面側へ持ち上がらない
-- `キートップ形状 = シンドリカル / スフェリカル` のどちらでも `深さ = ±1.5` が保持され、`±1.5` を超える入力は正負それぞれの上限へ対称に丸められ、body / legend / homing bar が描画される
-- `キートップ形状 = シンドリカル / スフェリカル` のまま `手前から奥の傾斜` と `左右の傾斜` を変えても、曲面が平坦化せずそのまま傾いて見える
-- `キートップ形状 = シンドリカル / スフェリカル` の正負どちらでも、legend の輪郭へ body 色の薄い筋や被りが出ず、負値で legend が空にならない
-- flush legend の既定値で正面を向けても、文字面に body 色のチラつきが出ない
-- 角丸外形、dish、stem 外周の曲面で、面ごとの筋が過度に目立たない
-- 稜線が必要な箇所では、輪郭が不自然に丸まって見えない
+- Modify the `Name` field in the UI
+- Save the `Edit Data JSON` from the export overlay
+- Verify the downloaded file is named `<Name>.json`
+- Drag & Drop the JSON back into the app and confirm the state is restored perfectly
 
-### 3. 編集データ JSON
+### 4. Projects
 
-- 設計タブ先頭の `名称` を分かりやすい文字列へ変更する
-- `プロジェクト` セグメントで編集中のキーキャップのコピーを追加する
-- 追加したキーキャップの書き出しボタンを押し、オーバーレイから `編集データ JSON` を保存する
-- ダウンロードファイル名が `名称 + .json` になることを確認する
-- 保存した JSON をドラッグ & ドロップで読み込む
-- 読み込み後にプロジェクトセグメントへ表示が移り、キーキャップ一覧へ追加され、追加されたキーキャップが編集中になることを確認する
-- preview と入力欄が元に戻ることを確認する
-- 保存した JSON から数項目を削った互換入力 JSON を別名で用意する
-- 互換入力 JSON をドラッグ & ドロップで読み込む
-- 読み込んだ JSON がキーキャップ一覧へ追加され、追加されたキーキャップが編集中になることを確認する
-- 削った項目が shape defaults で補完され、残した項目だけが反映されることを確認する
-- icon 用フィールドを持たない既存の文字印字 JSON は `印字の内容 = 文字` として読み込まれ、既存の `入れる文字` と font 設定が維持されることを確認する
-- `印字の内容 = アイコン`、`アイコン = volume-2` などで保存した JSON は、読み込み後も同じアイコン選択として復元されることを確認する
-- `rimEnabled` や `legendEnabled` を false にした場合でも、再度オンにすると hidden な値が既定どおり残っていることを確認する
+- Open the `Project` segment
+- Rename the project
+- Add a copy of the current keycap
+- Check if multiple keycaps appear in the list with previews
+- Change parameters and check if the active keycap's preview in the list updates
+- Save the project (downloads as ZIP)
+- Drag & Drop the ZIP back in and confirm the full project structure (multiple keycaps, active state) restores correctly
 
-### 4. プロジェクト
+## Tools to use for verification
 
-- `プロジェクト` セグメントを開く
-- プロジェクト名を変更できることを確認する
-- 編集中のキーキャップのコピーを追加し、preview 画像とキーキャップ名が一覧に出ることを確認する
-- preview を任意の角度へ回転して active keycap の preview 画像を再撮影し、その後パラメータを変更しても一覧画像が同じ角度で更新されることを確認する
-- 別の名称や legend に変更してもう一度追加し、一覧に複数件出ることを確認する
-- キーキャップ一覧の順序番号付きハンドルを掴んでドラッグし、drop 前にカードが移動アニメーション付きで詰まり、各カードの順序番号は元の値を保持し、drop 後に最終順へ更新されることを確認する
-- 一覧のキーキャップを押下すると、現在の編集内容と preview がそのキーキャップへ切り替わることを確認する
-- 一覧のキーキャップごとの書き出しボタンを押すと、JSON / 3MF / STEP / STL の選択肢を持つオーバーレイが開くことを確認する
-- `プロジェクトを保存` で `KeycapMaker.json`、`keycaps/`、`3mf/` を持つプロジェクト ZIP が保存されることを確認する
-- 保存したプロジェクトディレクトリをドラッグ & ドロップし、プロジェクト一覧と active keycap が復元されることを確認する
-- 保存したプロジェクト ZIP をドラッグ & ドロップし、解凍後のプロジェクト一覧と active keycap が復元されることを確認する
-- プロジェクト読み込み済みの状態で単体の編集データ JSON をドラッグ & ドロップし、既存のプロジェクト一覧を保持したまま新しいキーキャップとして追加され、追加分が編集中になることを確認する
-- 現在の形状へ反映できないパラメータを含む編集データ JSON を読み込み、JSON 読み込みレポートが表示されること、別キーキャップへ切り替えて戻ってもレポートが再表示されること、各行の `×` で該当パラメータだけを保存対象 JSON から削除できることを確認する
+- **Bambu Studio / PrusaSlicer**: Used to verify 3MF structure, part separation, names, and general printability of the generated models.
 
-### 5. 3MF
+## When to Execute
 
-- キーキャップ一覧の書き出しボタンを押し、オーバーレイから `3MF` を保存する
-- ダウンロードファイル名が `名称 + .3mf` になることを確認する
-- スライサー上の親 object 名が `名称` と一致することを確認する
-
-### 6. STEP
-
-- キーキャップ一覧の書き出しボタンを押し、オーバーレイで `STEP` が `3MF` と `STL` の間に表示されることを確認する
-- オーバーレイから `STEP` を保存する
-- ダウンロードファイル名が `名称 + .step` になることを確認する
-- 保存した STEP が `FACETED_BREP_SHAPE_REPRESENTATION` を含む STEP AP214 ファイルとして開けることを確認する
-- legend を有効にしていても、STEP に legend 形状が含まれないことを確認する
-- STEP は単一形状として読み込まれ、色や part 分離が含まれないことを確認する
-- 色分けや legend が必要な場合は 3MF を使う説明が UI に表示されていることを確認する
-
-### 7. STL
-
-- キーキャップ一覧の書き出しボタンを押し、オーバーレイから `STL` を保存する
-- ダウンロードファイル名が `名称 + .stl` になることを確認する
-- legend を有効にしていても、STL に legend 形状が含まれないことを確認する
-- STL は単一メッシュとして読み込まれ、色や part 分離が含まれないことを確認する
-- 色分けや legend が必要な場合は 3MF を使う説明が UI に表示されていることを確認する
-
-## Bambu Studio 確認
-
-geometry や export 契約を変えた場合は、保存した `名称 + .3mf` を Bambu Studio で開いて次を確認する。
-
-- 単位が崩れていない
-- import 時に小さい part 単体を理由にしたスケール警告が出ない
-- body / rim / homing / legend が想定どおりの位置関係を保っている
-- object list 上で part 名が `body` / `rim` / `homing` / `legend` として識別できる
-- `pitch / roll` を付けても homing bar や legend が空中に浮かない
-- `pitch / roll` を強めに付けても stem が上面へ貫通しない
-- `pitch / roll` を付けても cylindrical / spherical の凹面 / 凸面が top 面から浮かず、傾いたまま側面へ連続している
-- legend が有効な場合、印字が埋没せず見えている
-- flush legend の周囲で body と legend が同一面に重なっていない
-- typewriter key rim が有効な場合、rim が body と別 part のまま崩れていない
-- homing bar が有効な場合、別 part として崩れていない
-- 複数 part がある場合、オブジェクト分離が維持されている
-
-色は補助情報として扱う。色が見えるかどうかより、part 分離と位置関係を優先して確認する。
-
-## 実行タイミング
-
-- `scad/base/` または `scad/modules/` を変更したとき
-- `src/main.js` の export UI / export 実行経路を変更したとき
-- `src/lib/keycap-scad-bundle.js` を変更したとき
-- `src/lib/export-3mf.js` を変更したとき
-- runtime やフォント資産を入れ替えたとき
-
-## 記録先
-
-- 採用済み判断や重要な確認結果:
-  `docs/decisions/decision-log.md`
-- 未解決の問題や次の拡張タスク:
-  `docs/backlog/`
+- After modifying `scad/base/` or `scad/modules/`
+- After changing `src/main.js` (UI or export flows)
+- After changing SCAD bridging logic (`src/lib/keycap-scad-bundle.js`)
+- After updating the OpenSCAD runtime or font assets

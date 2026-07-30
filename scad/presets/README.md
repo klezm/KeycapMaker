@@ -1,3 +1,3 @@
 # scad/presets
 
-profile、キーサイズ、初期パラメータなど、UI と SCAD をつなぐプリセット定義を配置する場所です。
+This is the place to put preset definitions that connect the UI and SCAD, such as profiles, key sizes, and initial parameters.
