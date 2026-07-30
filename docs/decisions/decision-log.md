@@ -40,6 +40,15 @@ Keep a chronological record of adopted design decisions. Write only the assumpti
 - Related:
   [../architecture/scad-and-export.md](../architecture/scad-and-export.md)
 
+## 2026-06-16 - User-added fonts are treated as local browser fonts
+
+- Conclusion:
+  Added an option to read user TTF / OTF via the File System Access API or drag & drop and add them as local `My Fonts`. When a `My Font` is selected, `src/lib/font-source-resolver.js` converts it to an ArrayBuffer using the saved file handle and passes it to the OpenSCAD runtime.
+- Reason:
+  Because we wanted to solve the use case of "wanting to use fonts purchased individually by the user or self-made fonts for printing" without causing a copyright problem of redistribution. Local fonts are only executed within the browser, and the font files are not bundled in JSON or project ZIPs, maintaining a clean structure.
+- Related:
+  [../architecture/scad-and-export.md](../architecture/scad-and-export.md)
+
 ## 2026-06-20 - Separate STEP export from single-material shapes
 
 - Conclusion:
