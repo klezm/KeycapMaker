@@ -320,15 +320,15 @@ export function isProjectManifestPayload(payload) {
 export function parseProjectManifest(payload, fallbackName = DEFAULT_PROJECT_NAME) {
   const manifest = getPlainObject(payload);
   if (!manifest) {
-    throw new Error("Project JSON の形式が不正です。");
+    throw new Error("Invalid Project JSON format.");
   }
 
   if (manifest.kind !== PROJECT_DATA_KIND) {
-    throw new Error("KeycapMaker のProject JSON ではありません。");
+    throw new Error("Not a KeycapMaker Project JSON.");
   }
 
   if (manifest.schemaVersion !== PROJECT_DATA_SCHEMA_VERSION) {
-    throw new Error(`未対応のProject schemaVersion です: ${manifest.schemaVersion}`);
+    throw new Error(`Unsupported Project schemaVersion: ${manifest.schemaVersion}`);
   }
 
   const keycaps = assignProjectKeycapDisplayOrder(sortProjectKeycapsByDisplayOrder(
