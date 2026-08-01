@@ -1,19 +1,19 @@
-# SCAD and Export Contract
+# SCAD / Export 契約
 
-## SCAD Directory Responsibilities
+## SCAD ディレクトリの責務
 
 - `scad/base/`
-  Whole-key entry point and export switching
+  whole-key のエントリポイントと export 切り替え
 - `scad/modules/`
-  Reusable parts such as shell, legend, stem, and homing bar
+  shell、legend、stem、homing bar などの再利用部品
 - `scad/presets/`
-  SCAD-specific nominal constants and parameter sets for samples
+  SCAD 固有の nominal constant や sample 用 parameter set
 - `scad/samples/`
-  Samples used for shape regression checks
+  形状回帰確認に使うサンプル
 
-## Current Keycap Entry
+## 現在のキーキャップエントリ
 
-`scad/base/keycap.scad` is the current base entry. The following are switched by `export_target`:
+`scad/base/keycap.scad` が現在の基準エントリです。`export_target` で次を切り替えます。
 
 - `preview`
 - `body`
@@ -33,36 +33,72 @@
 - `single_material_shape`
 - `j_stem_lp01_reference`
 
-For `export_target = preview`, all parts are evaluated and returned with `#` prefix if they have colors, passing the visual properties. For other targets, only the specified body part is output in a color-independent format.
-`top_hat` is the separate part when the custom shell's top-hat keycap is enabled and the separation color is active. If the top-hat color is the same as the body, or if the top-hat is recessed instead of raised, it is not treated as a separate part, and `body` combines them.
-`body_core` is the body volume without the `homing` geometry, primarily used to output the homing bar correctly via 3MF part separation.
+この構成により、preview 用表示と part 単位 export を同じ基礎形状から扱います。
 
-Parameters (`user_*`) passed from JS to SCAD separate strings and numbers cleanly. In JS, UI variables include `mm` / `deg`, but these are stripped and passed as numeric values to SCAD parameters. For strings, they are passed properly escaped via `-D`. The JS bridge generates a `wrapper.scad` string where `user_*` values are injected into OpenSCAD's `keycap.scad`, and the worker evaluates this. The `quality` switch is determined by the JS side, passing `preview` or `export` to `user_quality`.
+## separate volume の扱い
 
-Shell generation (`scad/modules/keycap_shell.scad`) adds a dish indentation based on the `topCenterHeight` baseline in addition to outer perimeter tapering and curvature tracking based on `pitch` / `roll`. If it is a typewriter shape and the key rim is enabled, it returns the body with a flush seat for the rim subtracted.
-The `topSurfaceShape` switches between `flat`, `cylindrical`, and `spherical`. If it is `flat`, the `dishDepth` is ignored. If it is `cylindrical` or `spherical`, a dish is generated. The `topHatSurfaceShape` applied to the top surface of the top-hat follows the same specification.
-If `dishDepth` is negative, it treats it as a bulge that is a mirror image of the convex surface, and the convex surface starts from the actual top boundary after rounding and is cut by an envelope extending the existing sidewall gradient upwards. It does not lift the inner ceiling or stem mounting height.
-For custom shell, `topHatEnabled` switches the top-hat keycap. `topHatHeight` specifies the height from the normal top surface. `topHatSizeXY` specifies the difference relative to the normal top surface footprint. `topHatTopRadius` is treated separately as the top surface radius of the top-hat, and `topHatBottomRadius` as the bottom surface radius of the top-hat. Only when `topHatTopRadiusIndividualEnabled` is enabled, `topHatTopRadiusLeftTop` / `topHatTopRadiusRightTop` / `topHatTopRadiusRightBottom` / `topHatTopRadiusLeftBottom` are passed as `user_top_hat_top_radii`, and only when `topHatBottomRadiusIndividualEnabled` is enabled, `topHatBottomRadiusLeftTop` / `topHatBottomRadiusRightTop` / `topHatBottomRadiusRightBottom` / `topHatBottomRadiusLeftBottom` are passed as `user_top_hat_bottom_radii`. The array order on the SCAD side for both is `[left_top, right_top, right_bottom, left_bottom]`. If `topHatHeight` is negative, the same shape is recessed from the top surface and rounded to a depth that does not penetrate the shell ceiling. `topHatShoulderRadius` is 0 for a sharp edge, a positive value rounds the cross-section of the shoulder, and a negative value recesses it. Because the maximum absolute value is rounded to the smaller of the actual shoulder height and width, it can be specified up to where the cross-section viewed from the side becomes a 1/4 circular shape at 45 degrees. This is not yet displayed for typewriter styles.
-The JIS Enter shape is treated as a `jis_enter` geometry type. The default values are a generally vertical Enter footprint of 1.5u x 2u, with a bottom-left notch of 0.25u x 1u, and the notch amount can be edited with `jisEnterNotchWidth` / `jisEnterNotchDepth`. Since JIS X 6002 does not specify physical keytop dimensions, this shape is treated as a preset for JIS / ISO style keycap footprints often used in practice. The typewriter style JIS Enter is defined as a `typewriter_jis_enter` geometry type, using the same JIS footprint while applying the thin top, rim, and reverse stem mount of the typewriter.
-Initial values, geometry defaults, and display group configurations for each shape are located in `src/data/keycap-shapes/*.json`, and the SCAD side does not hold fail-safe defaults for top-level user parameters. The JS bridge resolves all necessary values from the shape JSON and injects them as `user_*`.
+- body / top-hat / rim / legend は別体積を維持できる
+- homing bar は body 側の触覚マーカーとして扱い、legend と混ぜない
+- body / top-hat / rim / legend / homing の相対位置は共有原点で揃える
+- 色だけに依存せず、mesh 自体を part として分ける
 
-The UI's `1u` conversion standard is treated as a display and input aid for narrow pitch verification. Changing the standard value does not change model dimensions like `keyWidth` / `keyDepth`, nor does it pass them to the SCAD bridge or edit data JSON. Only when the input on the `u` side is edited, it is converted to mm dimensions using the current conversion standard and reflected in the existing model parameters.
+## preview と export の責務分離
 
-The mounting height of the typewriter shape is held in `typewriterMountHeight` and treated as the distance from the center of the top surface of the keycap body to the bottom edge of the stem. Since the SCAD side converts `user_typewriter_mount_height` and `topCenterHeight` into the actual `stem_height`, `topCenterHeight` can be adjusted as the thickness of the keycap body, and `typewriterMountHeight` as the height when mounted, independently.
+- preview:
+  反応速度と見た目確認を優先する
+- export:
+  part 分離と形状の意味づけを優先する
 
-The stem creates the nominal shape of the desired height first, and finally uses `intersection()` with the keycap's internal clearance volume to limit it. This ensures that even with a strong `pitch / roll`, the stem automatically stops at the position hitting the back of the keycap, tracking more naturally than simple height suppression. J-STEM-LP01 is applied as a subtraction recess for receiving the LP01 top surface to the body shell / legend part / single material shape, rather than as a normal positive stem. The socket recess carves only the outer shape of the LP01 plate with 0 nominal clearance, leaving the round hole positions inside the plate without carving the back of the keycap. When switching to J-STEM-LP01 for the first time, start the UI's `stemCrossMargin` at 0.1mm based on actual physical confirmation results. If the actual part is tight, adjust the carved outer shape of the socket in 0.02mm increments in the positive direction; if loose, adjust in the negative direction. The legend is not disabled but maintains a separate volume, and only the area overlapping the socket is trimmed with the same recess. The app preview of the LP01 body displays the official STEP-derived OFF from `public/assets/j-stem-lp01/` as an alignment reference with color selection. Clear is displayed as translucent, white and orange as opaque, and it is not included in 3MF / STEP / STL. The `j_stem_lp01_reference` target and `j_stem_lp01_model()` on the SCAD side are retained as old reference models.
-The correspondence between the length labels on the J-STEM-LP01 drawing and SCAD constants is summarized in [../reference/j-stem-lp01-dimensions.md](../reference/j-stem-lp01-dimensions.md).
+現在の preview は OFF メッシュを body / top-hat / rim / homing / legend ごとに生成して Three.js へ渡します。top-hat は分離色が有効な場合だけ別 OFF になる。Three.js 側では shared vertex を保った indexed geometry を基準に creased normals を作り、曲面は滑らかに、急角は残す。SCAD 側の円弧分割は feature の半径と `quality` に応じて上限付きで増やす。現在の 3MF export は同じ part 群から 3MF を組み立てます。STEP export は `single_material_shape` target を OFF として出力し、ブラウザ側で STEP AP214 faceted B-rep へ変換します。STL export は `single_material_shape` target から OpenSCAD runtime の STL 出力を直接使い、色と legend を含まない単一メッシュとして扱います。
 
-### Flow of Screen JSON SCAD WASM in Mermaid
+legend の `text()` は bundled OpenSCAD runtime 上で preview / export の `quality` に応じて曲線分割数を上げ、内部では拡大してから縮小する。これにより、小さい文字サイズでも丸みのある書体の輪郭が過度に角張るのを抑える。font の native style は JS 側で `font` query を組み立てて指定し、ユーザー操作なしの擬似 bold / italic / slanted は行わない。下線は font file の `post` / `head` / `hhea` から `UnderlinePosition` / `UnderlineThickness` / line box 中心を読み、`valign="center"` な text 座標へ変換したうえで実測文字幅と組み合わせる。font metadata を取れない場合の任意フォールバックは行わない。輪郭補正は `legendOutlineDelta` を通した明示入力時だけ `offset()` を使う。
+legend は content type として `text` と `icon` を持つ。`text` は従来どおり font と `text()` を使い、`icon` は選択した icon provider の SVG を runtime asset として `/icons/{iconSet}/{runtimeName}.svg` に注入し、SCAD 側で `import()` した 2D 形状を `linear_extrude()` して legend volume にする。font 選択とは独立して `legendIconSet` / `legendIconName` / `legendIconFill` を保持し、既存 JSON に icon 用フィールドがない場合は `text` / `lucide` / `circle` / `false` を補完する。`legendIconFill` は選択した icon が通常 body とは異なる filled body を持つ場合だけ有効になり、Material Symbols は outline shape と base filled shape、Remix Icon は `*-line` と `*-fill` へ provider ごとに解決する。ブラウザ実行時は Lucide、Material Symbols、Font Awesome Free Solid、Remix Icon を jsDelivr の `latest` package から読み込み、取得した SVG node / body / path data を sanitizer に通してから OpenSCAD 用 SVG を作る。Lucide は sanitizer 済み node をさらに stroke primitives から filled path へ変換する。CDN が利用できない場合は installed package 由来の fallback data を同じ sanitizer / 変換経路に通す。見た目が変わらない icon では `legendIconFill` を `false` に丸め、UI も表示しない。アイコンでは provider が持つ stroke / fill の形状比率を維持し、`legendOutlineDelta` による `offset()` 太さ補正は適用しない。アイコンでも `legendSize`、`legendHeight`、位置、色は共通に扱い、下線は出さない。現在の provider は Lucide、Material Symbols、Font Awesome Free Solid、Remix Icon。
+ユーザーが TTF / OTF を追加した場合、その font はブラウザ内の一時 registry に `マイフォント` として保持し、preview / export 実行時だけ runtime asset として `/fonts/user/` 配下へ注入する。編集データ JSON には font 本体を保存せず、file bytes の hash 由来の `user-font:*` key だけを保持する。同じ font file を再追加すると key が一致して復元できる。未読み込みの `user-font:*` は既定 font へ黙って置換せず、UI で再追加を促す。
+legend の文字サイズは UI の `legendSize` をそのまま基準にし、文字数に応じた自動縮小や単一文字だけの自動拡大は行わない。
+legend の `legendHeight` は 0 を面一とし、正値は表面から盛り上がる高さ、負値は表面から沈み込む recess 深さとして扱う。負値の場合も legend part は別体積のまま保持し、body 側は表面から recessed legend の上面までを切り抜いて表示する。
+legend の作業領域はキーキャップ上面の footprint を上限にしない。文字が大きすぎる場合も自動縮小せず、SCAD 側の surface fitting 用領域を十分広く取って、legend part がキー上面からはみ出すことを許可する。
+top legend の曲面追従 volume は、上面曲面とその下側へ平行移動した曲面の間の band として扱う。cylindrical / spherical の深い凹面でも高い凸面でも、平面基準の作業領域を曲面の drop / rise の両側へ広げ、legend part が空になることを避ける。
+
+## UI から SCAD への橋渡し
+
+OpenSCAD browser runtime では `-D` 上書きが安定しなかったため、実行ごとに wrapper SCAD を生成して `user_*` 定義を注入します。
+
+主な橋渡しファイル:
+
+- `src/lib/keycap-scad-bundle.js`
+- `src/data/keycap-shape-registry.js`
+- `src/data/keycap-shapes/*.json`
+- `scad/presets/stem-nominals.scad`
+
+現在のキートップ姿勢パラメータは `topCenterHeight` を基準にし、前後は `topPitchDeg`、左右は `topRollDeg` へ正規化する。UI では端高さ入力も使えるが、保存と SCAD bridge はこの正規化表現を使う。
+`topOffsetX` / `topOffsetY` は stem 原点を動かさず、キートップ上面側の中心を左右 / 前後にずらす。SCAD 側では body shell、rim、legend、homing bar と stem clip 用の内側 clearance へ同じ XY offset を渡し、stem 本体は原点に残す。
+custom shell のキートップ上面Rは `topCornerRadius` を共通値として扱い、`topCornerRadiusIndividualEnabled` が有効な場合だけ `topCornerRadiusLeftTop` / `topCornerRadiusRightTop` / `topCornerRadiusRightBottom` / `topCornerRadiusLeftBottom` を `user_top_corner_radii` として渡す。SCAD 側の配列順は `[left_top, right_top, right_bottom, left_bottom]`。
+キートップ形状は `topSurfaceShape` で `flat` / `cylindrical` / `spherical` を切り替える。`dishDepth` は符号付きで、正値を凹み量、負値を盛り上がり量として扱い、cylindrical / spherical とも入力範囲を `-1.5mm` から `+1.5mm` に丸める。既定値は cylindrical が `0.5mm`、spherical が `1.0mm` のまま維持する。曲面の開始位置は上面 footprint 基準で固定し、絶対値の変更時は既存の球 / 円柱の Z 方向だけを正規化するため、正負は同じ曲面の鏡像になる。凸面は nominal footprint の垂直壁で切らず、丸め後の実際の上面境界を起点としてサイドウォール勾配を上方へ延長した envelope で切る。これにより、中央の cylindrical / spherical 曲面を変形させず、側面との接続部に余分なリップや平面段差を作らない。負値では外側だけを盛り上げ、内側天井と stem 取付高さは flat と同じ位置に保つ。
+SCAD 側では dish も top plane と同じ座標変換へ載せるため、`topPitchDeg` / `topRollDeg` を変えても cylindrical / spherical の局所形状を保ったまま傾けられる。
+shell shape の `topScale` は UI パラメータとして保持しつつ、JS bridge で現在の `keyWidth` / `keyDepth` / `topCenterHeight` から最終的な前後左右角度へ解決してから SCAD へ渡す。上面の footprint は `keyWidth * topScale` と `keyDepth * topScale` を目標にするため、正方形キーはすぼめても上面が正方形のまま縮む。初期値 `0.75` は 18mm の 1u キーで上面を約 13.5mm にする。下限は基本 `0.02` とし、上面 footprint または内側クリアランスが 0.2mm 未満に潰れる寸法条件では、JS 側で 0.01 step 単位に切り上げる。
+custom shell と JIS Enter の `keycapEdgeRadius` は、キートップ上面とサイドウォールの境目だけに適用する R 面取りとして扱う。0 は従来の角面、正値は既存の shoulder 生成を維持したうえで上端の局所的な roundover だけを追加する。`dishDepth` の凸面 envelope はこの roundover 後の実上面境界へ追従し、R の外側へ形状を追加しない。
+custom shell と JIS Enter の `keycapShoulderRadius` は、キーキャップ本体の底面から上面へすぼまる shoulder 断面に適用する。0 は従来の直線的な角面、正値は外側へ丸く膨らむ shoulder、負値は内側へ凹む shoulder として扱う。最大絶対値は `topCenterHeight` と `topScale` から決まる実際の水平すぼまり量の小さい方に丸める。
+custom shell は `topHatEnabled` で上面にもう一つの小さいキートップを追加できる。top-hat は既定では body 側の形状として扱い、`topHatSeparateColorEnabled` が有効かつ `topHatHeight` が正値の場合だけ `top_hat` target として別 part 化する。この場合も `single_material_shape` では一体化する。`topHatColor` は preview / 3MF の `top_hat` part 色としてだけ使う。`topHatSurfaceShape` / `topHatDishDepth` / `topHatTopWidth` / `topHatTopDepth` / `topHatBottomWidth` / `topHatBottomDepth` / `topHatTopRadius` / `topHatBottomRadius` / `topHatHeight` / `topHatShoulderAngle` / `topHatShoulderRadius` を `user_*` へ渡す。`topHatSurfaceShape` は通常の `topSurfaceShape` とは独立した top-hat 上面の `flat` / `cylindrical` / `spherical` で、既定値は `flat`。`topHatDishDepth` も正値を凹み、負値を盛り上がりとして扱い、cylindrical / spherical では `-1.5mm` から `+1.5mm`、`flat` では 0 とする。`topHatTopWidth` / `topHatTopDepth` は top-hat 上面の寸法、`topHatBottomWidth` / `topHatBottomDepth` は top-hat 底面の寸法として扱い、底面寸法は上面寸法以上かつ親キートップ上面内に丸める。`topHatTopRadius` は top-hat 上面のR、`topHatBottomRadius` は top-hat 底面のRとして別々に扱う。`topHatTopRadiusIndividualEnabled` が有効な場合だけ `topHatTopRadiusLeftTop` / `topHatTopRadiusRightTop` / `topHatTopRadiusRightBottom` / `topHatTopRadiusLeftBottom` を `user_top_hat_top_radii` として渡し、`topHatBottomRadiusIndividualEnabled` が有効な場合だけ `topHatBottomRadiusLeftTop` / `topHatBottomRadiusRightTop` / `topHatBottomRadiusRightBottom` / `topHatBottomRadiusLeftBottom` を `user_top_hat_bottom_radii` として渡す。SCAD 側の配列順はいずれも `[left_top, right_top, right_bottom, left_bottom]`。`topHatHeight` がマイナスの場合は同じ形状を上面から凹ませ、シェル天井を貫通しない深さに丸める。`topHatShoulderRadius` は 0 で角面、正値で shoulder の断面を丸め、負値で凹ませる。最大絶対値は実際の shoulder 高さと横幅の小さい方に丸めるため、45 度では横から見た断面が 1/4 円状になるところまで指定できる。typewriter 系にはまだ表示しない。
+JIS Enter shape は `jis_enter` geometry type として扱う。既定値は一般的な縦長 Enter footprint の 1.5u x 2u、左下欠き込み 0.25u x 1u で、`jisEnterNotchWidth` / `jisEnterNotchDepth` により欠き込み量を編集できる。JIS X 6002 は物理キートップ寸法を規定しないため、この shape は実用上よく使われる JIS / ISO 系 keycap footprint のプリセットとして扱う。typewriter style の JIS Enter は `typewriter_jis_enter` geometry type とし、同じ JIS footprint を使いながら typewriter の薄型 top、rim、逆向き stem mount を適用する。
+shape ごとの初期値、geometry defaults、表示グループ構成は `src/data/keycap-shapes/*.json` に置き、SCAD 側は top-level user parameter に対してフェイルセーフ default を持たない。JS bridge が shape JSON から必要値をすべて解決して `user_*` として注入する。
+
+UI の `1u` 換算基準は狭ピッチ確認用の表示・入力補助として扱う。基準値を変えても `keyWidth` / `keyDepth` などのモデル寸法は変更せず、SCAD bridge や編集データ JSON にも渡さない。`u` 側の入力を編集したときだけ、現在の換算基準で mm 寸法へ変換して既存のモデルパラメータに反映する。
+
+typewriter shape の取り付け高さは `typewriterMountHeight` で保持し、キートップ本体の上面中央から stem 下端までの距離として扱う。SCAD 側では `user_typewriter_mount_height` と `topCenterHeight` から実際の `stem_height` へ変換するため、`topCenterHeight` はキートップ本体の厚み、`typewriterMountHeight` は装着時の高さとして独立して調整できる。
+
+stem は希望高さの nominal 形状を先に作り、最後に keycap 内部クリアランス volume と `intersection()` して止める。これにより、強い `pitch / roll` があっても stem はキートップ裏面に当たった位置で自動的に止まり、単純な高さ抑制より自然に追従する。J-STEM-LP01 は通常の正の stem ではなく、LP01 上面を受けるための差し引き用 recess として body shell / legend part / single material shape へ適用する。受け座 recess は LP01 プレートの外形だけを nominal クリアランス 0 で掘り、プレート内側の丸穴位置はキーキャップ裏側を削らずに残す。J-STEM-LP01 へ切り替えた初回は、実物確認結果に基づいて UI の `stemCrossMargin` を 0.1mm から始める。実物がきつい場合は正値方向、緩い場合は負値方向へ 0.02mm 刻みで受け座の掘り込み外形を調整する。legend は無効化せず別体積を維持し、受け座と重なる範囲だけ同じ recess でトリムする。LP01 本体のアプリ preview は `public/assets/j-stem-lp01/` の公式 STEP 由来 OFF を色選択付きの位置合わせ参照として表示する。クリアは半透明、白とオレンジは不透明で表示し、3MF / STEP / STL には含めない。SCAD 側の `j_stem_lp01_reference` target と `j_stem_lp01_model()` は旧参照モデルとして残す。
+J-STEM-LP01 図面の長さラベルと SCAD 定数の対応は [../reference/j-stem-lp01-dimensions.md](../reference/j-stem-lp01-dimensions.md) にまとめる。
+
+### Mermaid で見る画面 JSON SCAD WASM の流れ
 
 ```mermaid
 flowchart TD
-  screen["Screen Input / src/main.js"] --> state["state.keycapParams"]
+  screen["画面入力 / src/main.js"] --> state["state.keycapParams"]
   shapeJson["shape JSON / defaults + geometryDefaults + fieldGroups"] --> state
   state --> bridge["createKeycapDefinitions()"]
   shapeJson --> bridge
   icons["Icon provider data / Lucide, Material Symbols, Font Awesome, Remix Icon"] --> bridge
-  bridge --> wrapper["wrapper SCAD / user_* definitions"]
+  bridge --> wrapper["wrapper SCAD / user_* 定義"]
   bridge --> iconSvg["runtime icon SVG / /icons/{set}/{runtimeName}.svg"]
   stepAsset["J-STEM-LP01 official STEP / derived OFF"] --> preview
   scadEntry["scad/base/keycap.scad"] --> wrapper
@@ -70,140 +106,140 @@ flowchart TD
   stemNominals["scad/presets/stem-nominals.scad"] --> wrapper
   wrapper --> worker["src/openscad-worker.js"]
   worker --> wasm["bundled OpenSCAD WASM runtime"]
-  wasm --> off["body / top-hat / rim / homing / legend OFF"]
+  wasm --> off["body / top-hat / rim / homing / legend 系の OFF"]
   off --> preview["preview-scene.js / Three.js"]
   off --> export3mf["export-3mf.js / 3MF"]
   off --> exportStep["export-step.js / STEP faceted B-rep"]
   wasm --> exportStl["single_material_shape / STL"]
 ```
 
-Rules:
+ルール:
 
-- When adding UI parameters, update both `src/main.js` and `src/lib/keycap-scad-bundle.js` at the same time.
-- When the geometry contract changes, update `scad/base/` or `scad/modules/`.
-- Initial values and display groups for each shape are consolidated in shape JSON, and SCAD receives only explicit parameters.
+- UI の追加パラメータは `src/main.js` と `src/lib/keycap-scad-bundle.js` を同時に更新する
+- geometry contract が変わる場合は `scad/base/` または `scad/modules/` を更新する
+- shape ごとの初期値と表示グループは shape JSON に集約し、SCAD は explicit parameter のみ受ける
 
-## Purpose of Samples
+## サンプルの位置づけ
 
 - `scad/samples/keycap-1u.scad`
-  For regression checks of the current keycap configuration.
+  現行キーキャップ構成の回帰確認用
 - `scad/samples/keycap-jis-enter.scad`
-  For regression checks of the vertically long JIS / ISO Enter footprint and custom shell top surface degrees of freedom.
+  JIS / ISO 系の縦長 Enter footprint とカスタムシェル相当の top surface 自由度を確認する回帰用
 - `scad/samples/keycap-typewriter-jis-enter.scad`
-  For regression checks of the typewriter style JIS Enter footprint, rim, and mount positions.
+  typewriter style の JIS Enter footprint、rim、mount 位置を確認する回帰用
 - `scad/samples/keycap-typewriter-rim.scad`
-  For checking key rim separation of typewriter shape.
+  typewriter shape の key rim 分離確認用
 - `scad/samples/keycap-typewriter-rim-tilted.scad`
-  For checking joint of typewriter key rim with pitch / roll.
+  pitch / roll 付き typewriter key rim の接合確認用
 - `scad/samples/keycap-typewriter-mount-height.scad`
-  For checking mounting height based on typewriter shape top surface.
+  typewriter shape の上面基準取り付け高さ確認用
 - `scad/samples/keycap-typewriter-spherical-top.scad`
-  For regression checks that spherical top does not break in typewriter shape.
+  typewriter shape で spherical top が破綻しないか確認する回帰用
 - `scad/samples/keycap-legend-seat.scad`
-  For checking flush legend seat cutout.
+  flush legend の座面切り抜き確認用
 - `scad/samples/keycap-curved-legend-seat.scad`
-  For regression checks that body does not cover legend surface even on spherical top.
+  spherical top でも legend 表面へ body が被らないか確認する回帰用
 - `scad/samples/keycap-multi-character-legend.scad`
-  For regression checks that it does not auto-shrink even with multiple characters, keeping explicit size.
+  複数文字でも自動縮小せず、明示サイズを保つか確認する回帰用
 - `scad/samples/keycap-top-legends.scad`
-  For checking center / top right / bottom right / top left / bottom left legend placement on the keycap top.
+  キートップ上の中央 / 右上 / 右下 / 左上 / 左下 legend 配置確認用
 - `scad/samples/keycap-rounded-legend.scad`
-  For regression checks of legend contour quality with rounded fonts.
+  丸みのある書体で legend 輪郭の品質を確認する回帰用
 - `scad/samples/keycap-sidewall-legend.scad`
-  For checking front / back / left / right sidewall legend placement.
+  front / back / left / right の sidewall legend 配置確認用
 - `scad/samples/keycap-homing-bar.scad`
-  For checking homing bar individually.
+  homing bar の単体確認用
 - `scad/samples/keycap-stem-clip.scad`
-  For regression checks that stem top end stops along inner ceiling with strong left/right tilt.
+  強い左右傾斜で stem の上端が内部天井に沿って止まるか確認する回帰用
 - `scad/samples/keycap-j-stem-lp01.scad`
-  For checking backside carving of J-STEM-LP01 socket.
+  J-STEM-LP01 受け座の裏側掘り込み確認用
 - `scad/samples/keycap-surface-quality.scad`
-  For regression checks evaluating surface quality of rounded corners, dish, and stem outer circumference together.
+  角丸外形、dish、stem 外周の曲面品質をまとめて確認する回帰用
 - `scad/samples/keycap-convex-surfaces.scad`
-  For regression checks evaluating negative `dishDepth` for cylindrical/spherical shapes on 1u, wide keys, top edge radii, and JIS Enter.
+  cylindrical / spherical の負 `dishDepth` を 1u、幅広キー、上端R、JIS Enter で確認する回帰用
 - `scad/samples/keycap-top-corner-radii.scad`
-  For regression checks of individual specifications for 4 corner radii on custom shell top surface.
+  custom shell 上面の4隅R個別指定を確認する回帰用
 - `scad/samples/keycap-top-orientation.scad`
-  For regression checks of fixed top center height + pitch / roll.
+  上面中央高さ固定 + pitch / roll の回帰確認用
 - `scad/samples/keycap-top-offset.scad`
-  For checking XY offset of keycap center while keeping stem origin fixed.
+  stem 原点を固定したキートップ中心の XY offset 確認用
 - `scad/samples/keycap-top-edge-rounded.scad`
-  For checking custom shell keycap top edge radii.
+  custom shell のキートップ上端R確認用
 - `scad/samples/keycap-shoulder-rounded.scad`
-  For checking body shoulder radius of custom shell.
+  custom shell の本体 shoulder R 確認用
 - `scad/samples/keycap-shoulder-rounded-hollow.scad`
-  For checking tracking of rounded shoulder and inner hollow in custom shell.
+  custom shell の丸い shoulder と内側 hollow 追従確認用
 - `scad/samples/keycap-shoulder-concave.scad`
-  For checking negative body shoulder radius of custom shell.
+  custom shell のマイナス本体 shoulder R 確認用
 - `scad/samples/keycap-top-hat.scad`
-  For checking top-hat keycap of custom shell.
+  custom shell の top-hat キートップ確認用
 - `scad/samples/keycap-top-hat-separated.scad`
-  For checking separate part target of top-hat in custom shell.
+  custom shell の top-hat 別パーツ target 確認用
 - `scad/samples/keycap-top-hat-spherical.scad`
-  For checking spherical top-hat top surface of custom shell.
+  custom shell の spherical top-hat 上面確認用
 - `scad/samples/keycap-top-hat-top-radii.scad`
-  For regression checks of individual specifications of top-hat top surface 4 corner radii in custom shell.
+  custom shell の top-hat 上面4隅R個別指定を確認する回帰用
 - `scad/samples/keycap-top-hat-recess.scad`
-  For checking negative height top-hat recess of custom shell.
+  custom shell のマイナス高さ top-hat 凹み確認用
 - `scad/samples/stem-mounts.scad`
-  For checking stem mount differences.
+  stem mount 差分の確認用
 
-Samples are currently used for geometry regression checks.
+サンプルは現在、geometry regression のために使う。
 
-## Current Export Contract
+## 現在の export 契約
 
 ### 3MF
 
-- Source is OFF mesh
-- Object resources are separated for each part within 3MF
-- In `build`, instead of placing parts sequentially, parts related to body / top-hat / rim / homing / legend are bundled as a parent object using `components`, and only one parent object is placed
-- Parent object `name` uses `Name` from UI
-- Current candidate parts are `body`, `top-hat`, `rim`, `homing`, `legend`, `legend-left-top`, `legend-right-top`, `legend-left-bottom`, `legend-right-bottom`, `legend-front`, `legend-back`, `legend-left`, `legend-right`
-- If top-hat separation color is disabled or top-hat is recessed, `top-hat` object is not included
-- If top legend is disabled, the corresponding `legend*` objects are not included
-- If sidewall legend is disabled, the corresponding `legend-*` objects are not included
-- Both text legends and icon legends are treated as `legend*` objects, maintaining part separation and color specification in 3MF
-- If typewriter key rim is disabled, rim object is not included
-- If homing bar is disabled, homing object is not included
-- Parent object does not have material/color; child part objects retain their material/color
-- Adds `Metadata/model_settings.config` for Bambu Studio/OrcaSlicer, and `Metadata/Slic3r_PE_model.config` for PrusaSlicer/Slic3r PE, retaining part display names as `body` / `rim` / `homing` / `legend` / `legend-*`
-- Maintains child object `name` and `partnumber` for standard 3MF-oriented importers like Cura
+- 出力元は OFF メッシュ
+- 3MF 内では part ごとに object resource を分ける
+- `build` には part 直列ではなく、body / top-hat / rim / homing / legend 系 part を `components` として束ねた親 object を 1 件だけ置く
+- 親 object の `name` には UI の `名称` を使う
+- 現在の part 候補は `body`、`top-hat`、`rim`、`homing`、`legend`、`legend-left-top`、`legend-right-top`、`legend-left-bottom`、`legend-right-bottom`、`legend-front`、`legend-back`、`legend-left`、`legend-right`
+- top-hat 分離色が無効、または top-hat が凹み形状の場合、`top-hat` object は含まれない
+- キートップ legend が無効なら対応する `legend*` object は含まれない
+- sidewall legend が無効なら対応する `legend-*` object は含まれない
+- text legend と icon legend はどちらも `legend*` object として扱い、3MF 内の part 分離と色指定を維持する
+- typewriter key rim が無効なら rim object は含まれない
+- homing bar が無効なら homing object は含まれない
+- 親 object には material / color を付けず、子 part object の material / color を維持する
+- Bambu Studio / OrcaSlicer 向けに `Metadata/model_settings.config`、PrusaSlicer / Slic3r PE 向けに `Metadata/Slic3r_PE_model.config` を追加し、part 表示名を `body` / `rim` / `homing` / `legend` / `legend-*` として保持する
+- Cura など標準3MF中心の importer 向けには、子 object の `name` と `partnumber` を保持する
 
 ### STEP
 
-- Source is OFF mesh of `single_material_shape` target
-- Since bundled OpenSCAD runtime doesn't support native STEP export, browser generates it as `FACETED_BREP_SHAPE_REPRESENTATION` of STEP AP214
-- Body shell, top-hat, stem, homing bar, and typewriter rim are treated as a single shape
-- Legends are not included in the output
-- Color, material, part name, and separate volume information are not included
-- Curved surfaces represent faceted mesh generated by OpenSCAD as `POLY_LOOP` / `FACE_SURFACE`. Though for CAD exchange, it's not a parametric NURBS / analytic surface
-- Use 3MF if color separation or legend is needed
-- As with other exports, download file name is based on `params.name`
+- 出力元は `single_material_shape` target の OFF メッシュ
+- bundled OpenSCAD runtime は native STEP export に対応していないため、ブラウザ側で STEP AP214 の `FACETED_BREP_SHAPE_REPRESENTATION` として生成する
+- body shell、top-hat、stem、homing bar、typewriter rim を単一形状として扱う
+- legend は出力に含めない
+- 色、material、part 名、separate volume 情報は含めない
+- 曲面は OpenSCAD が生成した faceted mesh を `POLY_LOOP` / `FACE_SURFACE` として表現するため、CAD 交換用ではあるがパラメトリックな NURBS / analytic surface ではない
+- 色分けや legend が必要な場合は 3MF を使う
+- 他の書き出しと同じく、ダウンロードファイル名は `params.name` を基準にする
 
 ### STL
 
-- Source is `single_material_shape` target
-- Exported directly as binary STL from OpenSCAD runtime
-- Body shell, top-hat, stem, homing bar, and typewriter rim are combined (union) into a single mesh
-- Legends are not included in the output
-- Color, material, part name, and separate volume information are not included
-- Use 3MF if color separation or legend is needed
-- As with JSON / 3MF / STEP, download file name is based on `params.name`
+- 出力元は `single_material_shape` target
+- OpenSCAD runtime から binary STL として直接出力する
+- body shell、top-hat、stem、homing bar、typewriter rim を単一メッシュとして union する
+- legend は出力に含めない
+- 色、material、part 名、separate volume 情報は含めない
+- 色分けや legend が必要な場合は 3MF を使う
+- JSON / 3MF / STEP と同じく、ダウンロードファイル名は `params.name` を基準にする
 
-### Edit Data JSON
+### 編集データ JSON
 
-- For saving and reloading UI state
-- Canonical JSON for saving has `schemaVersion`
-- Includes save name in `params.name`
-- Treated as a format for resuming work, not geometry export
-- JSON / 3MF / STEP / STL download file names are based on `params.name`
-- When saving, it holds full configuration resolving shape defaults, without dropping values for disabled UI inputs
-- When loading, accepts sparse compatible input JSON in addition to canonical JSON
-- Compatible input JSON can have known parameters under `params` or top-level. Missing keys fall back to shape defaults
-- If `shapeProfile` is explicit, binds relative to its defaults; if unspecified, uses default profile
-- Ignores unknown keys and sanitizes only known keys to reflect in state
+- UI state の保存と再読み込み用
+- 保存用の canonical JSON は `schemaVersion` を持つ
+- `params.name` に保存名を含める
+- geometry export ではなく、作業再開用フォーマットとして扱う
+- JSON / 3MF / STEP / STL のダウンロードファイル名は `params.name` を基準にする
+- 保存時は shape defaults を解決したフル設定を保持し、非活性 UI の値も落とさない
+- 読み込み時は canonical JSON に加えて sparse な互換入力 JSON も受ける
+- 互換入力 JSON は `params` 配下または top-level に既知パラメータを書ける。欠損したキーは shape defaults を使う
+- `shapeProfile` が明示されていればその defaults を基準に bind し、未指定なら既定 profile を使う
+- 未知のキーは無視し、既知キーだけを sanitize して state へ反映する
 
-Minimal example of compatible input JSON:
+互換入力 JSON の最小例:
 
 ```json
 {
@@ -213,21 +249,21 @@ Minimal example of compatible input JSON:
 }
 ```
 
-In the example above, unspecified values like `rimWidth` or `legendColor` are populated with typewriter shape JSON defaults before restoring the final editor state.
+上の例では `rimWidth` や `legendColor` など未指定の値を typewriter の shape JSON defaults で補完したうえで、最終的な editor state を復元する。
 
-## Current Known Constraints
+## 現在の既知制約
 
-- Legends are fixed models of center / top right / bottom right / top left / bottom left on the keytop and sidewall front / back / left / right
-- Top legend exposure assumes top dish
-- Sidewall legends align with the inclination of the center reference plane of each side, and embed automatically up to the inner surface of the wall. They do not automatically track rounded corners or notched surfaces of JIS Enter
-- Font assets allow a mix of variable / static, but the availability of native styles varies per font
-- User-added TTF / OTF are treated as local browser fonts, and the font files are not bundled in JSON / project ZIP
-- Additional quality levels like `high_preview` are not yet adopted. Re-evaluate from `docs/backlog/high-preview-quality-mode.md` if needed
+- legend はキートップ上の中央 / 右上 / 右下 / 左上 / 左下と sidewall front / back / left / right の固定モデル
+- キートップ legend の露出面は top dish 前提
+- sidewall legend は各側面の中央基準面の傾きに合わせて配置し、壁の内側面まで自動で埋め込む。角丸や JIS Enter の欠き込み面へは自動追従しない
+- font asset は variable / static の混在を許容するが、native style の有無は font ごとに異なる
+- ユーザー追加の TTF / OTF はブラウザ内のマイフォントとして扱い、JSON / project ZIP には font 本体を同梱しない
+- `high_preview` のような追加品質段階は未採用。必要になったら [../backlog/high-preview-quality-mode.md](../backlog/high-preview-quality-mode.md) を起点に再検討する
 
-These extension TODOs are documented in `docs/backlog/legend-extensibility-todo.md`.
+これらの拡張 TODO は [../backlog/legend-extensibility-todo.md](../backlog/legend-extensibility-todo.md) にまとめる。
 
-## Update Rules
+## 更新ルール
 
-- Update this document when SCAD responsibility boundaries change
-- Update this document and the manual verification procedure when the export part contract changes
-- Leave adoption decisions in `docs/decisions/decision-log.md`
+- SCAD の責務境界が変わったらこの文書を更新する
+- export の part 契約が変わったらこの文書と手動確認手順を更新する
+- 採用判断は [../decisions/decision-log.md](../decisions/decision-log.md) に残す
