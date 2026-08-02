@@ -52,7 +52,7 @@ const EXPECTED_LANDING_PAGE_ICON_URLS = Object.freeze({
   "kurobara-cinderella-regular": MODI_FAVICON_URL,
 });
 
-test("印字フォントはユーザー向けLP表示情報を持つ", () => {
+test("print fonts have user-facing legend-plate display information", () => {
   assert.equal(KEYCAP_LEGEND_FONTS.length, Object.keys(EXPECTED_LANDING_PAGE_URLS).length);
 
   for (const font of KEYCAP_LEGEND_FONTS) {
@@ -64,7 +64,7 @@ test("印字フォントはユーザー向けLP表示情報を持つ", () => {
   }
 });
 
-test("ユーザー追加フォントは内蔵フォントとは別に registry へ追加される", () => {
+test("user-added fonts are added to the registry separately from the built-in fonts", () => {
   clearUserKeycapLegendFonts();
   const key = `${USER_KEYCAP_LEGEND_FONT_KEY_PREFIX}0123456789abcdef`;
   const bytes = new Uint8Array([1, 2, 3, 4]);
@@ -90,7 +90,7 @@ test("ユーザー追加フォントは内蔵フォントとは別に registry �
   clearUserKeycapLegendFonts();
 });
 
-test("未知の user-font key は未読み込みフォントとして解決する", () => {
+test("an unknown user-font key resolves as an unloaded font", () => {
   clearUserKeycapLegendFonts();
   const missing = resolveKeycapLegendFont(`${USER_KEYCAP_LEGEND_FONT_KEY_PREFIX}missing`);
 
@@ -99,6 +99,6 @@ test("未知の user-font key は未読み込みフォントとして解決す�
   assert.equal(missing.key, `${USER_KEYCAP_LEGEND_FONT_KEY_PREFIX}missing`);
 });
 
-test("不正な font bytes の name metadata は空で返す", () => {
+test("returns empty name metadata for invalid font bytes", () => {
   assert.deepEqual(parseKeycapLegendFontNameMetadata(new Uint8Array([0, 1, 2])), {});
 });

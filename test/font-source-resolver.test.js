@@ -16,7 +16,7 @@ function makeMockResponse(body, { status = 200 } = {}) {
   };
 }
 
-test("TTF / OTF 直リンクは実際のフォント signature を確認して解決する", async (t) => {
+test("TTF / OTF direct links are resolved after verifying the actual font signature", async (t) => {
   const originalFetch = globalThis.fetch;
   t.after(() => {
     globalThis.fetch = originalFetch;
@@ -31,7 +31,7 @@ test("TTF / OTF 直リンクは実際のフォント signature を確認して�
   assert.equal(result.sourceUrl, "https://example.com/fonts/Demo-Regular.ttf");
 });
 
-test("TTF / OTF 直リンクでもフォントではないレスポンスは拒否する", async (t) => {
+test("TTF / OTF direct links are rejected when the response is not actually a font", async (t) => {
   const originalFetch = globalThis.fetch;
   t.after(() => {
     globalThis.fetch = originalFetch;
@@ -45,7 +45,7 @@ test("TTF / OTF 直リンクでもフォントではないレスポンスは拒�
   );
 });
 
-test("@font-face CSS は TTF / OTF の src を解決する", async (t) => {
+test("@font-face CSS resolves the TTF / OTF src", async (t) => {
   const originalFetch = globalThis.fetch;
   t.after(() => {
     globalThis.fetch = originalFetch;

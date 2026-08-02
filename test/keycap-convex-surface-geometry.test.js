@@ -280,7 +280,7 @@ async function renderBody({ bundle, wasmBinary, params, exportTarget = "body" })
   };
 }
 
-test("OpenSCAD full body は dishDepth の正負と代表 footprint で曲面契約を保つ", async (t) => {
+test("OpenSCAD full body keeps the curved-surface contract across dishDepth sign and representative footprints", async (t) => {
   const restoreBrowserMocks = installBrowserMocks({
     width: 120,
     actualBoundingBoxLeft: 60,
@@ -304,7 +304,7 @@ test("OpenSCAD full body は dishDepth の正負と代表 footprint で曲面契
       readFile(OPENSCAD_WASM_PATH),
     ]);
 
-    await t.test("1u cylindrical / spherical は負値で凸、正値で従来どおり凹む", async () => {
+    await t.test("1u cylindrical / spherical is convex with negative values and concave as before with positive values", async () => {
       const defaults = registry.createDefaultKeycapParams("custom-shell");
       const flat = await renderBody({
         bundle,
@@ -430,7 +430,7 @@ test("OpenSCAD full body は dishDepth の正負と代表 footprint で曲面契
       }
     });
 
-    await t.test("wide / rounded-edge / JIS の凸 body は空・破綻メッシュにならない", async () => {
+    await t.test("wide / rounded-edge / JIS convex bodies do not produce empty or broken meshes", async () => {
       const coverageCases = [
         {
           label: "wide cylindrical convex body",
@@ -513,7 +513,7 @@ test("OpenSCAD full body は dishDepth の正負と代表 footprint で曲面契
       }
     });
 
-    await t.test("JIS / typewriter も正の深さを 1.5mm まで保持する", async () => {
+    await t.test("JIS / typewriter also preserves positive depth up to 1.5mm", async () => {
       for (const profile of ["jis-enter", "typewriter", "typewriter-jis-enter"]) {
         const rendered = await renderBody({
           bundle,
@@ -533,7 +533,7 @@ test("OpenSCAD full body は dishDepth の正負と代表 footprint で曲面契
       }
     });
 
-    await t.test("custom / JIS top-hat も正負 1.5mm の曲面を生成できる", async () => {
+    await t.test("custom / JIS top-hat can also generate curved surfaces of plus or minus 1.5mm", async () => {
       for (const profile of ["custom-shell", "jis-enter"]) {
         const convex = await renderBody({
           bundle,
@@ -579,7 +579,7 @@ test("OpenSCAD full body は dishDepth の正負と代表 footprint で曲面契
       }
     });
 
-    await t.test("負の spherical でも flush legend の曲面追従 volume は空にならない", async () => {
+    await t.test("the curve-following volume for a flush legend is not empty even with a negative spherical value", async () => {
       const rendered = await renderBody({
         bundle,
         wasmBinary,

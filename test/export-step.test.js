@@ -50,6 +50,6 @@ test("STEP export encodes non-ASCII names as Part 21 strings", () => {
 test("STEP export rejects an empty mesh", () => {
   assert.throws(
     () => createStepText({ vertices: [], faces: [] }),
-    /STEP に含めるメッシュがありません。/,
+    /There are no meshes to include in the STEP\./,
   );
 });
