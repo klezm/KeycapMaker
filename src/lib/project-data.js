@@ -320,15 +320,15 @@ export function isProjectManifestPayload(payload) {
 export function parseProjectManifest(payload, fallbackName = DEFAULT_PROJECT_NAME) {
   const manifest = getPlainObject(payload);
   if (!manifest) {
-    throw new Error("プロジェクト JSON の形式が不正です。");
+    throw new Error("The project JSON is malformed.");
   }
 
   if (manifest.kind !== PROJECT_DATA_KIND) {
-    throw new Error("KeycapMaker のプロジェクト JSON ではありません。");
+    throw new Error("This does not look like a KeycapMaker project JSON.");
   }
 
   if (manifest.schemaVersion !== PROJECT_DATA_SCHEMA_VERSION) {
-    throw new Error(`未対応のプロジェクト schemaVersion です: ${manifest.schemaVersion}`);
+    throw new Error(`Unsupported project schemaVersion: ${manifest.schemaVersion}`);
   }
 
   const keycaps = assignProjectKeycapDisplayOrder(sortProjectKeycapsByDisplayOrder(
@@ -336,12 +336,12 @@ export function parseProjectManifest(payload, fallbackName = DEFAULT_PROJECT_NAM
       ? manifest.keycaps.map((entry, index) => {
           const normalizedEntry = getPlainObject(entry);
           if (!normalizedEntry) {
-            throw new Error(`プロジェクト内のキーキャップ定義 ${index + 1} が不正です。`);
+            throw new Error(`Keycap definition ${index + 1} in the project is malformed.`);
           }
 
           const jsonPath = normalizeProjectAssetPath(normalizedEntry.jsonPath);
           if (!jsonPath) {
-            throw new Error(`プロジェクト内のキーキャップ定義 ${index + 1} に jsonPath がありません。`);
+            throw new Error(`Keycap definition ${index + 1} in the project is missing jsonPath.`);
           }
 
           return {

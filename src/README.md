@@ -1,24 +1,24 @@
-# src ディレクトリ案内
+# src Directory Guide
 
-`src/` には Web アプリ本体を実装します。
+`src/` implements the web app itself.
 
-## ここで扱うもの
+## What Lives Here
 
-- パラメータ編集 UI
-- ブラウザ内プレビュー
-- OpenSCAD 系ランタイムとの接続
-- export 実行フロー
+- Parameter editing UI
+- In-browser preview
+- Connection to the OpenSCAD-based runtime
+- Export execution flow
 
-## 現在の主要ファイル
+## Current Key Files
 
-- `main.js`: UI、PoC、editor、export の主導線
-- `lib/keycap-scad-bundle.js`: SCAD 資産をブラウザ実行用ファイル群へまとめる
-- `lib/preview-scene.js`: OFF メッシュを Three.js で表示する
+- `main.js`: the main flow for UI, PoC, editor, and export
+- `lib/keycap-scad-bundle.js`: bundles the SCAD assets into files for browser execution
+- `lib/preview-scene.js`: displays the OFF mesh using Three.js
 
-## 実装方針
+## Implementation Guidelines
 
-- GitHub Pages 前提のため、サーバーサイド処理を前提にしない
-- preview と export の責務を分ける
-- UI パラメータと SCAD 幾何パラメータを分離する
+- Assume no server-side processing, since the target is GitHub Pages
+- Keep preview and export responsibilities separate
+- Keep UI parameters separate from SCAD geometry parameters
 
-実装を始めるときは、まず [../docs/roadmap/implementation-plan.md](../docs/roadmap/implementation-plan.md) の Task 01 を参照してください。
+When starting implementation, first refer to Task 01 in [../docs/roadmap/implementation-plan.md](../docs/roadmap/implementation-plan.md).

@@ -105,12 +105,12 @@ export function transformJStemLp01ReferenceMesh(mesh, params = {}) {
 
 export async function loadJStemLp01ReferenceMesh(assetUrl, fetchImpl = globalThis.fetch) {
   if (typeof fetchImpl !== "function") {
-    throw new Error("J-STEM-LP01 参照OFFを読み込む fetch が利用できません。");
+    throw new Error("No fetch implementation is available to load the J-STEM-LP01 reference OFF.");
   }
 
   const response = await fetchImpl(assetUrl);
   if (!response.ok) {
-    throw new Error(`J-STEM-LP01 参照OFFの読み込みに失敗しました: ${assetUrl}`);
+    throw new Error(`Failed to load the J-STEM-LP01 reference OFF: ${assetUrl}`);
   }
 
   return parseOff(await response.text());

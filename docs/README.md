@@ -1,17 +1,17 @@
-# docs ディレクトリ案内
+# docs Directory Guide
 
-`docs/` は、現在の実装を保守・拡張するための文書群です。未解決の TODO と採用済みの設計判断を分け、日常的に参照しやすい構成にしています。
+`docs/` is the set of documents for maintaining and extending the current implementation. It separates unresolved TODOs from adopted design decisions, organized for easy day-to-day reference.
 
-## サブディレクトリの役割
+## Role of Each Subdirectory
 
-- `architecture/`: アプリ構成、SCAD / export 契約、実装上の前提
-- `guide/`: ローカル開発手順、手動確認手順、更新時の運用
-- `decisions/`: 採用済みの判断を時系列で残す記録
-- `reference/`: 用語や短い参照資料
-- `backlog/`: 未着手または継続検討中の拡張 TODO
-- `design/`: Pencil の `.pen` を含む画面デザインの正本
+- `architecture/`: app structure, SCAD / export contracts, implementation assumptions
+- `guide/`: local development steps, manual verification steps, operational procedures for updates
+- `decisions/`: a chronological record of adopted decisions
+- `reference/`: terminology and short reference material
+- `backlog/`: unstarted or ongoing extension TODOs
+- `design/`: the source-of-truth screen designs, including Pencil `.pen` files
 
-## 推奨読書順
+## Recommended Reading Order
 
 1. [architecture/overview.md](architecture/overview.md)
 2. [architecture/scad-and-export.md](architecture/scad-and-export.md)
@@ -19,16 +19,16 @@
 4. [guide/development.md](guide/development.md)
 5. [guide/manual-verification.md](guide/manual-verification.md)
 6. [decisions/decision-log.md](decisions/decision-log.md)
-6. 必要に応じて `backlog/` と `design/`
+6. `backlog/` and `design/` as needed
 
-## 運用ルール
+## Operating Rules
 
-- 構成や責務が変わったら `architecture/` を更新する
-- 日常運用や確認手順が変わったら `guide/` を更新する
-- 採用した判断は [decisions/decision-log.md](decisions/decision-log.md) に残す
-- 将来の拡張案や未解決事項は `backlog/` に寄せる
-- 画面デザイン変更は `design/` を正本とする
+- Update `architecture/` when structure or responsibilities change
+- Update `guide/` when day-to-day operations or verification steps change
+- Record adopted decisions in [decisions/decision-log.md](decisions/decision-log.md)
+- Move future extension ideas or unresolved matters to `backlog/`
+- Treat `design/` as the source of truth for screen design changes
 
-## 参照資料
+## Reference Material
 
-- [reference/j-stem-lp01-dimensions.md](reference/j-stem-lp01-dimensions.md): J-STEM-LP01 図面寸法と SCAD パラメータの対応表
+- [reference/j-stem-lp01-dimensions.md](reference/j-stem-lp01-dimensions.md): mapping between the J-STEM-LP01 drawing dimensions and the SCAD parameters

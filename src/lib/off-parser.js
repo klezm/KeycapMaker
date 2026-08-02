@@ -5,7 +5,7 @@ export function parseOff(content) {
     .filter((line) => line.length > 0 && !line.startsWith("#"));
 
   if (lines.length === 0) {
-    throw new Error("OFF が空です。");
+    throw new Error("The OFF is empty.");
   }
 
   let lineIndex = 0;
@@ -17,12 +17,12 @@ export function parseOff(content) {
   } else if (countsLine.startsWith("OFF")) {
     countsLine = countsLine.slice(3).trim();
   } else {
-    throw new Error("OFF ヘッダが見つかりません。");
+    throw new Error("OFF header not found.");
   }
 
   const [vertexCount, faceCount] = countsLine.split(/\s+/).map(Number);
   if (!Number.isFinite(vertexCount) || !Number.isFinite(faceCount)) {
-    throw new Error("OFF の頂点数または面数が不正です。");
+    throw new Error("The OFF vertex count or face count is invalid.");
   }
 
   lineIndex += 1;

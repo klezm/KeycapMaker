@@ -9,17 +9,17 @@ const SHAPE_PROFILE_MAP = new Map(SHAPE_PROFILES.map((profile) => [profile.key, 
 const MANIFEST_SHAPE_KEYS = manifest.shapeKeys ?? SHAPE_PROFILES.map((profile) => profile.key);
 
 if (new Set(MANIFEST_SHAPE_KEYS).size !== MANIFEST_SHAPE_KEYS.length) {
-  throw new Error("shape manifest に重複キーがあります。");
+  throw new Error("The shape manifest has duplicate keys.");
 }
 
 for (const shapeKey of MANIFEST_SHAPE_KEYS) {
   if (!SHAPE_PROFILE_MAP.has(shapeKey)) {
-    throw new Error(`shape manifest に対応する JSON がありません: ${shapeKey}`);
+    throw new Error(`No JSON corresponds to the shape manifest entry: ${shapeKey}`);
   }
 }
 
 if (SHAPE_PROFILE_MAP.size !== MANIFEST_SHAPE_KEYS.length) {
-  throw new Error("shape JSON と manifest の shapeKeys が一致していません。");
+  throw new Error("The shape JSON shapeKeys do not match the manifest shapeKeys.");
 }
 
 const DEFAULT_SHAPE_PROFILE_KEY = manifest.defaultProfileKey ?? SHAPE_PROFILES[0]?.key ?? "custom-shell";

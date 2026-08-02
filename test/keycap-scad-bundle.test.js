@@ -70,7 +70,7 @@ function readRawScadDefinition(scadText, name) {
   return match[1];
 }
 
-test("印字の作業領域は実測した複数文字の外形を含む", async () => {
+test("print work area includes the measured outline of multiple characters", async () => {
   const restoreBrowserMocks = installBrowserMocks({
     width: 240,
     actualBoundingBoxLeft: 122,
@@ -115,7 +115,7 @@ test("印字の作業領域は実測した複数文字の外形を含む", async
   }
 });
 
-test("ユーザー追加フォントを runtime asset と SCAD wrapper へ渡す", async () => {
+test("passes user-added fonts to the runtime asset and SCAD wrapper", async () => {
   const restoreBrowserMocks = installBrowserMocks({
     width: 120,
     actualBoundingBoxLeft: 60,
@@ -170,7 +170,7 @@ test("ユーザー追加フォントを runtime asset と SCAD wrapper へ渡す
   }
 });
 
-test("Lucide アイコン印字を runtime asset と SCAD wrapper へ渡す", async () => {
+test("passes Lucide icon prints to the runtime asset and SCAD wrapper", async () => {
   const restoreBrowserMocks = installBrowserMocks({
     width: 120,
     actualBoundingBoxLeft: 60,
@@ -222,7 +222,7 @@ test("Lucide アイコン印字を runtime asset と SCAD wrapper へ渡す", as
   }
 });
 
-test("Lucide 以外のアイコンセットも runtime asset と SCAD wrapper へ渡す", async () => {
+test("passes non-Lucide icon sets to the runtime asset and SCAD wrapper as well", async () => {
   const restoreBrowserMocks = installBrowserMocks({
     width: 120,
     actualBoundingBoxLeft: 60,
@@ -267,7 +267,7 @@ test("Lucide 以外のアイコンセットも runtime asset と SCAD wrapper �
   }
 });
 
-test("アイコンの塗りつぶし設定は runtime asset と SCAD wrapper へ bool として反映する", async () => {
+test("icon fill setting is reflected as a bool in the runtime asset and SCAD wrapper", async () => {
   const restoreBrowserMocks = installBrowserMocks({
     width: 120,
     actualBoundingBoxLeft: 60,
@@ -363,7 +363,7 @@ test("アイコンの塗りつぶし設定は runtime asset と SCAD wrapper へ
   }
 });
 
-test("ステム入口の面取り量を SCAD wrapper へ渡す", async () => {
+test("passes the stem entrance chamfer amount to the SCAD wrapper", async () => {
   const restoreBrowserMocks = installBrowserMocks({
     width: 120,
     actualBoundingBoxLeft: 60,
@@ -402,7 +402,7 @@ test("ステム入口の面取り量を SCAD wrapper へ渡す", async () => {
   }
 });
 
-test("ステム開始位置補正の負値を SCAD wrapper と base で保持する", async () => {
+test("preserves negative stem start position offsets in the SCAD wrapper and base", async () => {
   const restoreBrowserMocks = installBrowserMocks({
     width: 120,
     actualBoundingBoxLeft: 60,
@@ -448,7 +448,7 @@ test("ステム開始位置補正の負値を SCAD wrapper と base で保持す
   }
 });
 
-test("J-STEM-LP01 の受け座SCADを bundle し、stemType を wrapper へ渡す", async () => {
+test("bundles the J-STEM-LP01 socket SCAD and passes stemType to the wrapper", async () => {
   const restoreBrowserMocks = installBrowserMocks({
     width: 120,
     actualBoundingBoxLeft: 60,
@@ -523,7 +523,7 @@ test("J-STEM-LP01 の受け座SCADを bundle し、stemType を wrapper へ渡�
   }
 });
 
-test("dishDepth の負値は cylindrical / spherical の盛り上がりとして SCAD へ渡す", async () => {
+test("negative dishDepth values are passed to SCAD as a cylindrical / spherical bulge", async () => {
   const restoreBrowserMocks = installBrowserMocks({
     width: 120,
     actualBoundingBoxLeft: 60,
@@ -595,7 +595,7 @@ test("dishDepth の負値は cylindrical / spherical の盛り上がりとして
   }
 });
 
-test("過大な dishDepth は SCAD wrapper で正負 1.5mm の範囲へ丸める", async () => {
+test("excessive dishDepth is clamped to a range of plus or minus 1.5mm in the SCAD wrapper", async () => {
   const restoreBrowserMocks = installBrowserMocks({
     width: 120,
     actualBoundingBoxLeft: 60,
@@ -646,7 +646,7 @@ test("過大な dishDepth は SCAD wrapper で正負 1.5mm の範囲へ丸める
   }
 });
 
-test("深い dish でもキートップ印字の曲面追従領域を確保する", async () => {
+test("ensures the keytop print's curve-following area is preserved even with a deep dish", async () => {
   const restoreBrowserMocks = installBrowserMocks({
     width: 120,
     actualBoundingBoxLeft: 60,
@@ -698,7 +698,7 @@ test("深い dish でもキートップ印字の曲面追従領域を確保す�
   }
 });
 
-test("サイドウォール印字パラメータを SCAD wrapper へ渡す", async () => {
+test("passes sidewall print parameters to the SCAD wrapper", async () => {
   const restoreBrowserMocks = installBrowserMocks({
     width: 160,
     actualBoundingBoxLeft: 80,
@@ -751,7 +751,7 @@ test("サイドウォール印字パラメータを SCAD wrapper へ渡す", asy
   }
 });
 
-test("キートップ四隅の印字パラメータを SCAD wrapper へ渡す", async () => {
+test("passes keytop corner print parameters to the SCAD wrapper", async () => {
   const restoreBrowserMocks = installBrowserMocks({
     width: 140,
     actualBoundingBoxLeft: 70,
@@ -810,7 +810,7 @@ test("キートップ四隅の印字パラメータを SCAD wrapper へ渡す", 
   }
 });
 
-test("マイナス印字高さを SCAD wrapper と recessed legend 処理へ渡す", async () => {
+test("passes negative print height to the SCAD wrapper and recessed legend processing", async () => {
   const restoreBrowserMocks = installBrowserMocks({
     width: 120,
     actualBoundingBoxLeft: 60,
@@ -858,7 +858,7 @@ test("マイナス印字高さを SCAD wrapper と recessed legend 処理へ渡�
   }
 });
 
-test("サイドウォール印字本体は内側面で止める", async () => {
+test("sidewall print body stops at the inner surface", async () => {
   const baseScad = await readFile(new URL("../scad/base/keycap.scad", import.meta.url), "utf8");
 
   assert.match(baseScad, /function keycap_sidewall_wall_depth\(side, axis_z\)/);
@@ -867,7 +867,7 @@ test("サイドウォール印字本体は内側面で止める", async () => {
   assert.doesNotMatch(baseScad, /side_legend_through_wall_embed\s*=\s*wall_thickness\s*\+/);
 });
 
-test("印字作業領域はキーの footprint を上限にしない", async () => {
+test("print work area is not capped by the key's footprint", async () => {
   const restoreBrowserMocks = installBrowserMocks({
     width: 120,
     actualBoundingBoxLeft: 60,
@@ -911,7 +911,7 @@ test("印字作業領域はキーの footprint を上限にしない", async () 
   }
 });
 
-test("正方形キーの topScale は上面を正方形のまま縮める", async () => {
+test("topScale for a square key shrinks the top surface while keeping it square", async () => {
   const restoreBrowserMocks = installBrowserMocks({
     width: 120,
     actualBoundingBoxLeft: 60,
@@ -964,7 +964,7 @@ test("正方形キーの topScale は上面を正方形のまま縮める", asyn
   }
 });
 
-test("サイドウォール肉厚とキートップ肉厚を別々の SCAD パラメータへ渡す", async () => {
+test("passes sidewall wall thickness and keytop wall thickness as separate SCAD parameters", async () => {
   const restoreBrowserMocks = installBrowserMocks({
     width: 120,
     actualBoundingBoxLeft: 60,
@@ -1005,7 +1005,7 @@ test("サイドウォール肉厚とキートップ肉厚を別々の SCAD パ�
   }
 });
 
-test("topScale は尖った上面用の低い値を SCAD 角度へ変換する", async () => {
+test("topScale converts low values for pointed top surfaces into a SCAD angle", async () => {
   const restoreBrowserMocks = installBrowserMocks({
     width: 120,
     actualBoundingBoxLeft: 60,
@@ -1058,7 +1058,7 @@ test("topScale は尖った上面用の低い値を SCAD 角度へ変換する",
   }
 });
 
-test("custom shell の上面Rを SCAD wrapper へ渡す", async () => {
+test("passes the custom shell's top radius to the SCAD wrapper", async () => {
   const restoreBrowserMocks = installBrowserMocks({
     width: 120,
     actualBoundingBoxLeft: 60,
@@ -1104,7 +1104,7 @@ test("custom shell の上面Rを SCAD wrapper へ渡す", async () => {
   }
 });
 
-test("キーキャップ本体のショルダーRを SCAD wrapper へ渡す", async () => {
+test("passes the keycap body's shoulder radius to the SCAD wrapper", async () => {
   const restoreBrowserMocks = installBrowserMocks({
     width: 120,
     actualBoundingBoxLeft: 60,
@@ -1147,7 +1147,7 @@ test("キーキャップ本体のショルダーRを SCAD wrapper へ渡す", as
   }
 });
 
-test("キートップ上端Rを SCAD wrapper へ渡す", async () => {
+test("passes the keytop top edge radius to the SCAD wrapper", async () => {
   const restoreBrowserMocks = installBrowserMocks({
     width: 120,
     actualBoundingBoxLeft: 60,
@@ -1190,7 +1190,7 @@ test("キートップ上端Rを SCAD wrapper へ渡す", async () => {
   }
 });
 
-test("typewriter の上面基準高さを SCAD wrapper へ渡す", async () => {
+test("passes typewriter's top reference height to the SCAD wrapper", async () => {
   const restoreBrowserMocks = installBrowserMocks({
     width: 120,
     actualBoundingBoxLeft: 60,
@@ -1233,7 +1233,7 @@ test("typewriter の上面基準高さを SCAD wrapper へ渡す", async () => {
   }
 });
 
-test("JISエンターの geometry と欠き込み寸法を SCAD wrapper へ渡す", async () => {
+test("passes JIS enter's geometry and notch dimensions to the SCAD wrapper", async () => {
   const restoreBrowserMocks = installBrowserMocks({
     width: 120,
     actualBoundingBoxLeft: 60,
@@ -1275,7 +1275,7 @@ test("JISエンターの geometry と欠き込み寸法を SCAD wrapper へ渡�
   }
 });
 
-test("対応形状の top-hat パラメータを SCAD wrapper へ渡す", async () => {
+test("passes top-hat parameters for supported shapes to the SCAD wrapper", async () => {
   const restoreBrowserMocks = installBrowserMocks({
     width: 120,
     actualBoundingBoxLeft: 60,
@@ -1424,7 +1424,7 @@ test("対応形状の top-hat パラメータを SCAD wrapper へ渡す", async 
   }
 });
 
-test("タイプライターJISエンターの geometry と mount / 欠き込み寸法を SCAD wrapper へ渡す", async () => {
+test("passes typewriter JIS enter's geometry and mount / notch dimensions to the SCAD wrapper", async () => {
   const restoreBrowserMocks = installBrowserMocks({
     width: 120,
     actualBoundingBoxLeft: 60,

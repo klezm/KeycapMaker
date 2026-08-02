@@ -20,7 +20,7 @@ function createTetraMesh() {
   };
 }
 
-test("STEP export は AP214 faceted B-rep を生成する", async () => {
+test("STEP export generates an AP214 faceted B-rep", async () => {
   const blob = createStepBlob(createTetraMesh(), {
     name: "Esc",
     createdAt: "2026-06-03T00:00:00.000Z",
@@ -37,7 +37,7 @@ test("STEP export は AP214 faceted B-rep を生成する", async () => {
   assert.match(text, /END-ISO-10303-21;\n$/);
 });
 
-test("STEP export は非 ASCII の名称を Part 21 文字列としてエンコードする", () => {
+test("STEP export encodes non-ASCII names as Part 21 strings", () => {
   const text = createStepText(createTetraMesh(), {
     name: "名称",
     createdAt: "2026-06-03T00:00:00.000Z",
@@ -47,7 +47,7 @@ test("STEP export は非 ASCII の名称を Part 21 文字列としてエンコ�
   assert.match(text, /FILE_NAME\('\\X2\\540D79F0\\X0\\.step'/);
 });
 
-test("STEP export は空メッシュを拒否する", () => {
+test("STEP export rejects an empty mesh", () => {
   assert.throws(
     () => createStepText({ vertices: [], faces: [] }),
     /STEP に含めるメッシュがありません。/,

@@ -136,12 +136,12 @@ function normalizeMesh(mesh = {}) {
   const faces = Array.isArray(mesh.faces) ? mesh.faces : [];
 
   if (vertices.length === 0 || faces.length === 0) {
-    throw new Error("STEP に含めるメッシュがありません。");
+    throw new Error("There are no meshes to include in the STEP.");
   }
 
   const normalizedVertices = vertices.map((vertex) => {
     if (!isFiniteVertex(vertex)) {
-      throw new Error("STEP に含める頂点座標が不正です。");
+      throw new Error("A vertex coordinate to include in the STEP is invalid.");
     }
 
     return {
@@ -159,14 +159,14 @@ function normalizeMesh(mesh = {}) {
       }
 
       if (face.some((index) => !Number.isInteger(index) || index < 0 || index >= normalizedVertices.length)) {
-        throw new Error("STEP に含める面の頂点参照が不正です。");
+        throw new Error("A face vertex reference to include in the STEP is invalid.");
       }
 
       return Boolean(resolveFaceFrame(normalizedVertices, face));
     });
 
   if (normalizedFaces.length === 0) {
-    throw new Error("STEP に含める有効な面がありません。");
+    throw new Error("There are no valid faces to include in the STEP.");
   }
 
   return {

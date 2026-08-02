@@ -27,7 +27,7 @@ async function loadFixture(name) {
   return JSON.parse(text);
 }
 
-test("互換入力 JSON は欠損した typewriter パラメータを defaults で補完する", async () => {
+test("compatible input JSON fills in missing typewriter parameters with defaults", async () => {
   const payload = await loadFixture("editor-data-sparse-typewriter.json");
   const defaults = createDefaultKeycapParams("typewriter");
   const parsed = parseEditorDataPayload(payload);
@@ -65,7 +65,7 @@ test("互換入力 JSON は欠損した typewriter パラメータを defaults �
   assert.equal(exported.params.rimEnabled, false);
 });
 
-test("既存の文字印字 JSON は icon 用フィールドがなくても text として読み込む", () => {
+test("existing text-print JSON loads as text even without icon fields", () => {
   const defaults = createDefaultKeycapParams("custom-shell");
   const parsed = parseEditorDataPayload({
     kind: EDITOR_DATA_KIND,
@@ -91,7 +91,7 @@ test("既存の文字印字 JSON は icon 用フィールドがなくても text
   assert.equal(exported.params.legendIconFill, false);
 });
 
-test("アイコン印字 JSON は icon 設定を保持し、不正な icon 名は既定値へ丸める", () => {
+test("icon-print JSON preserves icon settings and clamps invalid icon names to the default", () => {
   const defaults = createDefaultKeycapParams("custom-shell");
   const parsed = parseEditorDataPayload({
     kind: EDITOR_DATA_KIND,
@@ -122,7 +122,7 @@ test("アイコン印字 JSON は icon 設定を保持し、不正な icon 名�
   assert.equal(fallback.legendIconName, "circle");
 });
 
-test("対応アイコンセットの塗りつぶし設定は JSON で bool として保持する", () => {
+test("supported icon set's fill setting is preserved as a bool in JSON", () => {
   const defaults = createDefaultKeycapParams("custom-shell");
   const material = parseEditorDataPayload({
     kind: EDITOR_DATA_KIND,
@@ -180,7 +180,7 @@ test("対応アイコンセットの塗りつぶし設定は JSON で bool と�
   assert.equal(exported.params.legendIconFill, true);
 });
 
-test("kind なしの疎 JSON も top-level パラメータを bind して不足分を補完する", async () => {
+test("sparse JSON without kind also binds top-level parameters and fills in the missing ones", async () => {
   const payload = await loadFixture("editor-data-sparse-top-level.json");
   const defaults = createDefaultKeycapParams("custom-shell");
   const parsed = parseEditorDataPayload(payload);
@@ -198,7 +198,7 @@ test("kind なしの疎 JSON も top-level パラメータを bind して不足�
   assert.ok(Number.isFinite(parsed.topBackHeight));
 });
 
-test("未読み込みのユーザーフォント key は編集データで保持する", () => {
+test("unloaded user font key is preserved in the edit data", () => {
   const defaults = createDefaultKeycapParams("custom-shell");
   const userFontKey = `${USER_KEYCAP_LEGEND_FONT_KEY_PREFIX}0123456789abcdef`;
   const parsed = parseEditorDataPayload({
@@ -217,7 +217,7 @@ test("未読み込みのユーザーフォント key は編集データで保持
   assert.equal(exported.params.legendFontKey, userFontKey);
 });
 
-test("J-STEM-LP01 の stemType は編集データで保持する", () => {
+test("J-STEM-LP01 stemType is preserved in the edit data", () => {
   const defaults = createDefaultKeycapParams("custom-shell");
   const parsed = parseEditorDataPayload({
     kind: EDITOR_DATA_KIND,
@@ -234,7 +234,7 @@ test("J-STEM-LP01 の stemType は編集データで保持する", () => {
   assert.equal(parsed.stemEnabled, true);
 });
 
-test("J-STEM-LP01 のプレビュー色は既定でクリアにし、不正値は丸める", () => {
+test("J-STEM-LP01 preview color defaults to clear and clamps invalid values", () => {
   const defaults = createDefaultKeycapParams("custom-shell");
   const parsed = parseEditorDataPayload({
     kind: EDITOR_DATA_KIND,
@@ -250,7 +250,7 @@ test("J-STEM-LP01 のプレビュー色は既定でクリアにし、不正値�
   assert.equal(parsed.jStemLp01PreviewColor, "clear");
 });
 
-test("J-STEM-LP01 の軸開始位置補正は負値を 0 に丸める", () => {
+test("J-STEM-LP01 stem start position offset clamps negative values to 0", () => {
   const defaults = createDefaultKeycapParams("custom-shell");
   const parsed = parseEditorDataPayload({
     kind: EDITOR_DATA_KIND,
@@ -266,7 +266,7 @@ test("J-STEM-LP01 の軸開始位置補正は負値を 0 に丸める", () => {
   assert.equal(parsed.stemInsetDelta, 0);
 });
 
-test("J-STEM-LP01 へ切り替えると未調整クリアランスは 0.1mm から始める", () => {
+test("switching to J-STEM-LP01 starts unadjusted clearance at 0.1mm", () => {
   assert.equal(resolveStemCrossMarginAfterStemTypeChange("j_stem_lp01", 0, "choc_v2"), 0.1);
   assert.equal(resolveStemCrossMarginAfterStemTypeChange("j_stem_lp01", -0.04, "mx"), 0.1);
   assert.equal(resolveStemCrossMarginAfterStemTypeChange("j_stem_lp01", 0.12, "choc_v2"), 0.12);
@@ -274,7 +274,7 @@ test("J-STEM-LP01 へ切り替えると未調整クリアランスは 0.1mm か�
   assert.equal(resolveStemCrossMarginAfterStemTypeChange("mx", 0, "choc_v2"), 0);
 });
 
-test("JSON 読み込み時に bind できないパラメータを報告する", () => {
+test("reports parameters that cannot be bound when loading JSON", () => {
   const { params, bindingReport } = parseEditorDataPayloadWithReport({
     shapeProfile: "typewriter",
     keyWidth: 19,
@@ -304,7 +304,7 @@ test("JSON 読み込み時に bind できないパラメータを報告する", 
   );
 });
 
-test("現行形式 JSON の top-level に残った未対応パラメータも報告する", () => {
+test("also reports unsupported parameters left at the top level of current-format JSON", () => {
   const payload = createEditorDataPayload({
     ...createDefaultKeycapParams("typewriter"),
     name: "current with legacy field",
@@ -318,7 +318,7 @@ test("現行形式 JSON の top-level に残った未対応パラメータも報
   assert.equal(bindingReport.unboundParams[0].value, 7);
 });
 
-test("プロジェクト内 JSON の未対応パラメータを保持したまま既知パラメータを更新する", () => {
+test("updates known parameters while preserving unsupported parameters in project JSON", () => {
   const existingPayload = {
     shapeProfile: "typewriter",
     name: "legacy source",
@@ -345,7 +345,7 @@ test("プロジェクト内 JSON の未対応パラメータを保持したま�
   );
 });
 
-test("形のベースを変更したときは旧 shape 専用パラメータを引き継がない", () => {
+test("does not carry over parameters specific to the old shape when the base shape is changed", () => {
   const existingPayload = createEditorDataPayload({
     ...createDefaultKeycapParams("custom-shell"),
     name: "custom source",
@@ -368,7 +368,7 @@ test("形のベースを変更したときは旧 shape 専用パラメータを�
   assert.deepEqual(bindingReport.unboundParams, []);
 });
 
-test("読み込みレポートの path で JSON から該当パラメータだけ削除する", () => {
+test("removes only the corresponding parameter from JSON using the load report's path", () => {
   const payload = {
     shapeProfile: "typewriter",
     legacyTopLevelField: 7,
@@ -390,7 +390,7 @@ test("読み込みレポートの path で JSON から該当パラメータだ�
   assert.deepEqual(bindingReport.unboundParams, []);
 });
 
-test("homing bar の面取り量は負数を 0 に丸める", () => {
+test("homing bar chamfer amount clamps negative numbers to 0", () => {
   const parsed = parseEditorDataPayload({
     shapeProfile: "custom-shell",
     homingBarChamfer: -0.4,
@@ -399,7 +399,7 @@ test("homing bar の面取り量は負数を 0 に丸める", () => {
   assert.equal(parsed.homingBarChamfer, 0);
 });
 
-test("ステム入口の面取り量は保持し、負数を 0 に丸める", () => {
+test("stem entrance chamfer amount is preserved, clamping negative numbers to 0", () => {
   const defaults = createDefaultKeycapParams("custom-shell");
   const parsed = parseEditorDataPayload({
     shapeProfile: "custom-shell",
@@ -415,7 +415,7 @@ test("ステム入口の面取り量は保持し、負数を 0 に丸める", ()
   assert.equal(rounded.stemCrossChamfer, 0);
 });
 
-test("旧 dish 指定だけの入力は spherical として解釈する", () => {
+test("input with only a legacy dish specification is interpreted as spherical", () => {
   const parsed = parseEditorDataPayload({
     shapeProfile: "custom-shell",
     dishDepth: 0.8,
@@ -425,7 +425,7 @@ test("旧 dish 指定だけの入力は spherical として解釈する", () => 
   assert.equal(parsed.topVisibleCenterHeight, parsed.topCenterHeight - 0.8);
 });
 
-test("負の深さは現在の曲面を反転して盛り上がりとして扱う", () => {
+test("negative depth is treated as a bulge that mirrors the current curved surface", () => {
   const parsed = parseEditorDataPayload({
     shapeProfile: "custom-shell",
     topSurfaceShape: "cylindrical",
@@ -441,7 +441,7 @@ test("負の深さは現在の曲面を反転して盛り上がりとして扱�
   assert.equal(reparsed.dishDepth, -0.6);
 });
 
-test("曲面の深さは既定値を保ちつつ正負とも 1.5mm まで許容する", () => {
+test("curved surface depth keeps the default while allowing up to 1.5mm in either direction", () => {
   const cylindrical = parseEditorDataPayload({
     shapeProfile: "custom-shell",
     topSurfaceShape: "cylindrical",
@@ -489,7 +489,7 @@ test("曲面の深さは既定値を保ちつつ正負とも 1.5mm まで許容�
   assert.equal(belowMinimum.dishDepth, -1.5);
 });
 
-test("旧 dish 指定だけの負値も spherical の盛り上がりとして解釈する", () => {
+test("negative values with only a legacy dish specification are also interpreted as a spherical bulge", () => {
   const parsed = parseEditorDataPayload({
     shapeProfile: "custom-shell",
     dishDepth: -0.6,
@@ -500,7 +500,7 @@ test("旧 dish 指定だけの負値も spherical の盛り上がりとして解
   assert.equal(parsed.topVisibleCenterHeight, parsed.topCenterHeight + 0.6);
 });
 
-test("typewriter は spherical top を受ける", () => {
+test("typewriter accepts a spherical top", () => {
   const parsed = parseEditorDataPayload({
     shapeProfile: "typewriter",
     topSurfaceShape: "spherical",
@@ -519,7 +519,7 @@ test("typewriter は spherical top を受ける", () => {
   assert.equal(raised.topVisibleCenterHeight, raised.topCenterHeight + 0.8);
 });
 
-test("タイプライターJISエンターは spherical top と欠き込み寸法を受ける", () => {
+test("typewriter JIS enter accepts a spherical top and notch dimensions", () => {
   const parsed = parseEditorDataPayload({
     shapeProfile: "typewriter-jis-enter",
     topSurfaceShape: "spherical",
@@ -538,7 +538,7 @@ test("タイプライターJISエンターは spherical top と欠き込み寸�
   assert.equal(parsed.jisEnterNotchDepth, 18);
 });
 
-test("typewriter は cylindrical top を受けず default へ戻す", () => {
+test("typewriter does not accept a cylindrical top and reverts to default", () => {
   const defaults = createDefaultKeycapParams("typewriter");
   const parsed = parseEditorDataPayload({
     shapeProfile: "typewriter",
@@ -550,7 +550,7 @@ test("typewriter は cylindrical top を受けず default へ戻す", () => {
   assert.equal(parsed.topVisibleCenterHeight, parsed.topCenterHeight);
 });
 
-test("typewriter の上面基準高さは本体厚みより下に丸める", () => {
+test("typewriter's top reference height is clamped below the body thickness", () => {
   const parsed = parseEditorDataPayload({
     shapeProfile: "typewriter",
     topCenterHeight: 5.2,
@@ -560,7 +560,7 @@ test("typewriter の上面基準高さは本体厚みより下に丸める", () 
   assert.ok(Math.abs(parsed.typewriterMountHeight - 5.78) < 1e-9);
 });
 
-test("typewriter のキー寸法が一時的に 0 になってもキーリム幅を失わない", () => {
+test("typewriter does not lose key rim width even when key dimensions temporarily become 0", () => {
   const defaults = createDefaultKeycapParams("typewriter");
   const params = syncDerivedKeycapParams({
     ...defaults,
@@ -573,7 +573,7 @@ test("typewriter のキー寸法が一時的に 0 になってもキーリム幅
   assert.equal(params.rimWidth, defaults.rimWidth);
 });
 
-test("typewriter の空キー寸法入力は default で補完しキーリム幅を維持する", () => {
+test("typewriter fills empty key dimension input with defaults and keeps the key rim width", () => {
   const defaults = createDefaultKeycapParams("typewriter");
   const parsed = parseEditorDataPayload({
     shapeProfile: "typewriter",
@@ -588,7 +588,7 @@ test("typewriter の空キー寸法入力は default で補完しキーリム幅
   assert.equal(parsed.rimWidth, defaults.rimWidth);
 });
 
-test("キートップ形状ごとの代表プリセットを返す", () => {
+test("returns a representative preset for each keytop shape", () => {
   assert.deepEqual(getTopSurfaceShapePreset("flat"), {
     dishDepth: 0,
   });
@@ -600,7 +600,7 @@ test("キートップ形状ごとの代表プリセットを返す", () => {
   });
 });
 
-test("キートップ中心オフセットは保存データへ保持する", () => {
+test("keytop center offset is preserved in saved data", () => {
   const parsed = parseEditorDataPayload({
     shapeProfile: "custom-shell",
     topOffsetX: 1.25,
@@ -614,14 +614,14 @@ test("キートップ中心オフセットは保存データへ保持する", ()
   assert.equal(exported.params.topOffsetY, -2.5);
 });
 
-test("印字サイズの初期値は 5mm にする", () => {
+test("print size default is 5mm", () => {
   assert.equal(createDefaultKeycapParams("custom-shell").legendSize, 5.0);
   assert.equal(createDefaultKeycapParams("jis-enter").legendSize, 5.0);
   assert.equal(createDefaultKeycapParams("typewriter").legendSize, 5.0);
   assert.equal(createDefaultKeycapParams("typewriter-jis-enter").legendSize, 5.0);
 });
 
-test("キートップ四隅の印字は中央と同じパラメータセットを持つ", () => {
+test("keytop corner prints have the same parameter set as the center print", () => {
   const shapeKeys = ["custom-shell", "jis-enter", "typewriter", "typewriter-jis-enter"];
   const prefixes = ["topLegendRightTop", "topLegendRightBottom", "topLegendLeftTop", "topLegendLeftBottom"];
   const textDefaults = {
@@ -680,7 +680,7 @@ test("キートップ四隅の印字は中央と同じパラメータセット�
   }
 });
 
-test("サイドウォール印字サイズは4mm、高さ初期値は面一にする", () => {
+test("sidewall print size is 4mm and height defaults to flush", () => {
   const shapeKeys = ["custom-shell", "jis-enter", "typewriter", "typewriter-jis-enter"];
   const sideSizeKeys = ["sideLegendFrontSize", "sideLegendBackSize", "sideLegendLeftSize", "sideLegendRightSize"];
   const sideHeightKeys = ["sideLegendFrontHeight", "sideLegendBackHeight", "sideLegendLeftHeight", "sideLegendRightHeight"];
@@ -710,7 +710,7 @@ test("サイドウォール印字サイズは4mm、高さ初期値は面一に�
   }
 });
 
-test("印字高さのマイナス値は編集データで保持する", () => {
+test("negative print height value is preserved in the edit data", () => {
   const defaults = createDefaultKeycapParams("custom-shell");
   const parsed = parseEditorDataPayload({
     kind: EDITOR_DATA_KIND,
@@ -732,14 +732,14 @@ test("印字高さのマイナス値は編集データで保持する", () => {
   assert.equal(exported.params.sideLegendFrontHeight, -0.3);
 });
 
-test("シェル系の上面すぼまり初期値は一般的なキーキャップ比率にする", () => {
+test("shell-type top taper defaults to a common keycap ratio", () => {
   assert.equal(createDefaultKeycapParams("custom-shell").topScale, 0.75);
   assert.equal(createDefaultKeycapParams("jis-enter").topScale, 0.75);
   assert.equal(createDefaultKeycapParams("typewriter").topScale, 1);
   assert.equal(createDefaultKeycapParams("typewriter-jis-enter").topScale, 1);
 });
 
-test("上面中央の高さは形カードで横幅と奥行きの間に表示する", () => {
+test("top-center height is shown between width and depth on the shape card", () => {
   for (const profileKey of ["custom-shell", "jis-enter", "typewriter", "typewriter-jis-enter"]) {
     const shapeGroup = getShapeProfileFieldGroups(profileKey).find((group) => group.id === "shape");
     const topGroup = getShapeProfileFieldGroups(profileKey).find((group) => group.id === "top");
@@ -752,7 +752,7 @@ test("上面中央の高さは形カードで横幅と奥行きの間に表示�
   }
 });
 
-test("トップハットはキートップから独立したカードで天面の直後に底面を表示する", () => {
+test("top hat shows the base immediately after the top surface in a card independent of the keytop", () => {
   const groups = getShapeProfileFieldGroups("custom-shell");
   const topGroup = groups.find((group) => group.id === "top");
   const topHatGroup = groups.find((group) => group.id === "topHat");
@@ -789,7 +789,7 @@ test("トップハットはキートップから独立したカードで天面�
   ]);
 });
 
-test("上面すぼまりは尖った形状用に下限を広げつつ内側クリアランスを守る", () => {
+test("top taper widens the lower bound for pointed shapes while preserving inner clearance", () => {
   const pointed = parseEditorDataPayload({
     shapeProfile: "custom-shell",
     topScale: 0.01,
@@ -805,7 +805,7 @@ test("上面すぼまりは尖った形状用に下限を広げつつ内側ク�
   assert.equal(narrow.topScale, 0.13);
 });
 
-test("キーキャップ本体のショルダーRはすぼまり幅の範囲に丸める", () => {
+test("keycap body shoulder radius is clamped to the taper width range", () => {
   const rounded = parseEditorDataPayload({
     shapeProfile: "custom-shell",
     keyWidth: 18,
@@ -827,7 +827,7 @@ test("キーキャップ本体のショルダーRはすぼまり幅の範囲に�
   assert.ok(Math.abs(concave.keycapShoulderRadius + 2.25) < 1e-9);
 });
 
-test("キートップ上端Rは0以上かつすぼまり幅の範囲に丸める", () => {
+test("keytop top edge radius is clamped to 0 or above and within the taper width range", () => {
   const rounded = parseEditorDataPayload({
     shapeProfile: "custom-shell",
     keyWidth: 18,
@@ -851,7 +851,7 @@ test("キートップ上端Rは0以上かつすぼまり幅の範囲に丸める
   assert.equal(negative.keycapEdgeRadius, 0);
 });
 
-test("キートップ肉厚は保存データとして保持し最小値を守る", () => {
+test("keytop wall thickness is preserved as saved data and keeps the minimum value", () => {
   const parsed = parseEditorDataPayload({
     shapeProfile: "custom-shell",
     topThickness: 2.4,
@@ -865,7 +865,7 @@ test("キートップ肉厚は保存データとして保持し最小値を守�
   assert.equal(clamped.topThickness, 0.05);
 });
 
-test("custom shell の上面Rは共通値と個別値を保持し上面内に丸める", () => {
+test("custom shell top radius preserves shared and individual values and clamps within the top surface", () => {
   const shared = parseEditorDataPayload({
     shapeProfile: "custom-shell",
     topCornerRadius: 2.4,
@@ -896,7 +896,7 @@ test("custom shell の上面Rは共通値と個別値を保持し上面内に丸
   assert.equal(individual.topCornerRadiusLeftBottom, 4);
 });
 
-test("JISエンターは欠き込み寸法をキー寸法内に丸める", () => {
+test("JIS enter clamps the notch dimensions within the key dimensions", () => {
   const parsed = parseEditorDataPayload({
     shapeProfile: "jis-enter",
     keyWidth: 27,
@@ -911,7 +911,7 @@ test("JISエンターは欠き込み寸法をキー寸法内に丸める", () =>
   assert.equal(parsed.topSurfaceShape, "flat");
 });
 
-test("JISエンターの既定寸法はステム原点を下胴中央に置く", () => {
+test("JIS enter's default dimensions place the stem origin at the center of the lower body", () => {
   const params = createDefaultKeycapParams("jis-enter");
   const left = -params.keyWidth / 2 - params.jisEnterNotchWidth / 2;
   const right = params.keyWidth / 2 - params.jisEnterNotchWidth / 2;
@@ -925,7 +925,7 @@ test("JISエンターの既定寸法はステム原点を下胴中央に置く",
   assert.equal(params.jisEnterNotchDepth, 18);
 });
 
-test("top-hat パラメータは対応形状ごとに保持し上面内に丸める", () => {
+test("top-hat parameters are preserved per supported shape and clamped within the top surface", () => {
   const wideTopHat = parseEditorDataPayload({
     shapeProfile: "custom-shell",
     topHatEnabled: true,
@@ -1101,7 +1101,7 @@ test("top-hat パラメータは対応形状ごとに保持し上面内に丸め
   assert.equal(jisEnterDefaults.topHatEnabled, false);
 });
 
-test("タイプライターJISエンターの既定寸法もステム原点を下胴中央に置く", () => {
+test("typewriter JIS enter's default dimensions also place the stem origin at the center of the lower body", () => {
   const params = createDefaultKeycapParams("typewriter-jis-enter");
   const left = -params.keyWidth / 2 - params.jisEnterNotchWidth / 2;
   const right = params.keyWidth / 2 - params.jisEnterNotchWidth / 2;
@@ -1113,7 +1113,7 @@ test("タイプライターJISエンターの既定寸法もステム原点を�
   assert.equal(params.rimEnabled, true);
 });
 
-test("タイプライターJISエンターはRとリム幅をJIS footprint内に丸める", () => {
+test("typewriter JIS enter clamps radius and rim width within the JIS footprint", () => {
   const parsed = parseEditorDataPayload({
     shapeProfile: "typewriter-jis-enter",
     keyWidth: 27,
@@ -1128,7 +1128,7 @@ test("タイプライターJISエンターはRとリム幅をJIS footprint内に
   assert.equal(parsed.rimWidth, 9);
 });
 
-test("保存名の拡張子正規化は STEP と STL も対象にする", () => {
+test("saved-name extension normalization also covers STEP and STL", () => {
   assert.equal(sanitizeExportBaseName("sample.step"), "sample");
   assert.equal(sanitizeExportBaseName("sample.stl"), "sample");
   assert.equal(sanitizeExportBaseName("sample.3mf"), "sample");

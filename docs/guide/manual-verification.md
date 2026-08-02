@@ -1,185 +1,185 @@
-# 手動確認手順
+# Manual Verification Procedure
 
-## 目的
+## Purpose
 
-geometry contract、runtime、export を変更したときに、ブラウザ上とスライサー上で最低限確認すべき項目をまとめる。
+This document summarizes the minimum items to check in the browser and in the slicer when changing the geometry contract, runtime, or export.
 
-## ブラウザ確認
+## Browser Verification
 
-### 1. 初期表示
+### 1. Initial Display
 
-- アプリがエラーなしで開く
-- 初回 preview が表示される
-- カラーピッカーやセクション切り替えが壊れていない
+- The app opens without errors
+- The initial preview is displayed
+- The color picker and section switching are not broken
 
-### 2. 編集操作
+### 2. Editing Operations
 
-代表値として次を変え、preview が破綻しないことを確認する。
+Change the following representative values and confirm the preview does not break.
 
-- `横幅`
-- `上面中央の高さ`
-- `キーリムを付ける`
-- `キーリムの幅`
-- `上方向の高さ`
-- `下方向の高さ`
-- `手前から奥の傾斜`
-- `左右の傾斜`
-- `傾きの入力方法`
-- `キートップ形状`
-- `深さ`
-- typewriter shape の `上面基準の高さ`
-- `上面のすぼまり`
-- `印字を入れる`
-- `入れる文字`
-- `印字の内容` を `文字` から `アイコン` へ切り替えると、文字入力・書体・下線欄が隠れ、アイコンセットとアイコン検索欄が表示される
-- `アイコン` の虫眼鏡ボタンで検索 textbox と scrollable な選択欄が開く
-- `volume` などを入力すると選択中アイコンセットの候補がリアルタイムで絞り込まれ、候補を選ぶと選択中アイコン名と preview が更新される
-- アイコンセットを Material Symbols、Font Awesome Free Solid、Remix Icon へ切り替えても、検索候補、外部カタログリンク、ライセンス表記が選択中セットに連動する
-- アイコン印字でも `印字の大きさ`、`太さ補正`、`文字の高さ`、位置、色が反映される
-- 文字を `A` から `Shift` や `ShiftLock` へ増やしても、`文字の大きさ` を触らない限り印字サイズが自動で変わらない
-- `文字の大きさ` を変えたときだけ印字サイズが変わる
-- `書体`
-- `書体` の下に選択中フォントのページを開くリンクが favicon とページ名つきで表示され、新しいタブで配布・紹介ページへ遷移する
-- `書体` の虫眼鏡ボタンで検索 textbox と scrollable な選択欄が開く
-- font 選択欄の一番上に `組み込みフォント` / `マイフォント` の segment control が表示される
-- `組み込みフォント` segment には bundled font だけが表示され、`ローカルフォントを追加` は表示されない
-- `マイフォント` segment の `ローカルフォントを追加` から TTF / OTF を選択すると、選択した font が `マイフォント` として追加され、現在の印字へ反映される
-- TTF / OTF ファイルを画面へドラッグ & ドロップすると、プロジェクト / JSON 読み込みではなく `マイフォント` へ追加される
-- マイフォント選択中はローカルファイル名が表示され、プロジェクト ZIP や JSON に font 本体を同梱しない説明が表示される
-- マイフォント選択中に `削除` を押すと、その font を使っている印字は既定 font へ戻る
-- 保存済み JSON が未読み込みの `user-font:*` を参照している場合、既定 font へ黙って置換されず、同じ TTF / OTF の再追加を促す表示になる
-- 選択欄の各 font 名がその font で表示される
-- `M PLUS` などを入力すると候補がリアルタイムで絞り込まれる
-- 候補から `M PLUS 1 Variable` を選べる
-- `Noto Sans` / `Noto Sans JP` で検索して候補が出る
-- `Bangers` / `Creepster` / `Rye` / `Orbitron` で検索して候補が出る
-- `Art Gothic` で検索したとき `Grenze Gotisch Regular` と `MedievalSharp Regular` が候補に出る
-- `黒薔薇` で検索したとき `黒薔薇シンデレラ` が候補に出る
-- `黒薔薇シンデレラ` を選択中だけ、実際に使う著作権・ライセンス表記文が表示される
-- `黒薔薇シンデレラ` の `コピー` ボタンで表記文をクリップボードへ出せる
-- `M PLUS 1 Variable` 選択時に `フォント内スタイル` が有効になり、`Bold` などの named style へ切り替えられる
-- `Noto Sans Variable` / `Noto Sans JP Variable` 選択時に `フォント内スタイル` が有効になり、`Bold` などの named style へ切り替えられる
-- static font を選んだとき `フォント内スタイル` が非活性になる
-- `Orbitron Regular` を選んでも `フォント内スタイル` は有効化されず、Regular face のまま扱われる
-- `下線を付ける` をオンにしたとき、font ごとの下線位置と太さが変わり、特に `M PLUS 1 Variable / Thin / A` で線が文字中央へ食い込まない
-- `太さ補正 = 0` のとき、font を替えても意図しない太らせが入らない
-- `太さ補正` をプラス / マイナスへ振ったときだけ輪郭が変わる
-- `Bangers / A`、`Creepster / A`、`Rye / A`、`Orbitron / A` を切り替えても preview が崩れない
-- `Grenze Gotisch / A`、`MedievalSharp / A` を切り替えても preview が崩れない
-- `黒薔薇シンデレラ / 鍵 / あ / 黒` 前後で preview が崩れない
-- `書体 = M PLUS Rounded 1c Regular`、文字 = `B / O / S` 前後で曲線が過度に角張らない
-- 2u 以上のキーで `デジタル` や `ShiftLock` の `文字の大きさ` を大きくしても、legend がキー上面の footprint で切られず、はみ出した状態で表示される
-- `目印を付ける`
+- `Width`
+- `Top Center Height`
+- `Add Key Rim`
+- `Key Rim Width`
+- `Upward Height`
+- `Downward Height`
+- `Front-to-Back Tilt`
+- `Left-to-Right Tilt`
+- `Tilt Input Method`
+- `Keytop Surface`
+- `Depth`
+- the typewriter shape's `Top-Referenced Height`
+- `Top Taper`
+- `Add Keytop Legend`
+- `Legend Text`
+- switching `Legend Content` from `Text` to `Icon` hides the text input, typeface, and underline fields, and shows the icon set and icon search fields
+- the magnifying glass button for `Icon` opens a search textbox and a scrollable selection list
+- typing `volume` narrows the candidates in the currently selected icon set in real time, and selecting a candidate updates the selected icon name and the preview
+- switching the icon set between Material Symbols, Font Awesome Free Solid, and Remix Icon updates the search candidates, external catalog link, and license notice to match the selected set
+- icon legends also reflect `Legend Size`, `Weight Adjustment`, `Text Height`, position, and color
+- increasing the text from `A` to `Shift` or `ShiftLock` does not automatically change the legend size unless `Legend Size` is touched
+- the legend size changes only when `Legend Size` is changed
+- `Typeface`
+- below `Typeface`, a link to the selected font's page is shown with its favicon and page name, and opens the distribution/introduction page in a new tab
+- the magnifying glass button for `Typeface` opens a search textbox and a scrollable selection list
+- a `Built-in Fonts` / `My Fonts` segment control is shown at the top of the font selection list
+- the `Built-in Fonts` segment shows only bundled fonts, and `Add Local Font` is not shown there
+- choosing a TTF / OTF file from `Add Local Font` in the `My Fonts` segment adds the selected font as a `My Fonts` entry and applies it to the current legend
+- dragging and dropping a TTF / OTF file onto the screen adds it to `My Fonts` rather than being treated as a project / JSON load
+- while a My Font is selected, the local file name is shown along with a notice that the font itself is not bundled into the project ZIP or JSON
+- pressing `Delete` while a My Font is selected reverts any legend using that font to the default font
+- if a loaded JSON references an unloaded `user-font:*`, it is not silently replaced with the default font; instead the UI prompts to re-add the same TTF / OTF
+- each font name in the selection list is rendered in that font
+- typing `M PLUS` narrows the candidates in real time
+- `M PLUS 1 Variable` can be selected from the candidates
+- searching for `Noto Sans` / `Noto Sans JP` returns candidates
+- searching for `Bangers` / `Creepster` / `Rye` / `Orbitron` returns candidates
+- searching for `Art Gothic` returns `Grenze Gotisch Regular` and `MedievalSharp Regular` as candidates
+- searching for `黒薔薇` returns `黒薔薇シンデレラ` as a candidate
+- the actual copyright/license notice text is shown only while `黒薔薇シンデレラ` is selected
+- the `Copy` button for `黒薔薇シンデレラ` can copy the notice text to the clipboard
+- selecting `M PLUS 1 Variable` enables `Font Style`, allowing switching to named styles such as `Bold`
+- selecting `Noto Sans Variable` / `Noto Sans JP Variable` enables `Font Style`, allowing switching to named styles such as `Bold`
+- `Font Style` is disabled when a static font is selected
+- selecting `Orbitron Regular` does not enable `Font Style`, and it stays on the Regular face
+- turning on `Add Underline` changes the underline position and thickness per font, and in particular the line does not cut into the middle of the character with `M PLUS 1 Variable / Thin / A`
+- with `Weight Adjustment = 0`, switching fonts does not introduce unintended thickening
+- the outline changes only when `Weight Adjustment` is moved to a positive or negative value
+- switching between `Bangers / A`, `Creepster / A`, `Rye / A`, and `Orbitron / A` does not break the preview
+- switching between `Grenze Gotisch / A` and `MedievalSharp / A` does not break the preview
+- the preview does not break around `黒薔薇シンデレラ / 鍵 / あ / 黒`
+- with `Typeface = M PLUS Rounded 1c Regular` and text = `B / O / S`, the curves are not excessively angular
+- for keys 2u or larger, increasing the `Legend Size` for `Digital` or `ShiftLock` shows the legend extending beyond the keytop footprint rather than being clipped
+- `Add Homing Mark`
 - `stemType`
-- typewriter shape で rim を有効にしたとき、body と rim が別色で破綻なく分かれて見える
-- typewriter shape の `上面基準の高さ` を増減したとき、キートップ本体の厚みは変わらず、取り付け部分だけが上下方向に変わる
-- `上方向の高さ = 0`、`下方向の高さ = 0` のとき、rim がキートップと面一で欠けや浮きが出ない
-- `上方向の高さ = 0`、`下方向の高さ = 0` でも、typewriter rim の側面が body に埋もれず連続して露出する
-- typewriter rim の外側表面に body 色の薄い筋や被りが出ない
-- `上方向の高さ` または `下方向の高さ` を増やしたときだけ、外寸が増えて対応方向へ rim が伸びる
-- `左右の傾斜` を 28-32 度前後まで上げても、stem が上面へ露出しない
-- `キートップ形状 = フラット / シンドリカル / スフェリカル` を切り替えても preview が破綻しない
-- typewriter shape では `キートップ形状 = フラット / スフェリカル` を切り替えられ、`シンドリカル` は選択肢へ出ない
-- `深さ` は cylindrical / spherical とも `-1.5mm` から `+1.5mm` まで入力でき、正値では凹み、負値では同じ cylindrical / spherical 曲面の盛り上がりになり、0 へ戻すとフラット相当へ戻る
-- `キートップ形状 = シンドリカル / スフェリカル` の `深さ` の絶対値を浅くしても、曲面の開始位置が中心へ寄らず、外周基準のまま高さだけ変わる
-- `深さ = +0.5 / -0.5` など絶対値が同じ正負を切り替え、中心の落ち込み量と盛り上がり量が鏡像になり、円柱面 / 球面の曲率と向きが変わらない
-- 1u、2u 以上の幅広キー、縦長キー、JIS Enter で負の `深さ` を指定し、上面の大きさに追従して自然な凸面になり、キー外寸が増えない
-- 負の `深さ` と `キートップ上端R` を併用し、丸め後の側面 / 上面境界から凸面が始まり、外周に垂直なリップ、二段の平面、余分な高さが出ない
-- 負の `深さ` でも内側天井と stem 取付位置はフラット時と同じで、stem が上面側へ持ち上がらない
-- `キートップ形状 = シンドリカル / スフェリカル` のどちらでも `深さ = ±1.5` が保持され、`±1.5` を超える入力は正負それぞれの上限へ対称に丸められ、body / legend / homing bar が描画される
-- `キートップ形状 = シンドリカル / スフェリカル` のまま `手前から奥の傾斜` と `左右の傾斜` を変えても、曲面が平坦化せずそのまま傾いて見える
-- `キートップ形状 = シンドリカル / スフェリカル` の正負どちらでも、legend の輪郭へ body 色の薄い筋や被りが出ず、負値で legend が空にならない
-- flush legend の既定値で正面を向けても、文字面に body 色のチラつきが出ない
-- 角丸外形、dish、stem 外周の曲面で、面ごとの筋が過度に目立たない
-- 稜線が必要な箇所では、輪郭が不自然に丸まって見えない
+- with the typewriter shape and the rim enabled, the body and rim are shown as distinct colors without visual breakage
+- increasing or decreasing the typewriter shape's `Top-Referenced Height` changes only the mount portion up and down, without changing the thickness of the keytop body
+- with `Upward Height = 0` and `Downward Height = 0`, the rim is flush with the keytop and shows no gaps or floating
+- with `Upward Height = 0` and `Downward Height = 0`, the typewriter rim's side surface remains continuously exposed rather than being buried in the body
+- there are no thin body-colored streaks or bleed-through on the outer surface of the typewriter rim
+- increasing only `Upward Height` or `Downward Height` increases the outer dimensions and extends the rim in the corresponding direction
+- raising `Left-to-Right Tilt` to around 28-32 degrees does not expose the stem on the top surface
+- switching `Keytop Surface = Flat / Cylindrical / Spherical` does not break the preview
+- for the typewriter shape, `Keytop Surface = Flat / Spherical` can be switched, and `Cylindrical` does not appear as an option
+- `Depth` can be entered from `-1.5mm` to `+1.5mm` for both cylindrical and spherical; positive values produce a dish (recess), negative values produce a bulge (raised form) on the same cylindrical/spherical curved surface, and returning to 0 reverts to the flat equivalent
+- for `Keytop Surface = Cylindrical / Spherical`, reducing the absolute value of `Depth` does not move the curve's start point toward the center; only the height changes, referenced to the outer perimeter
+- switching between `Depth = +0.5` and `-0.5` (equal absolute values with opposite signs) produces mirror-image amounts of center recess and bulge, without changing the curvature or orientation of the cylindrical/spherical surface
+- specifying a negative `Depth` for a 1u key, wide keys of 2u or larger, tall keys, and JIS Enter produces a natural convex surface that follows the top surface size, without increasing the key's outer dimensions
+- combining a negative `Depth` with `Top Edge Radius`, the convex surface starts from the boundary between the rounded side and top surfaces, without a lip perpendicular to the perimeter, a two-step flat area, or extra height
+- with a negative `Depth`, the inner ceiling and stem mount position remain the same as when flat, and the stem is not raised toward the top surface
+- for both `Keytop Surface = Cylindrical` and `Spherical`, `Depth = ±1.5` is retained, values beyond `±1.5` are clamped symmetrically to the positive/negative limits, and the body / legend / homing bar are rendered
+- with `Keytop Surface = Cylindrical / Spherical`, changing `Front-to-Back Tilt` and `Left-to-Right Tilt` keeps the curved surface visibly tilted rather than flattening it
+- for both positive and negative values of `Keytop Surface = Cylindrical / Spherical`, there are no thin body-colored streaks or bleed-through on the legend's outline, and the legend is not empty for negative values
+- facing the default flush legend to the front shows no body-colored flicker on the text face
+- rounded outer edges, the dish, and the curved surface around the stem do not show excessively prominent per-face streaking
+- edges that need a sharp ridge do not appear unnaturally rounded
 
-### 3. 編集データ JSON
+### 3. Editor Data JSON
 
-- 設計タブ先頭の `名称` を分かりやすい文字列へ変更する
-- `プロジェクト` セグメントで編集中のキーキャップのコピーを追加する
-- 追加したキーキャップの書き出しボタンを押し、オーバーレイから `編集データ JSON` を保存する
-- ダウンロードファイル名が `名称 + .json` になることを確認する
-- 保存した JSON をドラッグ & ドロップで読み込む
-- 読み込み後にプロジェクトセグメントへ表示が移り、キーキャップ一覧へ追加され、追加されたキーキャップが編集中になることを確認する
-- preview と入力欄が元に戻ることを確認する
-- 保存した JSON から数項目を削った互換入力 JSON を別名で用意する
-- 互換入力 JSON をドラッグ & ドロップで読み込む
-- 読み込んだ JSON がキーキャップ一覧へ追加され、追加されたキーキャップが編集中になることを確認する
-- 削った項目が shape defaults で補完され、残した項目だけが反映されることを確認する
-- icon 用フィールドを持たない既存の文字印字 JSON は `印字の内容 = 文字` として読み込まれ、既存の `入れる文字` と font 設定が維持されることを確認する
-- `印字の内容 = アイコン`、`アイコン = volume-2` などで保存した JSON は、読み込み後も同じアイコン選択として復元されることを確認する
-- `rimEnabled` や `legendEnabled` を false にした場合でも、再度オンにすると hidden な値が既定どおり残っていることを確認する
+- change the `Name` at the top of the design tab to a clear, descriptive string
+- add a copy of the currently edited keycap in the `Project` segment
+- press the export button for the added keycap and save the `Editor Data JSON` from the overlay
+- confirm the downloaded file name is `Name + .json`
+- load the saved JSON via drag and drop
+- confirm that after loading, the view switches to the project segment, the keycap is added to the keycap list, and the added keycap becomes the one being edited
+- confirm that the preview and input fields revert accordingly
+- prepare, under a different name, a compatible input JSON with a few fields removed from the saved JSON
+- load the compatible input JSON via drag and drop
+- confirm the loaded JSON is added to the keycap list and the added keycap becomes the one being edited
+- confirm that removed fields are filled in from the shape defaults, and only the remaining fields are applied
+- confirm that an existing text-legend JSON without icon fields is loaded with `Legend Content = Text`, preserving the existing `Legend Text` and font settings
+- confirm that a JSON saved with `Legend Content = Icon`, `Icon = volume-2`, etc. is restored with the same icon selection after loading
+- confirm that if `rimEnabled` or `legendEnabled` is set to false, re-enabling it restores the hidden values to their original defaults
 
-### 4. プロジェクト
+### 4. Project
 
-- `プロジェクト` セグメントを開く
-- プロジェクト名を変更できることを確認する
-- 編集中のキーキャップのコピーを追加し、preview 画像とキーキャップ名が一覧に出ることを確認する
-- preview を任意の角度へ回転して active keycap の preview 画像を再撮影し、その後パラメータを変更しても一覧画像が同じ角度で更新されることを確認する
-- 別の名称や legend に変更してもう一度追加し、一覧に複数件出ることを確認する
-- キーキャップ一覧の順序番号付きハンドルを掴んでドラッグし、drop 前にカードが移動アニメーション付きで詰まり、各カードの順序番号は元の値を保持し、drop 後に最終順へ更新されることを確認する
-- 一覧のキーキャップを押下すると、現在の編集内容と preview がそのキーキャップへ切り替わることを確認する
-- 一覧のキーキャップごとの書き出しボタンを押すと、JSON / 3MF / STEP / STL の選択肢を持つオーバーレイが開くことを確認する
-- `プロジェクトを保存` で `KeycapMaker.json`、`keycaps/`、`3mf/` を持つプロジェクト ZIP が保存されることを確認する
-- 保存したプロジェクトディレクトリをドラッグ & ドロップし、プロジェクト一覧と active keycap が復元されることを確認する
-- 保存したプロジェクト ZIP をドラッグ & ドロップし、解凍後のプロジェクト一覧と active keycap が復元されることを確認する
-- プロジェクト読み込み済みの状態で単体の編集データ JSON をドラッグ & ドロップし、既存のプロジェクト一覧を保持したまま新しいキーキャップとして追加され、追加分が編集中になることを確認する
-- 現在の形状へ反映できないパラメータを含む編集データ JSON を読み込み、JSON 読み込みレポートが表示されること、別キーキャップへ切り替えて戻ってもレポートが再表示されること、各行の `×` で該当パラメータだけを保存対象 JSON から削除できることを確認する
+- open the `Project` segment
+- confirm the project name can be changed
+- add a copy of the currently edited keycap and confirm the preview image and keycap name appear in the list
+- rotate the preview to an arbitrary angle, recapture the preview image for the active keycap, then confirm that changing parameters afterward still updates the list image at the same angle
+- change the name or legend and add again, confirming multiple entries appear in the list
+- grab the numbered order handle on a keycap list entry and drag it; confirm the cards shift with a move animation before the drop, each card keeps its original order number during the drag, and the order numbers update to their final values after the drop
+- confirm that clicking a keycap in the list switches the current editing content and preview to that keycap
+- confirm that pressing the export button for a keycap in the list opens an overlay with JSON / 3MF / STEP / STL options
+- confirm that `Save Project` saves a project ZIP containing `KeycapMaker.json`, `keycaps/`, and `3mf/`
+- drag and drop a saved project directory and confirm the project list and active keycap are restored
+- drag and drop a saved project ZIP and confirm the project list and active keycap are restored after extraction
+- with a project already loaded, drag and drop a single editor data JSON and confirm it is added as a new keycap while keeping the existing project list, with the added keycap becoming the one being edited
+- load an editor data JSON containing parameters that cannot be applied to the current shape, and confirm that the JSON import report is displayed, that the report reappears after switching to another keycap and back, and that the `x` on each row removes only that parameter from the JSON to be saved
 
 ### 5. 3MF
 
-- キーキャップ一覧の書き出しボタンを押し、オーバーレイから `3MF` を保存する
-- ダウンロードファイル名が `名称 + .3mf` になることを確認する
-- スライサー上の親 object 名が `名称` と一致することを確認する
+- press the export button for a keycap in the list and save `3MF` from the overlay
+- confirm the downloaded file name is `Name + .3mf`
+- confirm the parent object name in the slicer matches `Name`
 
 ### 6. STEP
 
-- キーキャップ一覧の書き出しボタンを押し、オーバーレイで `STEP` が `3MF` と `STL` の間に表示されることを確認する
-- オーバーレイから `STEP` を保存する
-- ダウンロードファイル名が `名称 + .step` になることを確認する
-- 保存した STEP が `FACETED_BREP_SHAPE_REPRESENTATION` を含む STEP AP214 ファイルとして開けることを確認する
-- legend を有効にしていても、STEP に legend 形状が含まれないことを確認する
-- STEP は単一形状として読み込まれ、色や part 分離が含まれないことを確認する
-- 色分けや legend が必要な場合は 3MF を使う説明が UI に表示されていることを確認する
+- press the export button for a keycap in the list and confirm that `STEP` is shown between `3MF` and `STL` in the overlay
+- save `STEP` from the overlay
+- confirm the downloaded file name is `Name + .step`
+- confirm the saved STEP file opens as a STEP AP214 file containing `FACETED_BREP_SHAPE_REPRESENTATION`
+- confirm that STEP does not include legend geometry even when the legend is enabled
+- confirm that STEP loads as a single shape without colors or part separation
+- confirm the UI shows guidance to use 3MF when colors or legends are needed
 
 ### 7. STL
 
-- キーキャップ一覧の書き出しボタンを押し、オーバーレイから `STL` を保存する
-- ダウンロードファイル名が `名称 + .stl` になることを確認する
-- legend を有効にしていても、STL に legend 形状が含まれないことを確認する
-- STL は単一メッシュとして読み込まれ、色や part 分離が含まれないことを確認する
-- 色分けや legend が必要な場合は 3MF を使う説明が UI に表示されていることを確認する
+- press the export button for a keycap in the list and save `STL` from the overlay
+- confirm the downloaded file name is `Name + .stl`
+- confirm that STL does not include legend geometry even when the legend is enabled
+- confirm that STL loads as a single mesh without colors or part separation
+- confirm the UI shows guidance to use 3MF when colors or legends are needed
 
-## Bambu Studio 確認
+## Bambu Studio Verification
 
-geometry や export 契約を変えた場合は、保存した `名称 + .3mf` を Bambu Studio で開いて次を確認する。
+When geometry or the export contract has changed, open the saved `Name + .3mf` in Bambu Studio and check the following.
 
-- 単位が崩れていない
-- import 時に小さい part 単体を理由にしたスケール警告が出ない
-- body / rim / homing / legend が想定どおりの位置関係を保っている
-- object list 上で part 名が `body` / `rim` / `homing` / `legend` として識別できる
-- `pitch / roll` を付けても homing bar や legend が空中に浮かない
-- `pitch / roll` を強めに付けても stem が上面へ貫通しない
-- `pitch / roll` を付けても cylindrical / spherical の凹面 / 凸面が top 面から浮かず、傾いたまま側面へ連続している
-- legend が有効な場合、印字が埋没せず見えている
-- flush legend の周囲で body と legend が同一面に重なっていない
-- typewriter key rim が有効な場合、rim が body と別 part のまま崩れていない
-- homing bar が有効な場合、別 part として崩れていない
-- 複数 part がある場合、オブジェクト分離が維持されている
+- units are not broken
+- no scale warning appears at import time due to a small standalone part
+- body / rim / homing / legend maintain the expected positional relationship
+- parts can be identified in the object list as `body` / `rim` / `homing` / `legend`
+- the homing bar and legend do not float in midair when `pitch / roll` is applied
+- the stem does not penetrate the top surface even with strong `pitch / roll` values
+- the cylindrical/spherical dish/bulge surface does not float above the top face when `pitch / roll` is applied, remaining continuous with the tilted sidewall
+- when the legend is enabled, the legend is visible and not buried
+- around a flush legend, the body and legend do not overlap on the same plane
+- when the typewriter key rim is enabled, the rim remains a separate part from the body without breaking apart
+- when the homing bar is enabled, it remains a separate part without breaking apart
+- when there are multiple parts, object separation is preserved
 
-色は補助情報として扱う。色が見えるかどうかより、part 分離と位置関係を優先して確認する。
+Color is treated as auxiliary information. Prioritize checking part separation and positional relationships over whether colors are visible.
 
-## 実行タイミング
+## When to Run This
 
-- `scad/base/` または `scad/modules/` を変更したとき
-- `src/main.js` の export UI / export 実行経路を変更したとき
-- `src/lib/keycap-scad-bundle.js` を変更したとき
-- `src/lib/export-3mf.js` を変更したとき
-- runtime やフォント資産を入れ替えたとき
+- when `scad/base/` or `scad/modules/` is changed
+- when the export UI / export execution path in `src/main.js` is changed
+- when `src/lib/keycap-scad-bundle.js` is changed
+- when `src/lib/export-3mf.js` is changed
+- when runtime or font assets are replaced
 
-## 記録先
+## Where to Record Results
 
-- 採用済み判断や重要な確認結果:
+- Adopted decisions or important verification results:
   `docs/decisions/decision-log.md`
-- 未解決の問題や次の拡張タスク:
+- Unresolved issues or next extension tasks:
   `docs/backlog/`
