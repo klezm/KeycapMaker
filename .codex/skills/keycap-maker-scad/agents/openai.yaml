@@ -1,4 +1,4 @@
 interface:
   display_name: "Keycap Maker SCAD"
-  short_description: "Keycap Maker の modular SCAD 実装規約"
+  short_description: "Keycap Maker's modular SCAD implementation conventions"
   default_prompt: "Use $keycap-maker-scad to extend the Keycap Maker modular OpenSCAD stack while preserving preview/export separation and body/legend split."

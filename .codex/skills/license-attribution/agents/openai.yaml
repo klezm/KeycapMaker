@@ -1,4 +1,4 @@
 interface:
   display_name: "License Attribution"
-  short_description: "フォントや同梱 asset の表記要件を repo と UI に反映する"
+  short_description: "Reflect attribution requirements for fonts and bundled assets in the repo and UI"
   default_prompt: "Use $license-attribution to verify attribution requirements for bundled fonts or assets in Keycap Maker, store provenance in public/fonts, and wire actual attribution text into the UI when needed."
