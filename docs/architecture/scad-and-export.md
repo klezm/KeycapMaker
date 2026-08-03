@@ -1,19 +1,19 @@
-# SCAD / Export 契約
+# SCAD and Export Contract
 
-## SCAD ディレクトリの責務
+## SCAD Directory Responsibilities
 
 - `scad/base/`
-  whole-key のエントリポイントと export 切り替え
+  Whole-key entry point and export switching
 - `scad/modules/`
-  shell、legend、stem、homing bar などの再利用部品
+  Reusable parts such as shell, legend, stem, and homing bar
 - `scad/presets/`
-  SCAD 固有の nominal constant や sample 用 parameter set
+  SCAD-specific nominal constants and parameter sets for samples
 - `scad/samples/`
-  形状回帰確認に使うサンプル
+  Samples used for shape regression checks
 
-## 現在のキーキャップエントリ
+## Current Keycap Entry
 
-`scad/base/keycap.scad` が現在の基準エントリです。`export_target` で次を切り替えます。
+`scad/base/keycap.scad` is the current base entry. The following are switched by `export_target`:
 
 - `preview`
 - `body`
@@ -33,37 +33,37 @@
 - `single_material_shape`
 - `j_stem_lp01_reference`
 
-この構成により、preview 用表示と part 単位 export を同じ基礎形状から扱います。
+With this structure, preview display and part-by-part export are handled from the same base shape.
 
-## separate volume の扱い
+## Handling Separate Volumes
 
-- body / top-hat / rim / legend は別体積を維持できる
-- homing bar は body 側の触覚マーカーとして扱い、legend と混ぜない
-- body / top-hat / rim / legend / homing の相対位置は共有原点で揃える
-- 色だけに依存せず、mesh 自体を part として分ける
+- Body / top-hat / rim / legend can maintain separate volumes
+- Homing bar is treated as a tactile marker on the body side, not mixed with legends
+- Relative positions of body / top-hat / rim / legend / homing are aligned to a shared origin
+- Instead of relying solely on colors, the meshes themselves are separated into parts
 
-## preview と export の責務分離
+## Separation of Responsibilities Between Preview and Export
 
-- preview:
-  反応速度と見た目確認を優先する
-- export:
-  part 分離と形状の意味づけを優先する
+- Preview:
+  Prioritizes response speed and visual confirmation
+- Export:
+  Prioritizes part separation and the meaning of shapes
 
-現在の preview は OFF メッシュを body / top-hat / rim / homing / legend ごとに生成して Three.js へ渡します。top-hat は分離色が有効な場合だけ別 OFF になる。Three.js 側では shared vertex を保った indexed geometry を基準に creased normals を作り、曲面は滑らかに、急角は残す。SCAD 側の円弧分割は feature の半径と `quality` に応じて上限付きで増やす。現在の 3MF export は同じ part 群から 3MF を組み立てます。STEP export は `single_material_shape` target を OFF として出力し、ブラウザ側で STEP AP214 faceted B-rep へ変換します。STL export は `single_material_shape` target から OpenSCAD runtime の STL 出力を直接使い、色と legend を含まない単一メッシュとして扱います。
+The current preview generates OFF meshes per body / top-hat / rim / homing / legend and passes them to Three.js. The top-hat becomes a separate OFF only when separation coloring is enabled. On the Three.js side, creased normals are created based on indexed geometry retaining shared vertices, keeping curved surfaces smooth while preserving sharp edges. Arc divisions on the SCAD side increase based on feature radius and `quality`, up to a limit. The current 3MF export assembles 3MFs from the same set of parts. STEP export outputs the `single_material_shape` target as OFF and converts it to STEP AP214 faceted B-rep on the browser side. STL export directly uses the STL output of the OpenSCAD runtime from the `single_material_shape` target, treated as a single mesh without color and legends.
 
-legend の `text()` は bundled OpenSCAD runtime 上で preview / export の `quality` に応じて曲線分割数を上げ、内部では拡大してから縮小する。これにより、小さい文字サイズでも丸みのある書体の輪郭が過度に角張るのを抑える。font の native style は JS 側で `font` query を組み立てて指定し、ユーザー操作なしの擬似 bold / italic / slanted は行わない。下線は font file の `post` / `head` / `hhea` から `UnderlinePosition` / `UnderlineThickness` / line box 中心を読み、`valign="center"` な text 座標へ変換したうえで実測文字幅と組み合わせる。font metadata を取れない場合の任意フォールバックは行わない。輪郭補正は `legendOutlineDelta` を通した明示入力時だけ `offset()` を使う。
-legend は content type として `text` と `icon` を持つ。`text` は従来どおり font と `text()` を使い、`icon` は選択した icon provider の SVG を runtime asset として `/icons/{iconSet}/{runtimeName}.svg` に注入し、SCAD 側で `import()` した 2D 形状を `linear_extrude()` して legend volume にする。font 選択とは独立して `legendIconSet` / `legendIconName` / `legendIconFill` を保持し、既存 JSON に icon 用フィールドがない場合は `text` / `lucide` / `circle` / `false` を補完する。`legendIconFill` は選択した icon が通常 body とは異なる filled body を持つ場合だけ有効になり、Material Symbols は outline shape と base filled shape、Remix Icon は `*-line` と `*-fill` へ provider ごとに解決する。ブラウザ実行時は Lucide、Material Symbols、Font Awesome Free Solid、Remix Icon を jsDelivr の `latest` package から読み込み、取得した SVG node / body / path data を sanitizer に通してから OpenSCAD 用 SVG を作る。Lucide は sanitizer 済み node をさらに stroke primitives から filled path へ変換する。CDN が利用できない場合は installed package 由来の fallback data を同じ sanitizer / 変換経路に通す。見た目が変わらない icon では `legendIconFill` を `false` に丸め、UI も表示しない。アイコンでは provider が持つ stroke / fill の形状比率を維持し、`legendOutlineDelta` による `offset()` 太さ補正は適用しない。アイコンでも `legendSize`、`legendHeight`、位置、色は共通に扱い、下線は出さない。現在の provider は Lucide、Material Symbols、Font Awesome Free Solid、Remix Icon。
-ユーザーが TTF / OTF を追加した場合、その font はブラウザ内の一時 registry に `マイフォント` として保持し、preview / export 実行時だけ runtime asset として `/fonts/user/` 配下へ注入する。編集データ JSON には font 本体を保存せず、file bytes の hash 由来の `user-font:*` key だけを保持する。同じ font file を再追加すると key が一致して復元できる。未読み込みの `user-font:*` は既定 font へ黙って置換せず、UI で再追加を促す。
-legend の文字サイズは UI の `legendSize` をそのまま基準にし、文字数に応じた自動縮小や単一文字だけの自動拡大は行わない。
-legend の `legendHeight` は 0 を面一とし、正値は表面から盛り上がる高さ、負値は表面から沈み込む recess 深さとして扱う。負値の場合も legend part は別体積のまま保持し、body 側は表面から recessed legend の上面までを切り抜いて表示する。
-legend の作業領域はキーキャップ上面の footprint を上限にしない。文字が大きすぎる場合も自動縮小せず、SCAD 側の surface fitting 用領域を十分広く取って、legend part がキー上面からはみ出すことを許可する。
-top legend の曲面追従 volume は、上面曲面とその下側へ平行移動した曲面の間の band として扱う。cylindrical / spherical の深い凹面でも高い凸面でも、平面基準の作業領域を曲面の drop / rise の両側へ広げ、legend part が空になることを避ける。
+Legend's `text()` increases curve divisions depending on `quality` for preview/export on the bundled OpenSCAD runtime, internally expanding and shrinking. This prevents rounded typeface contours from becoming excessively angular even at small sizes. Native font styles are specified by assembling a `font` query in JS; no pseudo-bold / italic / slanted is applied without user action. Underlines read `UnderlinePosition` / `UnderlineThickness` / line box center from the font file's `post` / `head` / `hhea` tables, convert to `valign="center"` text coordinates, and combine with actual measured text width. No arbitrary fallbacks are used if font metadata is unavailable. Contour correction uses `offset()` only upon explicit input via `legendOutlineDelta`.
+Legends have content types of `text` and `icon`. `text` uses fonts and `text()` as usual; `icon` injects the SVG of the selected icon provider as a runtime asset to `/icons/{iconSet}/{runtimeName}.svg`, and uses `linear_extrude()` on the SCAD side after `import()`ing the 2D shape. `legendIconSet` / `legendIconName` / `legendIconFill` are held independently of font selection. If existing JSONs lack icon fields, `text` / `lucide` / `circle` / `false` are supplemented. `legendIconFill` is enabled only when the selected icon has a filled body distinct from the normal body. Material Symbols resolves to outline shape and base filled shape, and Remix Icon resolves to `*-line` and `*-fill` per provider. During browser execution, Lucide, Material Symbols, Font Awesome Free Solid, and Remix Icon are loaded from jsDelivr's `latest` packages. The fetched SVG node / body / path data goes through a sanitizer before making the SVG for OpenSCAD. Lucide further converts sanitized nodes from stroke primitives to filled paths. If the CDN is unavailable, fallback data from installed packages goes through the same sanitizer/conversion path. For icons whose appearance does not change, `legendIconFill` is rounded to `false`, and the UI is hidden. Icons maintain their provider's stroke / fill shape ratios, and `offset()` thickness correction via `legendOutlineDelta` is not applied. Icons share `legendSize`, `legendHeight`, position, and color settings, but do not show underlines. Current providers are Lucide, Material Symbols, Font Awesome Free Solid, and Remix Icon.
+If a user adds a TTF / OTF, that font is held in the in-browser temporary registry as `My Fonts`, and injected as a runtime asset under `/fonts/user/` only during preview/export execution. Font data itself is not saved in edit data JSONs; only the `user-font:*` key derived from the file bytes' hash is kept. Re-adding the same font file matches the key and restores it. Unloaded `user-font:*` keys are not silently replaced with default fonts; the UI prompts re-addition.
+Legend text size uses the UI's `legendSize` as the baseline; it is not auto-shrunk based on character count or auto-enlarged for single characters.
+`legendHeight` treats 0 as flush. Positive values mean protruding height from the surface; negative values mean recessed depth sinking from the surface. Even for negative values, the legend part retains its separate volume, and the body side is displayed cut out from the surface down to the top face of the recessed legend.
+Legend workspace is not capped by the keycap top footprint. Even if text is too large, it doesn't auto-shrink. The surface fitting area on the SCAD side is made large enough, allowing legend parts to overhang the keytop.
+Top legend curve tracking volume acts as a band between the top curve surface and a surface translated downwards. Even on deeply concave or highly convex cylindrical/spherical surfaces, the plane-based workspace expands to both sides of the curve drop/rise, avoiding empty legend parts.
 
-## UI から SCAD への橋渡し
+## Bridging from UI to SCAD
 
-OpenSCAD browser runtime では `-D` 上書きが安定しなかったため、実行ごとに wrapper SCAD を生成して `user_*` 定義を注入します。
+Because `-D` overwrites were unstable in the OpenSCAD browser runtime, a wrapper SCAD is generated for each execution to inject `user_*` definitions.
 
-主な橋渡しファイル:
+Main bridge files:
 
 - `src/lib/keycap-scad-bundle.js`
 - `src/data/keycap-shape-registry.js`
@@ -184,62 +184,62 @@ Rules:
 - `scad/samples/stem-mounts.scad`
   For checking stem mount differences.
 
-Samples are currently used for geometry regression.
+Samples are currently used for geometry regression checks.
 
 ## Current Export Contract
 
 ### 3MF
 
-- 出力元は OFF メッシュ
-- 3MF 内では part ごとに object resource を分ける
-- `build` には part 直列ではなく、body / top-hat / rim / homing / legend 系 part を `components` として束ねた親 object を 1 件だけ置く
-- 親 object の `name` には UI の `名称` を使う
-- 現在の part 候補は `body`、`top-hat`、`rim`、`homing`、`legend`、`legend-left-top`、`legend-right-top`、`legend-left-bottom`、`legend-right-bottom`、`legend-front`、`legend-back`、`legend-left`、`legend-right`
-- top-hat 分離色が無効、または top-hat が凹み形状の場合、`top-hat` object は含まれない
-- キートップ legend が無効なら対応する `legend*` object は含まれない
-- sidewall legend が無効なら対応する `legend-*` object は含まれない
-- text legend と icon legend はどちらも `legend*` object として扱い、3MF 内の part 分離と色指定を維持する
-- typewriter key rim が無効なら rim object は含まれない
-- homing bar が無効なら homing object は含まれない
-- 親 object には material / color を付けず、子 part object の material / color を維持する
-- Bambu Studio / OrcaSlicer 向けに `Metadata/model_settings.config`、PrusaSlicer / Slic3r PE 向けに `Metadata/Slic3r_PE_model.config` を追加し、part 表示名を `body` / `rim` / `homing` / `legend` / `legend-*` として保持する
-- Cura など標準3MF中心の importer 向けには、子 object の `name` と `partnumber` を保持する
+- Source is OFF mesh
+- Object resources are separated for each part within 3MF
+- In `build`, instead of placing parts sequentially, parts related to body / top-hat / rim / homing / legend are bundled as a parent object using `components`, and only one parent object is placed
+- Parent object `name` uses `Name` from UI
+- Current candidate parts are `body`, `top-hat`, `rim`, `homing`, `legend`, `legend-left-top`, `legend-right-top`, `legend-left-bottom`, `legend-right-bottom`, `legend-front`, `legend-back`, `legend-left`, `legend-right`
+- If top-hat separation color is disabled or top-hat is recessed, `top-hat` object is not included
+- If top legend is disabled, the corresponding `legend*` objects are not included
+- If sidewall legend is disabled, the corresponding `legend-*` objects are not included
+- Both text legends and icon legends are treated as `legend*` objects, maintaining part separation and color specification in 3MF
+- If typewriter key rim is disabled, rim object is not included
+- If homing bar is disabled, homing object is not included
+- Parent object does not have material/color; child part objects retain their material/color
+- Adds `Metadata/model_settings.config` for Bambu Studio/OrcaSlicer, and `Metadata/Slic3r_PE_model.config` for PrusaSlicer/Slic3r PE, retaining part display names as `body` / `rim` / `homing` / `legend` / `legend-*`
+- Maintains child object `name` and `partnumber` for standard 3MF-oriented importers like Cura
 
 ### STEP
 
-- 出力元は `single_material_shape` target の OFF メッシュ
-- bundled OpenSCAD runtime は native STEP export に対応していないため、ブラウザ側で STEP AP214 の `FACETED_BREP_SHAPE_REPRESENTATION` として生成する
-- body shell、top-hat、stem、homing bar、typewriter rim を単一形状として扱う
-- legend は出力に含めない
-- 色、material、part 名、separate volume 情報は含めない
-- 曲面は OpenSCAD が生成した faceted mesh を `POLY_LOOP` / `FACE_SURFACE` として表現するため、CAD 交換用ではあるがパラメトリックな NURBS / analytic surface ではない
-- 色分けや legend が必要な場合は 3MF を使う
-- 他の書き出しと同じく、ダウンロードファイル名は `params.name` を基準にする
+- Source is OFF mesh of `single_material_shape` target
+- Since bundled OpenSCAD runtime doesn't support native STEP export, browser generates it as `FACETED_BREP_SHAPE_REPRESENTATION` of STEP AP214
+- Body shell, top-hat, stem, homing bar, and typewriter rim are treated as a single shape
+- Legends are not included in the output
+- Color, material, part name, and separate volume information are not included
+- Curved surfaces represent faceted mesh generated by OpenSCAD as `POLY_LOOP` / `FACE_SURFACE`. Though for CAD exchange, it's not a parametric NURBS / analytic surface
+- Use 3MF if color separation or legend is needed
+- As with other exports, download file name is based on `params.name`
 
 ### STL
 
-- 出力元は `single_material_shape` target
-- OpenSCAD runtime から binary STL として直接出力する
-- body shell、top-hat、stem、homing bar、typewriter rim を単一メッシュとして union する
-- legend は出力に含めない
-- 色、material、part 名、separate volume 情報は含めない
-- 色分けや legend が必要な場合は 3MF を使う
-- JSON / 3MF / STEP と同じく、ダウンロードファイル名は `params.name` を基準にする
+- Source is `single_material_shape` target
+- Exported directly as binary STL from OpenSCAD runtime
+- Body shell, top-hat, stem, homing bar, and typewriter rim are combined (union) into a single mesh
+- Legends are not included in the output
+- Color, material, part name, and separate volume information are not included
+- Use 3MF if color separation or legend is needed
+- As with JSON / 3MF / STEP, download file name is based on `params.name`
 
-### 編集データ JSON
+### Edit Data JSON
 
-- UI state の保存と再読み込み用
-- 保存用の canonical JSON は `schemaVersion` を持つ
-- `params.name` に保存名を含める
-- geometry export ではなく、作業再開用フォーマットとして扱う
-- JSON / 3MF / STEP / STL のダウンロードファイル名は `params.name` を基準にする
-- 保存時は shape defaults を解決したフル設定を保持し、非活性 UI の値も落とさない
-- 読み込み時は canonical JSON に加えて sparse な互換入力 JSON も受ける
-- 互換入力 JSON は `params` 配下または top-level に既知パラメータを書ける。欠損したキーは shape defaults を使う
-- `shapeProfile` が明示されていればその defaults を基準に bind し、未指定なら既定 profile を使う
-- 未知のキーは無視し、既知キーだけを sanitize して state へ反映する
+- For saving and reloading UI state
+- Canonical JSON for saving has `schemaVersion`
+- Includes save name in `params.name`
+- Treated as a format for resuming work, not geometry export
+- JSON / 3MF / STEP / STL download file names are based on `params.name`
+- When saving, it holds full configuration resolving shape defaults, without dropping values for disabled UI inputs
+- When loading, accepts sparse compatible input JSON in addition to canonical JSON
+- Compatible input JSON can have known parameters under `params` or top-level. Missing keys fall back to shape defaults
+- If `shapeProfile` is explicit, binds relative to its defaults; if unspecified, uses default profile
+- Ignores unknown keys and sanitizes only known keys to reflect in state
 
-互換入力 JSON の最小例:
+Minimal example of compatible input JSON:
 
 ```json
 {
@@ -249,21 +249,21 @@ Samples are currently used for geometry regression.
 }
 ```
 
-上の例では `rimWidth` や `legendColor` など未指定の値を typewriter の shape JSON defaults で補完したうえで、最終的な editor state を復元する。
+In the example above, unspecified values like `rimWidth` or `legendColor` are populated with typewriter shape JSON defaults before restoring the final editor state.
 
-## 現在の既知制約
+## Current Known Constraints
 
-- legend はキートップ上の中央 / 右上 / 右下 / 左上 / 左下と sidewall front / back / left / right の固定モデル
-- キートップ legend の露出面は top dish 前提
-- sidewall legend は各側面の中央基準面の傾きに合わせて配置し、壁の内側面まで自動で埋め込む。角丸や JIS Enter の欠き込み面へは自動追従しない
-- font asset は variable / static の混在を許容するが、native style の有無は font ごとに異なる
-- ユーザー追加の TTF / OTF はブラウザ内のマイフォントとして扱い、JSON / project ZIP には font 本体を同梱しない
-- `high_preview` のような追加品質段階は未採用。必要になったら [../backlog/high-preview-quality-mode.md](../backlog/high-preview-quality-mode.md) を起点に再検討する
+- Legends are fixed models of center / top right / bottom right / top left / bottom left on the keytop and sidewall front / back / left / right
+- Top legend exposure assumes top dish
+- Sidewall legends align with the inclination of the center reference plane of each side, and embed automatically up to the inner surface of the wall. They do not automatically track rounded corners or notched surfaces of JIS Enter
+- Font assets allow a mix of variable / static, but the availability of native styles varies per font
+- User-added TTF / OTF are treated as local browser fonts, and the font files are not bundled in JSON / project ZIP
+- Additional quality levels like `high_preview` are not yet adopted. Re-evaluate from `docs/backlog/high-preview-quality-mode.md` if needed
 
-これらの拡張 TODO は [../backlog/legend-extensibility-todo.md](../backlog/legend-extensibility-todo.md) にまとめる。
+These extension TODOs are documented in `docs/backlog/legend-extensibility-todo.md`.
 
-## 更新ルール
+## Update Rules
 
-- SCAD の責務境界が変わったらこの文書を更新する
-- export の part 契約が変わったらこの文書と手動確認手順を更新する
-- 採用判断は [../decisions/decision-log.md](../decisions/decision-log.md) に残す
+- Update this document when SCAD responsibility boundaries change
+- Update this document and the manual verification procedure when the export part contract changes
+- Leave adoption decisions in `docs/decisions/decision-log.md`

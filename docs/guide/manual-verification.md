@@ -86,7 +86,7 @@ Change the following representative values and verify that the preview does not 
 - Specifying a negative `Depth` on 1u, keys wider than 2u, vertically long keys, or JIS Enter results in a natural convex surface tracking the top surface size, without increasing the key's outer dimensions
 - Using negative `Depth` with `Keytop Top Edge R` results in the convex surface starting from the side/top boundary after rounding, without creating vertical lips on the outer perimeter, two-step planes, or extra height
 - Even with negative `Depth`, the inner ceiling and stem mounting position are the same as flat, and the stem is not lifted to the top surface side
-- `Depth = ±1.5` is maintained for both `Keytop Shape = Cylindrical / Spherical`, inputs exceeding `±1.5` are symmetrically rounded to the positive/negative maximum limits, and body / legend / homing bar are drawn
+- `Depth = +-/1.5` is maintained for both `Keytop Shape = Cylindrical / Spherical`, inputs exceeding `+-/1.5` are symmetrically rounded to the positive/negative maximum limits, and body / legend / homing bar are drawn
 - Changing `Front to Back Incline` and `Left to Right Incline` while keeping `Keytop Shape = Cylindrical / Spherical` keeps the curved surface tilted without flattening it
 - For both positive/negative `Keytop Shape = Cylindrical / Spherical`, thin streaks or bleeding of body color do not appear on the legend contour, and the legend does not become empty with negative values
 - Even when facing the front with flush legend default values, flickering of the body color does not appear on the text surface
