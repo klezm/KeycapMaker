@@ -568,7 +568,7 @@ async function ensureMeasurementFontLoaded(selectedFont) {
     return null;
   }
   if (selectedFont.isMissing) {
-    throw new Error(`マイフォントが未読み込みです: ${selectedFont.key}`);
+    throw new Error(`My Font is unloaded: ${selectedFont.key}`);
   }
 
   const cachedPromise = measurementFontPromises.get(selectedFont.key);
@@ -600,7 +600,7 @@ async function ensureMeasurementFontLoaded(selectedFont) {
 
 async function getFontBinaryAsset(selectedFont) {
   if (selectedFont?.isMissing) {
-    throw new Error(`マイフォントが未読み込みです: ${selectedFont.key}`);
+    throw new Error(`My Font is unloaded: ${selectedFont.key}`);
   }
 
   const cachedPromise = fontBinaryPromises.get(selectedFont.key);
@@ -615,7 +615,7 @@ async function getFontBinaryAsset(selectedFont) {
   const checkedBinaryPromise = binaryPromise
     .then((fontBytes) => {
       if (!(fontBytes instanceof Uint8Array) || (selectedFont.isUserFont && fontBytes.byteLength === 0)) {
-        throw new Error(`font asset の読み込みに失敗しました: ${selectedFont.key}`);
+        throw new Error(`Failed to load font asset: ${selectedFont.key}`);
       }
 
       return fontBytes;
@@ -1116,7 +1116,7 @@ function resolveLegendFontAssetUrl(font) {
 async function loadBinaryAsset(relativePath) {
   const response = await fetch(resolvePublicAssetUrl(relativePath));
   if (!response.ok) {
-    throw new Error(`runtime asset の読み込みに失敗しました: ${relativePath}`);
+    throw new Error(`Failed to load runtime asset: ${relativePath}`);
   }
 
   return new Uint8Array(await response.arrayBuffer());

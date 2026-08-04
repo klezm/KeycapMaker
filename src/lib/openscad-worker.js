@@ -9,7 +9,7 @@ function makeDirRecursive(fs, absolutePath) {
     if (analysis.exists) {
       const mode = analysis.object?.mode ?? analysis.stat?.mode;
       if (mode != null && !fs.isDir(mode)) {
-        throw new Error(`${current} はディレクトリではありません。`);
+        throw new Error(`${current} is not a directory.`);
       }
       continue;
     }

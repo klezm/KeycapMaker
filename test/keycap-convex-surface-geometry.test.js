@@ -139,7 +139,7 @@ function sampleTopZ(mesh, x, y) {
 function assertClose(actual, expected, tolerance, message) {
   assert.ok(
     Number.isFinite(actual) && Math.abs(actual - expected) <= tolerance,
-    `${message}: expected ${expected} ± ${tolerance}, received ${actual}`,
+    `${message}: expected ${expected} +/- ${tolerance}, received ${actual}`,
   );
 }
 
@@ -280,7 +280,7 @@ async function renderBody({ bundle, wasmBinary, params, exportTarget = "body" })
   };
 }
 
-test("OpenSCAD full body は dishDepth の正負と代表 footprint で曲面契約を保つ", async (t) => {
+test("OpenSCAD full body maintains curve contract with positive/negative dishDepth and representative footprint", async (t) => {
   const restoreBrowserMocks = installBrowserMocks({
     width: 120,
     actualBoundingBoxLeft: 60,
@@ -304,7 +304,7 @@ test("OpenSCAD full body は dishDepth の正負と代表 footprint で曲面契
       readFile(OPENSCAD_WASM_PATH),
     ]);
 
-    await t.test("1u cylindrical / spherical は負値で凸、正値で従来どおり凹む", async () => {
+    await t.test("1u cylindrical / spherical bulges with negative value, indents traditionally with positive value", async () => {
       const defaults = registry.createDefaultKeycapParams("custom-shell");
       const flat = await renderBody({
         bundle,
@@ -430,7 +430,7 @@ test("OpenSCAD full body は dishDepth の正負と代表 footprint で曲面契
       }
     });
 
-    await t.test("wide / rounded-edge / JIS の凸 body は空・破綻メッシュにならない", async () => {
+    await t.test("wide / rounded-edge / JIS convex body does not result in empty/broken mesh", async () => {
       const coverageCases = [
         {
           label: "wide cylindrical convex body",
@@ -513,7 +513,7 @@ test("OpenSCAD full body は dishDepth の正負と代表 footprint で曲面契
       }
     });
 
-    await t.test("JIS / typewriter も正の深さを 1.5mm まで保持する", async () => {
+    await t.test("JIS / typewriter also retains positive depth up to 1.5mm", async () => {
       for (const profile of ["jis-enter", "typewriter", "typewriter-jis-enter"]) {
         const rendered = await renderBody({
           bundle,
@@ -533,7 +533,7 @@ test("OpenSCAD full body は dishDepth の正負と代表 footprint で曲面契
       }
     });
 
-    await t.test("custom / JIS top-hat も正負 1.5mm の曲面を生成できる", async () => {
+    await t.test("custom / JIS top-hat can also generate +/- 1.5mm curved surfaces", async () => {
       for (const profile of ["custom-shell", "jis-enter"]) {
         const convex = await renderBody({
           bundle,
@@ -579,7 +579,7 @@ test("OpenSCAD full body は dishDepth の正負と代表 footprint で曲面契
       }
     });
 
-    await t.test("負の spherical でも flush legend の曲面追従 volume は空にならない", async () => {
+    await t.test("Even with negative spherical, flush legend curve tracking volume does not become empty", async () => {
       const rendered = await renderBody({
         bundle,
         wasmBinary,

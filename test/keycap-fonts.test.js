@@ -38,7 +38,7 @@ const EXPECTED_LANDING_PAGE_NAMES = Object.freeze({
   "noto-sans-jp-variable": "Noto Sans JP - Google Fonts",
   "mplusrounded1c-regular": "M PLUS Rounded 1c - Google Fonts",
   "dotgothic16-regular": "DotGothic16 - Google Fonts",
-  "kurobara-cinderella-regular": "黒薔薇シンデレラ - MODI工場",
+  "kurobara-cinderella-regular": "Kurobara Cinderella - MODI Factory",
   "bangers-regular": "Bangers - Google Fonts",
   "creepster-regular": "Creepster - Google Fonts",
   "rye-regular": "Rye - Google Fonts",
@@ -52,7 +52,7 @@ const EXPECTED_LANDING_PAGE_ICON_URLS = Object.freeze({
   "kurobara-cinderella-regular": MODI_FAVICON_URL,
 });
 
-test("印字フォントはユーザー向けLP表示情報を持つ", () => {
+test("Legend fonts have LP display info for users", () => {
   assert.equal(KEYCAP_LEGEND_FONTS.length, Object.keys(EXPECTED_LANDING_PAGE_URLS).length);
 
   for (const font of KEYCAP_LEGEND_FONTS) {
@@ -64,7 +64,7 @@ test("印字フォントはユーザー向けLP表示情報を持つ", () => {
   }
 });
 
-test("ユーザー追加フォントは内蔵フォントとは別に registry へ追加される", () => {
+test("User-added fonts are added to registry separately from built-in fonts", () => {
   clearUserKeycapLegendFonts();
   const key = `${USER_KEYCAP_LEGEND_FONT_KEY_PREFIX}0123456789abcdef`;
   const bytes = new Uint8Array([1, 2, 3, 4]);
@@ -90,7 +90,7 @@ test("ユーザー追加フォントは内蔵フォントとは別に registry �
   clearUserKeycapLegendFonts();
 });
 
-test("未知の user-font key は未読み込みフォントとして解決する", () => {
+test("Unknown user-font key resolves as un-loaded font", () => {
   clearUserKeycapLegendFonts();
   const missing = resolveKeycapLegendFont(`${USER_KEYCAP_LEGEND_FONT_KEY_PREFIX}missing`);
 
@@ -99,6 +99,6 @@ test("未知の user-font key は未読み込みフォントとして解決す�
   assert.equal(missing.key, `${USER_KEYCAP_LEGEND_FONT_KEY_PREFIX}missing`);
 });
 
-test("不正な font bytes の name metadata は空で返す", () => {
+test("Invalid font bytes name metadata returns empty", () => {
   assert.deepEqual(parseKeycapLegendFontNameMetadata(new Uint8Array([0, 1, 2])), {});
 });

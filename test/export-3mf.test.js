@@ -37,7 +37,7 @@ function createMesh(name, colorHex, zOffset = 0) {
   };
 }
 
-test("3MF export はpartをcomponents親オブジェクトに束ねる", async () => {
+test("3MF export bundles parts into components parent object", async () => {
   const blob = create3mfBlob([
     createMesh("keycap-body", "#f8f9fa"),
     createMesh("keycap-legend", "#212529", 1),
@@ -62,7 +62,7 @@ test("3MF export はpartをcomponents親オブジェクトに束ねる", async (
   assert.doesNotMatch(xml, /<build>.*objectid="2".*<\/build>/);
 });
 
-test("3MF export は主要スライサ向けのpart名メタデータを含める", async () => {
+test("3MF export includes part name metadata for major slicers", async () => {
   const archive = await readArchive(create3mfBlob([
     createMesh("keycap-body", "#f8f9fa"),
     createMesh("keycap-legend", "#212529", 1),
@@ -86,7 +86,7 @@ test("3MF export は主要スライサ向けのpart名メタデータを含め�
   );
 });
 
-test("3MF export は親オブジェクト名に指定名を使う", async () => {
+test("3MF export uses specified name for parent object name", async () => {
   const archive = await readArchive(create3mfBlob(
     [
       createMesh("keycap-body", "#f8f9fa"),

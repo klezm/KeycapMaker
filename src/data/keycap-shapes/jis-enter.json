@@ -1,6 +1,6 @@
 {
   "key": "jis-enter",
-  "label": "JISエンター",
+  "label": "JIS Enter",
   "geometryType": "jis_enter",
   "geometryDefaults": {
     "profileFrontAngle": 15,
@@ -211,8 +211,8 @@
   "fieldGroups": [
     {
       "id": "shape",
-      "title": "キーキャップの形",
-      "description": "一般的な JIS / ISO 系の縦長 Enter footprint を基準に、全体寸法、上面中央の高さ、左下の欠き込み、上端Rと本体の肩Rを調整します。横幅と奥行きは 1u 換算カードの基準で換算します。",
+      "title": "Keycap Shape",
+      "description": "Based on a typical JIS/ISO vertical Enter footprint, adjust overall dimensions, top center height, bottom-left notch, top edge R, and body shoulder R. Width and depth are converted based on 1u card.",
       "fieldKeys": [
         "shapeProfile",
         "keyWidth",
@@ -229,8 +229,8 @@
     },
     {
       "id": "top",
-      "title": "キートップ",
-      "description": "カスタムシェルと同じく、フラット / シンドリカル / スフェリカル、前後左右の傾きを調整できます。",
+      "title": "Keytop",
+      "description": "Like Custom Shell, adjust Flat / Cylindrical / Spherical shape and front/back/left/right incline.",
       "fieldKeys": [
         "topOffsetX",
         "topOffsetY",
@@ -247,8 +247,8 @@
     },
     {
       "id": "topHat",
-      "title": "トップハット",
-      "description": "JIS Enter のキートップ外形から内側へ逃がして追加する上面の有無、R、高さ、肩角度を調整します。",
+      "title": "Top-hat",
+      "description": "Adjust the presence, R, height, and shoulder angle of a top surface added by recessing inwards from the JIS Enter Keytop outer shape.",
       "fieldKeys": [
         "topHatEnabled",
         "topHatSeparateColorEnabled",
@@ -265,8 +265,8 @@
     },
     {
       "id": "legend",
-      "title": "印字",
-      "description": "入れる文字、書体、見た目、位置、盛り上がり、埋め込み量をまとめて調整します。複数文字もそのまま入力できます。",
+      "title": "Legend",
+      "description": "Adjust text, typeface, appearance, position, bulge, and embed depth together. Multiple characters can be entered as is.",
       "fieldKeys": [
         "legendEnabled",
         "legendColor",
@@ -412,8 +412,8 @@
     },
     {
       "id": "homing",
-      "title": "指の目印",
-      "description": "F キーや J キーのように、指で触って分かる出っ張りを調整します。印字とは別に設定できます。",
+      "title": "Homing Mark",
+      "description": "Adjust tactile protrusions like F or J keys. Set separately from Legend.",
       "fieldKeys": [
         "homingBarEnabled",
         "homingBarColor",
@@ -426,7 +426,7 @@
     },
     {
       "id": "stem",
-      "title": "取り付け部分",
+      "title": "Mounting Part",
       "descriptionKey": "stem-group",
       "fieldKeys": [
         "stemType",

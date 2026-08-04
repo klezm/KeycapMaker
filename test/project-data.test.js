@@ -23,14 +23,14 @@ import {
   parseProjectManifest,
 } from "../src/lib/project-data.js";
 
-test("Project名とProject内パスをファイル保存向けに正規化する", () => {
+test("Normalize Project name and paths in Project for file saving", () => {
   assert.equal(normalizeProjectName("  My/Project?.json  "), "My-Project-");
   assert.equal(normalizeProjectName(""), DEFAULT_PROJECT_NAME);
   assert.equal(normalizeProjectAssetPath("\\keycaps\\esc.json"), "keycaps/esc.json");
   assert.equal(normalizeProjectAssetPath("../outside.json", "fallback.json"), "fallback.json");
 });
 
-test("現在のキーキャップからProject内キーキャップ定義を作る", () => {
+test("Create Project keycap definition from current keycap", () => {
   const params = {
     ...createDefaultKeycapParams("custom-shell"),
     name: "ESC",
@@ -63,7 +63,7 @@ test("現在のキーキャップからProject内キーキャップ定義を作�
   });
 });
 
-test("Projectが空の場合はキーキャップを1件作成して active にする", () => {
+test("If Project is empty, create 1 keycap and make active", () => {
   const params = {
     ...createDefaultKeycapParams("custom-shell"),
     name: "Initial",
@@ -77,7 +77,7 @@ test("Projectが空の場合はキーキャップを1件作成して active に�
   assert.equal(project.activeKeycapId, project.keycaps[0].id);
 });
 
-test("Projectにキーキャップがある場合は先頭を active の fallback にする", () => {
+test("If Project has keycaps, make the first one active fallback", () => {
   const params = createDefaultKeycapParams("custom-shell");
   const laterEntry = createProjectKeycapEntry(params, {
     id: "keycap-later",
@@ -96,7 +96,7 @@ test("Projectにキーキャップがある場合は先頭を active の fallbac
   assert.equal(project.activeKeycapId, "keycap-first");
 });
 
-test("Project manifest を作成し、読み戻せる", () => {
+test("Create and read back Project manifest", () => {
   const params = {
     ...createDefaultKeycapParams("typewriter"),
     name: "A",
@@ -129,7 +129,7 @@ test("Project manifest を作成し、読み戻せる", () => {
   assert.equal(parsed.activeKeycapId, "keycap-a");
 });
 
-test("キーキャップの表示順を displayOrder で保持し、一覧順に振り直す", () => {
+test("Retain keycap display order in displayOrder and reassign to list order", () => {
   const params = createDefaultKeycapParams("custom-shell");
   const entryA = createProjectKeycapEntry({ ...params, name: "A" }, {
     id: "keycap-a",
@@ -162,7 +162,7 @@ test("キーキャップの表示順を displayOrder で保持し、一覧順に
   assert.deepEqual(parsed.keycaps.map((entry) => entry.displayOrder), [0, 1]);
 });
 
-test("Project保存前のキーキャップ定義は現在の一覧順で正規化する", () => {
+test("Normalize keycap definitions before saving Project with current list order", () => {
   const params = createDefaultKeycapParams("custom-shell");
   const entries = [
     createProjectKeycapEntry({ ...params, name: "First" }, {
@@ -199,7 +199,7 @@ test("Project保存前のキーキャップ定義は現在の一覧順で正規�
   assert.deepEqual(normalized.map((entry) => entry.editorDataPayload.params.name), ["First", "Second"]);
 });
 
-test("Project保存前に名称変更済みキーキャップの asset path を現在名へ同期する", () => {
+test("Synchronize asset paths of renamed keycaps to current names before saving Project", () => {
   const params = createDefaultKeycapParams("custom-shell");
   const renamedEntry = createProjectKeycapEntry({ ...params, name: "Renamed" }, {
     id: "keycap-sync",
@@ -218,7 +218,7 @@ test("Project保存前に名称変更済みキーキャップの asset path を�
   assert.equal(normalized.editorDataPayload.params.name, "Renamed");
 });
 
-test("過去保存の stale asset path を持つProjectも読み込み後の保存で現在名へ同期する", () => {
+test("Project with previously saved stale asset paths also synchronizes to current name upon saving after load", () => {
   const params = createDefaultKeycapParams("custom-shell");
   const currentEntry = createProjectKeycapEntry({ ...params, name: "Renamed" }, {
     id: "keycap-legacy",
@@ -247,7 +247,7 @@ test("過去保存の stale asset path を持つProjectも読み込み後の保�
   assert.equal(normalized.threeMfPath, "3mf/Renamed-legacy.3mf");
 });
 
-test("Project manifest 以外の JSON は拒否する", () => {
+test("Reject JSONs other than Project manifest", () => {
   assert.equal(isProjectManifestPayload({ kind: "keycap-maker/editor-params" }), false);
   assert.throws(
     () => parseProjectManifest({ kind: "keycap-maker/editor-params", schemaVersion: 5 }),
@@ -255,9 +255,9 @@ test("Project manifest 以外の JSON は拒否する", () => {
   );
 });
 
-test("プレビュー画像 data URL の拡張子を解決し、placeholder は SVG として扱う", () => {
+test("Resolve preview image data URL extension and treat placeholder as SVG", () => {
   const placeholder = createProjectPreviewPlaceholderDataUrl({
-    name: "あ",
+    name: "A",
     legendText: "A",
     bodyColor: "#abcdef",
   });
@@ -267,7 +267,7 @@ test("プレビュー画像 data URL の拡張子を解決し、placeholder は 
   assert.match(decodeURIComponent(placeholder), /<svg/);
 });
 
-test("Project ZIP / ZLP 名と archive 内 manifest path を解決する", () => {
+test("Resolve Project ZIP / ZLP name and manifest path inside archive", () => {
   assert.equal(isProjectArchiveFileName("Demo.zip"), true);
   assert.equal(isProjectArchiveFileName("Demo.zlp"), true);
   assert.equal(isProjectArchiveFileName("Demo.json"), false);
@@ -278,7 +278,7 @@ test("Project ZIP / ZLP 名と archive 内 manifest path を解決する", () =>
   ]), "Demo/KeycapMaker.json");
 });
 
-test("Project asset の MIME type を path から解決する", () => {
+test("Resolve Project asset MIME type from path", () => {
   assert.equal(getProjectAssetMimeType("keycaps/a.png"), "image/png");
   assert.equal(getProjectAssetMimeType("keycaps/a.svg"), "image/svg+xml");
   assert.equal(getProjectAssetMimeType("keycaps/a.json"), "application/json");

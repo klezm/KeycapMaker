@@ -1,6 +1,6 @@
 {
   "key": "typewriter-jis-enter",
-  "label": "タイプライターJISエンター",
+  "label": "Typewriter JIS Enter",
   "geometryType": "typewriter_jis_enter",
   "geometryDefaults": {
     "profileFrontAngle": 0,
@@ -195,8 +195,8 @@
   "fieldGroups": [
     {
       "id": "shape",
-      "title": "キーキャップの形",
-      "description": "タイプライター風の薄い JIS Enter footprint を基準に、全体寸法、キートップの厚み、左下の欠き込み、R を調整します。横幅と奥行きは 1u 換算カードの基準で換算します。",
+      "title": "Keycap Shape",
+      "description": "Based on a thin typewriter-style JIS Enter footprint, adjust overall dimensions, Keytop Thickness, bottom-left notch, and R. Width and depth are converted based on 1u card.",
       "fieldKeys": [
         "shapeProfile",
         "keyWidth",
@@ -210,8 +210,8 @@
     },
     {
       "id": "top",
-      "title": "キートップ",
-      "description": "タイプライターと同じく、リム、前後左右の傾き、取り付け基準高さを調整できます。",
+      "title": "Keytop",
+      "description": "Like typewriter, adjust rim, front/back/left/right incline, and mounting reference height.",
       "fieldKeys": [
         "typewriterMountHeight",
         "topOffsetX",
@@ -234,8 +234,8 @@
     },
     {
       "id": "legend",
-      "title": "印字",
-      "description": "入れる文字、書体、見た目、位置、盛り上がり、埋め込み量をまとめて調整します。複数文字もそのまま入力できます。",
+      "title": "Legend",
+      "description": "Adjust text, typeface, appearance, position, bulge, and embed depth together. Multiple characters can be entered as is.",
       "fieldKeys": [
         "legendEnabled",
         "legendColor",
@@ -381,8 +381,8 @@
     },
     {
       "id": "homing",
-      "title": "指の目印",
-      "description": "F キーや J キーのように、指で触って分かる出っ張りを調整します。印字とは別に設定できます。",
+      "title": "Homing Mark",
+      "description": "Adjust tactile protrusions like F or J keys. Set separately from Legend.",
       "fieldKeys": [
         "homingBarEnabled",
         "homingBarColor",
@@ -395,7 +395,7 @@
     },
     {
       "id": "stem",
-      "title": "取り付け部分",
+      "title": "Mounting Part",
       "descriptionKey": "stem-group",
       "fieldKeys": [
         "stemType",
@@ -408,18 +408,18 @@
   ],
   "fieldOverrides": {
     "topCenterHeight": {
-      "label": "キートップの厚み",
-      "hint": "薄いキートップの底から上面までの厚みです"
+      "label": "Keytop Thickness",
+      "hint": "Thickness from bottom to top surface of the thin Keytop"
     },
     "topSurfaceShape": {
       "options": [
         {
           "value": "flat",
-          "label": "フラット"
+          "label": "Flat"
         },
         {
           "value": "spherical",
-          "label": "スフェリカル"
+          "label": "Spherical"
         }
       ]
     }

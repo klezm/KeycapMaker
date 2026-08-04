@@ -3059,7 +3059,7 @@ function formatMillimeter(value, digits = 1) {
 }
 
 function formatDegree(value, digits = 1) {
-  return `${Number(value).toFixed(digits)}°`;
+  return `${Number(value).toFixed(digits)}deg`;
 }
 
 function countStepDigits(step) {
@@ -4105,7 +4105,7 @@ function renderKeycapExportOverlay() {
             aria-label="${escapeHtml(t("actions.close"))}"
             title="${escapeHtml(t("actions.close"))}"
           >
-            <span aria-hidden="true">×</span>
+            <span aria-hidden="true">x</span>
           </button>
         </div>
         <div class="keycap-export-dialog__body">
@@ -4166,7 +4166,7 @@ function renderKeycapDesignOverlay(overlayRoot, entry) {
             aria-label="${escapeHtml(t("actions.close"))}"
             title="${escapeHtml(t("actions.close"))}"
           >
-            <span aria-hidden="true">×</span>
+            <span aria-hidden="true">x</span>
           </button>
         </div>
         <div class="keycap-export-dialog__body">
