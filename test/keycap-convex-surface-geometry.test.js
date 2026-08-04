@@ -139,7 +139,7 @@ function sampleTopZ(mesh, x, y) {
 function assertClose(actual, expected, tolerance, message) {
   assert.ok(
     Number.isFinite(actual) && Math.abs(actual - expected) <= tolerance,
-    `${message}: expected ${expected} +/- ${tolerance}, received ${actual}`,
+    `${message}: expected ${expected} ± ${tolerance}, received ${actual}`,
   );
 }
 
