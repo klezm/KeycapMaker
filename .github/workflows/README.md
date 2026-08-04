@@ -1,18 +1,18 @@
 # .github/workflows
 
-GitHub Actions と GitHub Pages デプロイ用のワークフローを配置する場所です。
+The place for GitHub Actions and GitHub Pages deployment workflows.
 
-## 今後ここに置くもの
+## What will go here going forward
 
-- GitHub Pages へのデプロイワークフロー
-- 必要に応じたビルド確認や静的チェック
+- The deployment workflow to GitHub Pages
+- Build verification or static checks as needed
 
-本リポジトリでは、Task 10 で [deploy-pages.yml](deploy-pages.yml) を追加済みです。
+This repository has already added [deploy-pages.yml](deploy-pages.yml) as part of Task 10.
 
-## GitHub Pages デプロイ条件
+## GitHub Pages deployment conditions
 
-- `main` ブランチへの push だけで自動デプロイする
-- 通常開発は `dev` に集約し、`dev` を `main` へ push / merge したときだけ公開対象にする
-- `feat/*` など、`main` 以外のブランチへの push ではデプロイしない
-- `docs/` や README など、配信される Web 資源に関係しない変更だけではデプロイしない
-- 対象パスは `src/` の実装ファイル、`public/`、`scad/**/*.scad`、`index.html`、Vite / npm 設定に限定する
+- Deploy automatically only on pushes to the `main` branch
+- Concentrate normal development on `dev`, and only make it live when `dev` is pushed / merged into `main`
+- Do not deploy on pushes to branches other than `main`, such as `feat/*`
+- Do not deploy for changes that only touch things unrelated to the served web resources, such as `docs/` or README files
+- Limit the target paths to implementation files under `src/`, `public/`, `scad/**/*.scad`, `index.html`, and Vite / npm configuration

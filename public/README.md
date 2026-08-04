@@ -1,25 +1,25 @@
-# public ディレクトリ案内
+# public Directory Guide
 
-`public/` は GitHub Pages でそのまま配信する静的アセットの置き場です。
+`public/` is where static assets served as-is via GitHub Pages live.
 
-## 配置候補
+## Candidate Contents
 
-- Wasm バイナリ
-- フォントファイル
-- アイコンや画像
-- 配信時にビルドでそのまま参照する補助ファイル
+- Wasm binaries
+- Font files
+- Icons and images
+- Supporting files referenced directly by the build at delivery time
 
-`text()` を利用するフォントを同梱する場合も、このディレクトリ配下の配置方針を先に決めてください。
+If you plan to bundle a font that uses `text()`, decide on the placement policy within this directory first.
 
-## 現在の同梱物
+## Current Contents
 
 - `vendor/openscad/`: OpenSCAD WASM runtime
-- `assets/j-stem-lp01/`: J-STEM-LP01 の公式 STEP と preview 用 OFF 派生メッシュ
-- `fonts/MPLUS1-Variable.ttf`: `M PLUS 1` variable font
-- `fonts/MPLUS1p-Regular.ttf`: 標準ゴシック
-- `fonts/NotoSans-Variable.ttf`: `Noto Sans` variable font
-- `fonts/NotoSansJP-Variable.ttf`: `Noto Sans JP` variable font
-- `fonts/MPLUSRounded1c-Regular.ttf`: 丸みのあるゴシック
-- `fonts/DotGothic16-Regular.ttf`: ドット風ゴシック
-- `fonts/*-OFL.txt`: 各フォントのライセンス
-- `fonts/*-SOURCE.txt`: 一部フォントの出典・メタデータ確認メモ
+- `assets/j-stem-lp01/`: the official STEP file for J-STEM-LP01 and a derived OFF mesh for preview
+- `fonts/MPLUS1-Variable.ttf`: the `M PLUS 1` variable font
+- `fonts/MPLUS1p-Regular.ttf`: a standard gothic typeface
+- `fonts/NotoSans-Variable.ttf`: the `Noto Sans` variable font
+- `fonts/NotoSansJP-Variable.ttf`: the `Noto Sans JP` variable font
+- `fonts/MPLUSRounded1c-Regular.ttf`: a rounded gothic typeface
+- `fonts/DotGothic16-Regular.ttf`: a dot-matrix-style gothic typeface
+- `fonts/*-OFL.txt`: license for each font
+- `fonts/*-SOURCE.txt`: source/metadata verification notes for some fonts

@@ -1,45 +1,47 @@
-# 用語集
+# Glossary
 
 ## body
 
-キーキャップ本体の主要体積。
+The main volume of the keycap body.
 
 ## body_core
 
-body から homing bar を除いた基礎ボリューム。preview / export の part 分離で使う。
+The base volume with the homing bar removed from the body. Used for part separation in preview / export.
 
 ## rim / key rim
 
-typewriter shape のキートップ外周を覆う別体積パーツ。body と別色で扱える。
+A separate-volume part covering the outer edge of the keytop in the typewriter shape. Can be handled in a different color from the body.
 
 ## legend
 
-キーキャップ上の印字や記号を表す形状。
+The shape representing the printed text or symbol on the keycap.
 
 ## homing bar
 
-F / J キーのような触覚マーカー。legend とは別責務で body 側オプションとして扱う。
+A tactile marker like the one found on the F / J keys. Handled as a separate responsibility from legend, as an optional feature on the body side.
 
-## separate volume / 別体積方式
+## separate volume / separate-volume approach
 
-body / rim / legend を別 body として保持し、出力形式やスライサー側で独立に扱えるようにする設計方針。
+A design approach where body / rim / legend are each kept as separate bodies, so they can be handled independently in the output format and by the slicer.
 
 ## preview
 
-ブラウザ上で編集結果を即時確認するための表示経路。反応速度を優先する。
+The display pathway for immediately checking edit results in the browser. Prioritizes responsiveness.
 
 ## export
 
-3MF や編集データ JSON を生成する経路。part 構造や保存契約を優先する。
+The pathway that generates 3MF or editor data JSON. Prioritizes part structure and the save contract.
 
 ## profile
 
-キーキャップの高さ、傾き、上面形状など、全体形状の系統。
+The overall family of shape settings, such as the keycap's height, tilt, and top-surface form.
 
 ## preset
 
-shape JSON や sample fixture のように、パラメータの組み合わせをまとめた定義。現在の editor 初期値は `src/data/keycap-shapes/*.json` が持つ。
+A definition that bundles a combination of parameters, such as shape JSON or a sample fixture. The current editor's initial values live in `src/data/keycap-shapes/*.json`.
 
 ## stem
 
-キーキャップ裏面の取り付け形状。
+The mounting shape on the underside of the keycap.
+</content>
+</invoke>

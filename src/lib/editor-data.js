@@ -187,7 +187,7 @@ function findLegendParamPrefix(fieldKey, suffix) {
 function getLegendFontStyleFieldOptions(legendFontKey = DEFAULT_KEYCAP_LEGEND_FONT_KEY) {
   const nativeStyleOptions = getKeycapLegendFontStyleOptions(legendFontKey);
   if (nativeStyleOptions.length === 0) {
-    return [{ value: LEGEND_FONT_STYLE_FALLBACK_KEY, label: "フォント名どおり" }];
+    return [{ value: LEGEND_FONT_STYLE_FALLBACK_KEY, label: "Same as font name" }];
   }
 
   return nativeStyleOptions.map((option) => ({
@@ -1426,18 +1426,18 @@ function hasRecognizedCompatibleInput(payload) {
 
 function parseFullEditorDataPayload(payload) {
   if (payload.schemaVersion !== EDITOR_DATA_SCHEMA_VERSION) {
-    throw new Error(`未対応の編集データ schemaVersion です: ${payload.schemaVersion}`);
+    throw new Error(`Unsupported editor-data schemaVersion: ${payload.schemaVersion}`);
   }
 
   const params = getPlainObject(payload.params);
   if (!params) {
-    throw new Error("編集データ JSON に params がありません。");
+    throw new Error("The editor-data JSON is missing params.");
   }
 
   const selectors = getPlainObject(payload.selectors) ?? {};
   const rawProfileKey = selectors.shapeProfile ?? params.shapeProfile ?? DEFAULT_SHAPE_PROFILE_KEY;
   if (!isRecognizedShapeProfileKey(rawProfileKey)) {
-    throw new Error(`未対応の形のベースです: ${rawProfileKey}`);
+    throw new Error(`Unsupported shape base: ${rawProfileKey}`);
   }
 
   const defaults = createDefaultKeycapParams(rawProfileKey);
@@ -1454,15 +1454,15 @@ function parseFullEditorDataPayload(payload) {
 
 function parseCompatibleEditorDataPayload(payload) {
   if (payload.kind != null && !isCompatiblePatchKind(payload.kind)) {
-    throw new Error("KeycapMaker の編集データ JSON / 互換入力 JSON ではありません。");
+    throw new Error("This does not look like a KeycapMaker editor-data JSON / compatible input JSON.");
   }
 
   if (isCompatiblePatchKind(payload.kind) && payload.schemaVersion != null && payload.schemaVersion !== EDITOR_DATA_COMPAT_SCHEMA_VERSION) {
-    throw new Error(`未対応の互換入力 schemaVersion です: ${payload.schemaVersion}`);
+    throw new Error(`Unsupported compatible-input schemaVersion: ${payload.schemaVersion}`);
   }
 
   if (!hasRecognizedCompatibleInput(payload)) {
-    throw new Error("互換入力 JSON に編集パラメータがありません。");
+    throw new Error("The compatible-input JSON is missing editor parameters.");
   }
 
   const selectors = getPlainObject(payload.selectors) ?? {};
@@ -1474,7 +1474,7 @@ function parseCompatibleEditorDataPayload(payload) {
   };
   const rawProfileKey = selectors.shapeProfile ?? mergedInputParams.shapeProfile ?? DEFAULT_SHAPE_PROFILE_KEY;
   if (!isRecognizedShapeProfileKey(rawProfileKey)) {
-    throw new Error(`未対応の形のベースです: ${rawProfileKey}`);
+    throw new Error(`Unsupported shape base: ${rawProfileKey}`);
   }
 
   const defaults = createDefaultKeycapParams(rawProfileKey);
@@ -1521,11 +1521,11 @@ function collectEditorDataBindingReport(payload, profileKey = DEFAULT_SHAPE_PROF
 
 function parseEditorDataPayloadResult(payload) {
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
-    throw new Error("編集データ JSON の形式が不正です。");
+    throw new Error("The editor-data JSON is malformed.");
   }
 
   if (payload.kind != null && !isCurrentOrLegacyEditorDataKind(payload.kind) && !isCompatiblePatchKind(payload.kind)) {
-    throw new Error("KeycapMaker の編集データ JSON / 互換入力 JSON ではありません。");
+    throw new Error("This does not look like a KeycapMaker editor-data JSON / compatible input JSON.");
   }
 
   const mergedRawParams = isCurrentOrLegacyEditorDataKind(payload.kind)

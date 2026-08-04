@@ -1,3 +1,3 @@
 # scad/modules
 
-stem、legend、上面形状など、差し替えや再利用を前提にした小さな SCAD モジュールを配置する場所です。
+The place for small SCAD modules intended to be swapped out or reused, such as stems, legends, and top-face shapes.

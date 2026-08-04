@@ -1,134 +1,134 @@
 # Fonts
 
-印字の書体選択では、フロントエンドへ同梱して配信できるライセンスのものだけを使います。
+For the legend typeface selection, only fonts whose license clearly permits bundling with and serving from the frontend are used.
 
-## 軽量取り込みルール
+## Lightweight intake rules
 
-- 同梱する font は、再配布と Web 配信が明確に許可されたものだけにする。
-- font file と同じ directory に、適用ライセンス本文または配布元の利用条件メモを残す。
-- `*-SOURCE.txt` または同等の provenance note に、配布元 URL、取得日または review date、bundled filenames、font metadata、SHA-256 を残す。
-- できるだけ commit / tag 固定の URL で取得する。既存資産で当初の取得日が未記録のものは、review date と Git 上の初回追加日を記録する。
-- サブセット化、形式変換、glyph 改変は原則しない。必要な場合は別 font として扱い、Reserved Font Name とライセンス条件を再確認する。
-- UI 上の attribution が必要な font は、抽象的な注意ではなく実際の表記文を font 定義へ入れる。
-- font を追加・更新したら `.codex/skills/keycap-font-addition/scripts/validate-font-assets.mjs` を実行し、登録、同梱ファイル、provenance、license text、SHA-256、TTF metadata の整合性を確認する。
+- Only bundle fonts whose redistribution and web delivery are explicitly permitted.
+- Keep the applicable license text, or a note on the distributor's usage terms, in the same directory as the font file.
+- Record the distribution URL, the acquisition or review date, the bundled filenames, font metadata, and the SHA-256 hash in a `*-SOURCE.txt` file or equivalent provenance note.
+- Fetch from a commit/tag-pinned URL whenever possible. For existing assets whose original acquisition date was never recorded, record the review date and the date first added in Git.
+- Do not subset, convert formats, or alter glyphs as a rule. If that's needed, treat the result as a separate font and re-check the Reserved Font Name and license terms.
+- For fonts that require UI attribution, put the actual attribution text into the font definition rather than a generic warning.
+- After adding or updating a font, run `.codex/skills/keycap-font-addition/scripts/validate-font-assets.mjs` to verify consistency between the registration, bundled files, provenance, license text, SHA-256, and TTF metadata.
 
 - `MPLUS1-Variable.ttf`
-  - 表示名: `M PLUS 1 Variable`
-  - OpenSCAD 名: `M PLUS 1`
-  - 利用方針: variable font。named style は `Thin` から `Black` まで選択する
-  - 出典: M+ FONTS 公式 `fonts/MPLUS1/variable/MPLUS1[wght].ttf`
-  - 閲覧用ページ: https://fonts.google.com/specimen/M%2BPLUS%2B1
-  - ライセンス: `MPLUS1-OFL.txt`
-  - 出典メモ: `MPLUS1-SOURCE.txt`
+  - Display name: `M PLUS 1 Variable`
+  - OpenSCAD name: `M PLUS 1`
+  - Usage policy: variable font. Named styles are selectable from `Thin` to `Black`.
+  - Source: M+ FONTS official `fonts/MPLUS1/variable/MPLUS1[wght].ttf`
+  - Info page: https://fonts.google.com/specimen/M%2BPLUS%2B1
+  - License: `MPLUS1-OFL.txt`
+  - Source note: `MPLUS1-SOURCE.txt`
 
 - `MPLUS1p-Regular.ttf`
-  - 表示名: `M PLUS 1p Regular`
-  - OpenSCAD 名: `M PLUS 1p`
-  - 出典: Google Fonts `ofl/mplus1p`
-  - 閲覧用ページ: https://fonts.google.com/specimen/M%2BPLUS%2B1p
-  - ライセンス: `MPLUS1p-OFL.txt`
-  - 出典メモ: `MPLUS1p-SOURCE.txt`
+  - Display name: `M PLUS 1p Regular`
+  - OpenSCAD name: `M PLUS 1p`
+  - Source: Google Fonts `ofl/mplus1p`
+  - Info page: https://fonts.google.com/specimen/M%2BPLUS%2B1p
+  - License: `MPLUS1p-OFL.txt`
+  - Source note: `MPLUS1p-SOURCE.txt`
 
 - `NotoSans-Variable.ttf`
-  - 表示名: `Noto Sans Variable`
-  - OpenSCAD 名: `Noto Sans`
-  - 利用方針: variable font。named style は `Thin` から `Black` まで選択する
-  - 出典: Google Fonts `ofl/notosans`
-  - 閲覧用ページ: https://fonts.google.com/noto/specimen/Noto%2BSans
-  - ライセンス: `NotoSans-OFL.txt`
-  - 出典メモ: `NotoSans-SOURCE.txt`
+  - Display name: `Noto Sans Variable`
+  - OpenSCAD name: `Noto Sans`
+  - Usage policy: variable font. Named styles are selectable from `Thin` to `Black`.
+  - Source: Google Fonts `ofl/notosans`
+  - Info page: https://fonts.google.com/noto/specimen/Noto%2BSans
+  - License: `NotoSans-OFL.txt`
+  - Source note: `NotoSans-SOURCE.txt`
 
 - `NotoSansJP-Variable.ttf`
-  - 表示名: `Noto Sans JP Variable`
-  - OpenSCAD 名: `Noto Sans JP`
-  - 利用方針: variable font。named style は `Thin` から `Black` まで選択する
-  - 出典: Google Fonts `ofl/notosansjp`
-  - 閲覧用ページ: https://fonts.google.com/noto/specimen/Noto%2BSans%2BJP
-  - ライセンス: `NotoSansJP-OFL.txt`
-  - 出典メモ: `NotoSansJP-SOURCE.txt`
+  - Display name: `Noto Sans JP Variable`
+  - OpenSCAD name: `Noto Sans JP`
+  - Usage policy: variable font. Named styles are selectable from `Thin` to `Black`.
+  - Source: Google Fonts `ofl/notosansjp`
+  - Info page: https://fonts.google.com/noto/specimen/Noto%2BSans%2BJP
+  - License: `NotoSansJP-OFL.txt`
+  - Source note: `NotoSansJP-SOURCE.txt`
 
 - `MPLUSRounded1c-Regular.ttf`
-  - 表示名: `M PLUS Rounded 1c Regular`
-  - OpenSCAD 名: `M PLUS Rounded 1c`
-  - 出典: Google Fonts `ofl/mplusrounded1c` / M+ FONTS for Google Fonts
-  - 閲覧用ページ: https://fonts.google.com/specimen/M%2BPLUS%2BRounded%2B1c
-  - ライセンス: `MPLUSRounded1c-OFL.txt`
-  - 出典メモ: `MPLUSRounded1c-SOURCE.txt`
+  - Display name: `M PLUS Rounded 1c Regular`
+  - OpenSCAD name: `M PLUS Rounded 1c`
+  - Source: Google Fonts `ofl/mplusrounded1c` / M+ FONTS for Google Fonts
+  - Info page: https://fonts.google.com/specimen/M%2BPLUS%2BRounded%2B1c
+  - License: `MPLUSRounded1c-OFL.txt`
+  - Source note: `MPLUSRounded1c-SOURCE.txt`
 
 - `DotGothic16-Regular.ttf`
-  - 表示名: `DotGothic16 Regular`
-  - OpenSCAD 名: `DotGothic16`
-  - 出典: Google Fonts `ofl/dotgothic16`
-  - 閲覧用ページ: https://fonts.google.com/specimen/DotGothic16
-  - ライセンス: `DotGothic16-OFL.txt`
-  - 出典メモ: `DotGothic16-SOURCE.txt`
+  - Display name: `DotGothic16 Regular`
+  - OpenSCAD name: `DotGothic16`
+  - Source: Google Fonts `ofl/dotgothic16`
+  - Info page: https://fonts.google.com/specimen/DotGothic16
+  - License: `DotGothic16-OFL.txt`
+  - Source note: `DotGothic16-SOURCE.txt`
 
 - `KurobaraCinderella-Regular.ttf`
-  - 表示名: `黒薔薇シンデレラ`
-  - OpenSCAD 名: `kurobara-cinderella`
-  - 利用方針: static font。棘付きの和文 gothic display として日本語 legend に使う
-  - 出典: MODI工場 `font_kurobara-cinderella.php`
-  - 閲覧用ページ: https://modi.jpn.org/font_kurobara-cinderella.php
-  - ライセンス: `KurobaraCinderella-MODI.txt` と `MPLUS1-OFL.txt`
+  - Display name: `黒薔薇シンデレラ`
+  - OpenSCAD name: `kurobara-cinderella`
+  - Usage policy: static font. Used as a spiked Japanese gothic display face for Japanese legends.
+  - Source: MODI Factory `font_kurobara-cinderella.php`
+  - Info page: https://modi.jpn.org/font_kurobara-cinderella.php
+  - License: `KurobaraCinderella-MODI.txt` and `MPLUS1-OFL.txt`
 
 - `Bangers-Regular.ttf`
-  - 表示名: `Bangers Regular`
-  - OpenSCAD 名: `Bangers`
-  - 利用方針: static font。コミック表紙寄りの display 用として短い legend に使う
-  - 出典: Google Fonts `ofl/bangers`
-  - 閲覧用ページ: https://fonts.google.com/specimen/Bangers
-  - ライセンス: `Bangers-OFL.txt`
-  - 出典メモ: `Bangers-SOURCE.txt`
+  - Display name: `Bangers Regular`
+  - OpenSCAD name: `Bangers`
+  - Usage policy: static font. Used for short legends as a comic-cover-leaning display face.
+  - Source: Google Fonts `ofl/bangers`
+  - Info page: https://fonts.google.com/specimen/Bangers
+  - License: `Bangers-OFL.txt`
+  - Source note: `Bangers-SOURCE.txt`
 
 - `Creepster-Regular.ttf`
-  - 表示名: `Creepster Regular`
-  - OpenSCAD 名: `Creepster`
-  - 利用方針: static font。ホラー映画タイトル寄りの display 用として短い legend に使う
-  - 出典: Google Fonts `ofl/creepster`
-  - 閲覧用ページ: https://fonts.google.com/specimen/Creepster
-  - ライセンス: `Creepster-OFL.txt`
-  - 出典メモ: `Creepster-SOURCE.txt`
+  - Display name: `Creepster Regular`
+  - OpenSCAD name: `Creepster`
+  - Usage policy: static font. Used for short legends as a horror-movie-title-leaning display face.
+  - Source: Google Fonts `ofl/creepster`
+  - Info page: https://fonts.google.com/specimen/Creepster
+  - License: `Creepster-OFL.txt`
+  - Source note: `Creepster-SOURCE.txt`
 
 - `Rye-Regular.ttf`
-  - 表示名: `Rye Regular`
-  - OpenSCAD 名: `Rye`
-  - 利用方針: static font。西部劇ポスター寄りの display 用として短い legend に使う
-  - 出典: Google Fonts `ofl/rye`
-  - 閲覧用ページ: https://fonts.google.com/specimen/Rye
-  - ライセンス: `Rye-OFL.txt`
-  - 出典メモ: `Rye-SOURCE.txt`
+  - Display name: `Rye Regular`
+  - OpenSCAD name: `Rye`
+  - Usage policy: static font. Used for short legends as a western-poster-leaning display face.
+  - Source: Google Fonts `ofl/rye`
+  - Info page: https://fonts.google.com/specimen/Rye
+  - License: `Rye-OFL.txt`
+  - Source note: `Rye-SOURCE.txt`
 
 - `Orbitron-Variable.ttf`
-  - 表示名: `Orbitron Regular`
-  - OpenSCAD 名: `Orbitron`
-  - 利用方針: variable font の配布物を同梱するが、現 UI では family 既定の Regular face として扱う
-  - 出典: Google Fonts `ofl/orbitron`
-  - 閲覧用ページ: https://fonts.google.com/specimen/Orbitron
-  - ライセンス: `Orbitron-OFL.txt`
-  - 出典メモ: `Orbitron-SOURCE.txt`
+  - Display name: `Orbitron Regular`
+  - OpenSCAD name: `Orbitron`
+  - Usage policy: the variable font's distribution package is bundled, but the current UI treats it as the family's default Regular face.
+  - Source: Google Fonts `ofl/orbitron`
+  - Info page: https://fonts.google.com/specimen/Orbitron
+  - License: `Orbitron-OFL.txt`
+  - Source note: `Orbitron-SOURCE.txt`
 
 - `GrenzeGotisch-Variable.ttf`
-  - 表示名: `Grenze Gotisch Regular`
-  - OpenSCAD 名: `Grenze Gotisch`
-  - 利用方針: variable font の配布物を同梱するが、現 UI では family 既定の Regular face として扱う
-  - 系統: `Art Gothic` 検索で見つけやすい近似候補。Blackletter 寄りの display
-  - 出典: Google Fonts `ofl/grenzegotisch`
-  - 閲覧用ページ: https://fonts.google.com/specimen/Grenze%2BGotisch
-  - ライセンス: `GrenzeGotisch-OFL.txt`
-  - 出典メモ: `GrenzeGotisch-SOURCE.txt`
+  - Display name: `Grenze Gotisch Regular`
+  - OpenSCAD name: `Grenze Gotisch`
+  - Usage policy: the variable font's distribution package is bundled, but the current UI treats it as the family's default Regular face.
+  - Category: an easy-to-find approximate candidate for an `Art Gothic` search. A blackletter-leaning display face.
+  - Source: Google Fonts `ofl/grenzegotisch`
+  - Info page: https://fonts.google.com/specimen/Grenze%2BGotisch
+  - License: `GrenzeGotisch-OFL.txt`
+  - Source note: `GrenzeGotisch-SOURCE.txt`
 
 - `MedievalSharp-Regular.ttf`
-  - 表示名: `MedievalSharp Regular`
-  - OpenSCAD 名: `MedievalSharp`
-  - 利用方針: static font。石碑 inscription 寄りの gothic display として短い legend に使う
-  - 系統: `Art Gothic` 検索で見つけやすい近似候補
-  - 出典: Google Fonts `ofl/medievalsharp`
-  - 閲覧用ページ: https://fonts.google.com/specimen/MedievalSharp
-  - ライセンス: `MedievalSharp-OFL.txt`
-  - 出典メモ: `MedievalSharp-SOURCE.txt`
+  - Display name: `MedievalSharp Regular`
+  - OpenSCAD name: `MedievalSharp`
+  - Usage policy: static font. Used for short legends as a stone-inscription-leaning gothic display face.
+  - Category: an easy-to-find approximate candidate for an `Art Gothic` search.
+  - Source: Google Fonts `ofl/medievalsharp`
+  - Info page: https://fonts.google.com/specimen/MedievalSharp
+  - License: `MedievalSharp-OFL.txt`
+  - Source note: `MedievalSharp-SOURCE.txt`
 
-static font はファイル名どおりの face をそのまま使い、擬似 italic / slanted / bold は付けません。明示的な輪郭補正は UI の数値入力からだけ行います。
+Static fonts use the face exactly as named in the file; no pseudo-italic/slanted/bold is applied. Any explicit outline adjustment is done only through the UI's numeric inputs.
 
-`下線を付ける` は font file の `post` table にある `UnderlinePosition` と `UnderlineThickness` を使います。font metadata を使えない場合は任意値へフォールバックせず、下線を出しません。
+`Add underline` uses the `UnderlinePosition` and `UnderlineThickness` values from the font file's `post` table. When font metadata isn't available, it does not fall back to an arbitrary value — no underline is drawn instead.
 
-いずれも legend の `text()` 生成に使います。display 系の追加書体は主に短い legend 向けです。`黒薔薇シンデレラ` は日本語を含む和文 display として扱い、MODI 配布元の利用条件と M+ FONTS 派生の注記を `KurobaraCinderella-MODI.txt` に残します。`Art Gothic` そのものはこのリポジトリには同梱せず、再配布条件が明確な OFL 配布物の近似候補を入れています。
+All of these are used for the legend's `text()` generation. The additional display faces are mainly intended for short legends. `黒薔薇シンデレラ` is treated as a Japanese display face that includes Japanese characters; the MODI distributor's usage terms and the note on its M+ FONTS derivation are kept in `KurobaraCinderella-MODI.txt`. `Art Gothic` itself is not bundled in this repository; instead, an approximate candidate from an OFL distribution with clear redistribution terms is included.

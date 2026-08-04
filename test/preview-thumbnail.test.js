@@ -15,7 +15,7 @@ function createImageData(width, height, opaquePixels) {
   return { data };
 }
 
-test("透明背景から描画済みピクセル範囲を検出する", () => {
+test("detects the drawn pixel range against a transparent background", () => {
   const imageData = createImageData(8, 6, [
     [2, 1],
     [5, 4],
@@ -30,11 +30,11 @@ test("透明背景から描画済みピクセル範囲を検出する", () => {
   });
 });
 
-test("描画済みピクセルがない場合は範囲なしとして扱う", () => {
+test("treats the case with no drawn pixels as having no range", () => {
   assert.equal(findOpaquePixelBounds(createImageData(4, 4, []), 4, 4), null);
 });
 
-test("検出範囲を画像境界内で広げる", () => {
+test("expands the detected range within the image bounds", () => {
   assert.deepEqual(expandPixelBounds({ x: 1, y: 2, width: 3, height: 2 }, 5, 5, 2), {
     x: 0,
     y: 0,
@@ -43,7 +43,7 @@ test("検出範囲を画像境界内で広げる", () => {
   });
 });
 
-test("正方形サムネイルの中央に余白付きで配置する draw plan を作る", () => {
+test("creates a draw plan that centers content in a square thumbnail with padding", () => {
   const plan = createSquareThumbnailDrawPlan(
     { x: 10, y: 20, width: 120, height: 60 },
     200,

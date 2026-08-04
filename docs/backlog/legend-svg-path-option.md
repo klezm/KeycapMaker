@@ -1,49 +1,49 @@
-# legend の text-to-path SVG 案
+# legend text-to-path SVG option
 
-## 背景
+## Background
 
-bundled OpenSCAD runtime では、`text()` を小さいサイズで使うと曲線が粗く多角形化されやすい。現行実装では OpenSCAD 内で `$fn` と内部拡大縮小を使って改善するが、別案として「外部で文字を path 化した SVG を使う」方法も検討対象に残す。
+In the bundled OpenSCAD runtime, using `text()` at small sizes tends to produce coarse, polygonized curves. The current implementation improves this using `$fn` and internal scaling within OpenSCAD, but we keep as an alternative option the idea of "using an SVG where the characters have been converted to paths externally."
 
-## 案の概要
+## Outline of the approach
 
-1. フォントから glyph outline を外部で path 化する
-2. SVG 内の text 要素ではなく、閉じた path として保持する
-3. OpenSCAD 側では `import("legend.svg")` で 2D 形状を読み込む
-4. 必要に応じて `linear_extrude()` して legend volume にする
+1. Convert glyph outlines from a font to paths externally
+2. Keep them as closed paths rather than `text` elements within the SVG
+3. Load the 2D shape on the OpenSCAD side with `import("legend.svg")`
+4. `linear_extrude()` as needed to turn it into a legend volume
 
-## 期待できる利点
+## Expected benefits
 
-- OpenSCAD の `text()` 実装に依存せず、事前に制御した輪郭を使える
-- font ごとの字形差を、glyph outline の段階で固定できる
-- 輪郭生成を JS 側へ逃がせば、将来的に複数 legend や icon 系にも広げやすい
+- Does not depend on OpenSCAD's `text()` implementation; can use outlines controlled in advance
+- Per-font glyph-shape differences can be locked in at the glyph-outline stage
+- If outline generation is offloaded to the JS side, it becomes easier to extend to multiple legends or icon-type content in the future
 
-## 主な制約
+## Main constraints
 
-- OpenSCAD の SVG import も最終的には closed polygon として扱うため、真にベクターを保持するわけではない
-- 公式マニュアル上、SVG import は text/font を直接扱わず、幾何情報へ変換された path 前提になる
-- path 化の責務が OpenSCAD 外へ移るため、フォント計測、字詰め、配置、キャッシュ設計が別途必要になる
-- GitHub Pages 上で完結させるには、ブラウザ側での text-to-path 実装か事前生成フローが必要になる
-- UI 入力文字列を都度 SVG へ変換する場合、runtime asset と export 経路の管理が増える
+- Since OpenSCAD's SVG import is ultimately treated as closed polygons as well, it does not truly preserve vector data
+- Per the official manual, SVG import does not handle text/font directly; it assumes paths already converted to geometric data
+- Since the responsibility for path conversion moves outside OpenSCAD, font metrics, kerning, placement, and cache design need to be handled separately
+- To keep this self-contained on GitHub Pages, either a browser-side text-to-path implementation or a pre-generation flow is needed
+- If UI input strings are converted to SVG on each change, management of runtime assets and the export path increases
 
-## このリポジトリで追加検討が必要な点
+## Points needing further consideration in this repository
 
-- JS 側で glyph outline を生成するライブラリ選定
-- 文字列から複数 path をまとめる座標系と原点契約
-- `src/lib/keycap-scad-bundle.js` へ SVG asset を渡す bridge 設計
-- preview / export の両経路で同じ legend path を再利用するキャッシュ設計
-- フォントライセンス上、path 化や再配布の扱いに追加確認が必要か
+- Choice of a library for generating glyph outlines on the JS side
+- Coordinate system and origin convention for combining multiple paths from a string
+- Bridge design for passing SVG assets to `src/lib/keycap-scad-bundle.js`
+- Cache design so the same legend path can be reused across both the preview and export paths
+- Whether font licensing requires additional confirmation regarding path conversion or redistribution
 
-## 現時点の判断
+## Current decision
 
-未採用。まずは OpenSCAD 内で完結する改善を優先し、次の条件のいずれかが出たら再検討する。
+Not adopted. Prioritize improvements that stay self-contained within OpenSCAD for now, and reconsider if any of the following conditions arise.
 
-補足: icon legend では、文字の glyph outline 生成とは別に、配布済み SVG icon data を provider ごとの runtime asset として渡す `import()` 経路を採用済み。ここでの未採用判断は、ユーザー入力文字列を font から path 化して SVG legend にする案を指す。
+Note: for icon legends, separately from glyph-outline generation for text, an `import()` path has already been adopted that passes pre-distributed SVG icon data as a per-provider runtime asset. The "not adopted" decision here refers specifically to the approach of converting user-input strings from a font into paths for an SVG legend.
 
-- `$fn` と内部拡大縮小でも丸みの品質が不足する
-- 複数 legend、icon、side legend で `text()` ベースの限界が顕著になる
-- ブラウザ側での glyph outline 生成を別用途でも使いたくなる
+- Even with `$fn` and internal scaling, curve quality remains insufficient
+- The limits of the `text()`-based approach become pronounced with multiple legends, icons, or side legends
+- We want to reuse browser-side glyph-outline generation for other purposes as well
 
-## 参考
+## References
 
 - [OpenSCAD User Manual/Text](https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Text)
 - [OpenSCAD User Manual/SVG Import](https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Importing_Geometry/SVG_Import)

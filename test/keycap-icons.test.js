@@ -102,7 +102,7 @@ function hasSelfIntersection(points) {
   return false;
 }
 
-test("アイコン picker の初期一覧はキーキャップ向け候補を表示する", () => {
+test("icon picker's initial list shows candidates suited for keycaps", () => {
   const recommendedIcons = listRecommendedLegendIcons();
 
   assert.equal(recommendedIcons[0]?.name, "arrow-up");
@@ -112,7 +112,7 @@ test("アイコン picker の初期一覧はキーキャップ向け候補を表
   assert.equal(new Set(recommendedIcons.map((icon) => icon.name)).size, recommendedIcons.length);
 });
 
-test("検索時は初期候補にない Lucide アイコンも選択候補へ出す", () => {
+test("search also surfaces Lucide icons not in the initial candidates as selectable options", () => {
   const defaultResults = searchLegendIcons("", "lucide", 96).map((icon) => icon.name);
   const searchResults = searchLegendIcons("file-volume", "lucide", 96).map((icon) => icon.name);
 
@@ -120,7 +120,7 @@ test("検索時は初期候補にない Lucide アイコンも選択候補へ出
   assert.ok(searchResults.includes("file-volume"));
 });
 
-test("Lucide アイコンは sanitizer 済みノードからモデル用 SVG を生成する", () => {
+test("Lucide icons generate a model SVG from the sanitized node", () => {
   const lucideIcons = listAvailableLegendIcons("lucide");
 
   assert.ok(lucideIcons.length >= 1700);
@@ -133,7 +133,7 @@ test("Lucide アイコンは sanitizer 済みノードからモデル用 SVG を
   assert.doesNotMatch(powerSvg, /c-0\.14794|0,0 0,0|c0,0/);
 });
 
-test("各アイコンセットは共通の body 形式でモデル用 SVG を生成する", () => {
+test("each icon set generates a model SVG using a common body format", () => {
   listLegendIconSets().forEach((iconSet) => {
     const icons = listAvailableLegendIcons(iconSet.key);
     assert.ok(icons.length > 0, `${iconSet.key} should have icons`);
@@ -146,7 +146,7 @@ test("各アイコンセットは共通の body 形式でモデル用 SVG を生
   });
 });
 
-test("Lucide SVG ノードは sanitizer で危険な要素と属性を落とす", () => {
+test("Lucide SVG nodes have dangerous elements and attributes dropped by the sanitizer", () => {
   const sanitizedNodes = sanitizeLucideSvgNodes([
     ["script", { href: "https://example.invalid/icon.js" }],
     ["path", {
@@ -175,7 +175,7 @@ test("Lucide SVG ノードは sanitizer で危険な要素と属性を落とす"
   assert.doesNotMatch(svg, /script|onload|style=|\skey=|stroke-width=/);
 });
 
-test("Lucide stroke-to-fill は round cap の path を自己交差させない", () => {
+test("Lucide stroke-to-fill does not self-intersect the path for a round cap", () => {
   const svg = buildLegendIconSvg(resolveLegendIcon("corner-down-right", "lucide"));
   const pathDataList = extractSvgPathData(svg);
   const selfIntersectingPaths = pathDataList.filter((pathData) => hasSelfIntersection(parsePolygonPoints(pathData)));
@@ -183,7 +183,7 @@ test("Lucide stroke-to-fill は round cap の path を自己交差させない",
   assert.equal(selfIntersectingPaths.length, 0);
 });
 
-test("Material Symbols のモデル用 body は元 Iconify data の Outlined FILL=0 形状を使う", async () => {
+test("Material Symbols' model body uses the Outlined FILL=0 shape from the original Iconify data", async () => {
   const original = JSON.parse(await readFile(
     path.join(PROJECT_ROOT, "node_modules/@iconify-json/material-symbols/icons.json"),
     "utf8",
@@ -216,7 +216,7 @@ test("Material Symbols のモデル用 body は元 Iconify data の Outlined FIL
   assert.deepEqual(mismatches, []);
 });
 
-test("対応アイコンセットは共通の fill bool から provider 別の実体名と SVG 形状を解決する", () => {
+test("supported icon sets resolve provider-specific entity names and SVG shapes from the common fill bool", () => {
   assert.equal(isLegendIconFillSupported("lucide"), false);
   assert.equal(isLegendIconFillSupported("font-awesome"), false);
   assert.equal(isLegendIconFillSupported("material-symbols"), true);
@@ -260,7 +260,7 @@ test("対応アイコンセットは共通の fill bool から provider 別の�
   assert.equal(getLegendIconRuntimePath("circle-line", "remix-icon", { filled: true }), "/icons/remix-icon/circle-fill.svg");
 });
 
-test("モデル用 SVG は compound path の塗り規則を nonzero として明示する", () => {
+test("model SVG explicitly sets the compound path's fill rule to nonzero", () => {
   const materialPowerSvg = buildLegendIconSvg(resolveLegendIcon("power", "material-symbols"));
   const materialPowerParent = materialSymbolsIconSet.icons["power-plug"];
   const materialPowerPath = extractSvgPathData(materialPowerSvg)[0];
@@ -275,7 +275,7 @@ test("モデル用 SVG は compound path の塗り規則を nonzero として明
   assert.equal(materialPowerParent.body.includes("fill-rule"), false);
 });
 
-test("全アイコンセットのモデル用 SVG は通常形状と塗りつぶし形状を生成できる", () => {
+test("model SVG for all icon sets can generate both regular and filled shapes", () => {
   let generatedCount = 0;
 
   listLegendIconSets().forEach((iconSet) => {
@@ -292,7 +292,7 @@ test("全アイコンセットのモデル用 SVG は通常形状と塗りつぶ
   assert.ok(generatedCount > 10000);
 });
 
-test("Font Awesome のモデル用 path は元 package 定義から変えない", () => {
+test("Font Awesome's model path does not change from the original package definition", () => {
   const originalByName = new Map();
   Object.values(fontAwesomeIcons).forEach((value) => {
     if (
@@ -329,7 +329,7 @@ test("Font Awesome のモデル用 path は元 package 定義から変えない"
   assert.deepEqual(mismatches, []);
 });
 
-test("Remix Icon のモデル用 path は元 SVG の path d をそのまま使う", async () => {
+test("Remix Icon's model path uses the original SVG's path d as-is", async () => {
   const svgFiles = await collectFiles(
     path.join(PROJECT_ROOT, "node_modules/remixicon/icons"),
     (entryPath) => entryPath.endsWith(".svg"),
@@ -357,7 +357,7 @@ test("Remix Icon のモデル用 path は元 SVG の path d をそのまま使�
   assert.deepEqual(mismatches, []);
 });
 
-test("複数アイコンセットを共通 API で検索できる", () => {
+test("multiple icon sets can be searched with a common API", () => {
   const iconSetKeys = listLegendIconSets().map((iconSet) => iconSet.key);
 
   assert.deepEqual(iconSetKeys, ["lucide", "material-symbols", "font-awesome", "remix-icon"]);
@@ -368,7 +368,7 @@ test("複数アイコンセットを共通 API で検索できる", () => {
   assert.ok(searchLegendIcons("command", "remix-icon", 8).some((icon) => icon.name === "command-line"));
 });
 
-test("アイコン名の正規化と SVG 生成はアイコンセットごとの既定値を使う", () => {
+test("icon name normalization and SVG generation use per-icon-set defaults", () => {
   assert.equal(resolveLegendIconName("keyboard_command_key", "material-symbols"), "keyboard-command-key");
   assert.equal(resolveLegendIconName("volume-up", "font-awesome"), "volume-high");
   assert.equal(resolveLegendIconName("circle", "remix-icon"), "circle-line");

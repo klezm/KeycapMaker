@@ -15,9 +15,9 @@ description: Extend and maintain Keycap Maker's modular OpenSCAD assets under `s
    - `scad/presets/` for defaults and parameter sets.
    - `scad/samples/` for regression fixtures and minimal examples.
 4. Preserve the repo's core design choices:
-   - preview と export の責務分離
-   - body と legend の別体積維持
-   - UI パラメータと SCAD 幾何パラメータの分離
+   - separation of responsibilities between preview and export
+   - keeping body and legend as separate volumes
+   - separation of UI parameters and SCAD geometry parameters
 5. If a parameter crosses the app boundary, inspect `src/lib/keycap-scad-bundle.js` and keep the `-D` bridge aligned.
 
 ## Repo Rules

@@ -46,7 +46,7 @@ function parseJStemLp01ScadOutlinePoints(scad) {
     }));
 }
 
-test("公式 STEP 由来 J-STEM-LP01 OFF は既存ローカル座標に揃っている", async () => {
+test("the J-STEM-LP01 OFF derived from the official STEP is aligned to the existing local coordinates", async () => {
   const off = await readFile("public/assets/j-stem-lp01/j-stem-lp01-reference.off", "utf8");
   const mesh = parseOff(off);
   const bounds = createBounds(mesh.vertices);
@@ -66,7 +66,7 @@ test("公式 STEP 由来 J-STEM-LP01 OFF は既存ローカル座標に揃って
   assertClose(plateEdgeBounds.maxZ, 0.8, "plate edge max z");
 });
 
-test("J-STEM-LP01 の受け座ブーリアン外周は公式 STEP と同じ向きにする", async () => {
+test("J-STEM-LP01 socket boolean outer boundary matches the orientation of the official STEP", async () => {
   const scad = await readFile("scad/modules/stem_j_stem_lp01.scad", "utf8");
   const points = parseJStemLp01ScadOutlinePoints(scad);
   const bounds = createBounds(points.map((point) => ({ x: point.x, y: point.y, z: 0 })));
@@ -83,7 +83,7 @@ test("J-STEM-LP01 の受け座ブーリアン外周は公式 STEP と同じ向�
   assert.doesNotMatch(scad, /top_left_center = \[-5\.250, 5\.220\]/);
 });
 
-test("J-STEM-LP01 参照メッシュは SCAD の top plane transform と同じ式で配置する", () => {
+test("J-STEM-LP01 reference mesh is positioned using the same formula as the SCAD top plane transform", () => {
   const mesh = {
     vertices: [{ x: 1, y: 2, z: 3 }],
     faces: [[0, 0, 0]],
@@ -114,7 +114,7 @@ test("J-STEM-LP01 参照メッシュは SCAD の top plane transform と同じ�
   assertClose(raisedTransform.mountZ, flatTransform.mountZ, "raised surface keeps receiver mount height");
 });
 
-test("J-STEM-LP01 参照メッシュは受け座の掘り込み深さ補正へ追従する", () => {
+test("J-STEM-LP01 reference mesh follows the socket's carve-depth correction", () => {
   const mesh = {
     vertices: [{ x: 0, y: 0, z: 0 }],
     faces: [[0, 0, 0]],
@@ -142,7 +142,7 @@ test("J-STEM-LP01 参照メッシュは受け座の掘り込み深さ補正へ�
   );
 });
 
-test("J-STEM-LP01 参照プレビュー色はクリアを既定にし、白とオレンジを解決する", () => {
+test("J-STEM-LP01 reference preview color defaults to clear and resolves white and orange", () => {
   assert.equal(DEFAULT_J_STEM_LP01_PREVIEW_COLOR, "clear");
   assert.equal(resolveJStemLp01PreviewColor("orange"), "orange");
   assert.equal(resolveJStemLp01PreviewColor("white"), "white");
@@ -155,7 +155,7 @@ test("J-STEM-LP01 参照プレビュー色はクリアを既定にし、白と�
   assert.equal(getJStemLp01PreviewStyle("orange").opacity, 1);
 });
 
-test("J-STEM-LP01 参照OFFローダーは public asset の応答を parse する", async () => {
+test("J-STEM-LP01 reference OFF loader parses the public asset's response", async () => {
   const mesh = await loadJStemLp01ReferenceMesh("asset.off", async (assetUrl) => ({
     ok: assetUrl === "asset.off",
     async text() {

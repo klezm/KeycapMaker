@@ -1,98 +1,98 @@
-# アプリ全体像
+# App overview
 
-## 現在のプロダクト範囲
+## Current product scope
 
-KeycapMaker は、GitHub Pages で配信するクライアントサイド完結のキーキャップ編集アプリです。現在の主要機能は次のとおりです。
+KeycapMaker is a client-side-only keycap editing app served via GitHub Pages. The main current features are as follows.
 
-- キーキャップ形状の編集
-- legend の文字列、書体、font 内 style、明示的な太さ補正、位置、高さの編集。キートップ legend は埋め込み量も編集できる
-- homing bar と stem 方式の切り替え
-- typewriter shape 専用の key rim 追加
-- Three.js によるプレビュー
-- 複数キーキャップをまとめるプロジェクト
-- 3MF の書き出し
-- CAD 交換用 STEP の書き出し
-- 単色形状用 STL の書き出し
-- 編集再開用 JSON の保存とドラッグ & ドロップ読み込み
+- Editing keycap shapes
+- Editing the legend's text, typeface, in-font style, explicit weight correction, position, and height. The keytop legend's embed depth can also be edited
+- Switching between homing bar and stem types
+- Adding a key rim dedicated to the typewriter shape
+- Preview via Three.js
+- A project that bundles multiple keycaps together
+- 3MF export
+- STEP export for CAD interchange
+- STL export for single-material shapes
+- Saving JSON for resuming edits, and drag-and-drop loading
 
-## 実装上の固定前提
+## Fixed implementation assumptions
 
-- 配信は GitHub Pages を使う
-- サーバーサイド処理は前提にしない
-- OpenSCAD 実行、プレビュー、export はブラウザ内で完結させる
-- preview と export は責務を分ける
-- body / legend は separate volume を維持する
-- 色指定は補助情報であり、部位の意味づけは別体積構造を優先する
+- Deployment uses GitHub Pages
+- No server-side processing is assumed
+- OpenSCAD execution, preview, and export are all self-contained in the browser
+- preview and export have separate responsibilities
+- body / legend keep the separate-volume approach
+- Color assignment is auxiliary information; the semantic meaning of a part is defined primarily by the separate-volume structure
 
-## コードの主な責務
+## Main code responsibilities
 
-### UI と状態管理
+### UI and state management
 
 - `src/main.js`
-  アプリ状態、フォーム、プレビュー更新、export、JSON 入出力の中心
+  The center of app state, forms, preview updates, export, and JSON I/O
 - `src/lib/editor-data.js`
-  編集データ JSON の canonical export と、欠損を defaults で補う互換入力 JSON の import を扱う
+  Handles the canonical export of editor data JSON, and import of compatible input JSON that fills in missing fields with defaults
 - `src/lib/project-data.js`
-  複数キーキャップを束ねる project manifest と project 内 keycap entry の正規化を扱う
+  Handles the project manifest that bundles multiple keycaps, and normalization of keycap entries within a project
 - `src/data/keycap-shape-registry.js`
-  shape JSON の集約、selector、既定 shape の解決
+  Aggregates shape JSON, provides a selector, and resolves the default shape
 - `src/data/keycap-shapes/*.json`
-  shape ごとの初期値、geometry defaults、表示グループ定義
+  Per-shape initial values, geometry defaults, and display group definitions
 - `src/lib/keycap-fonts.js`
-  legend font の選択肢と style 解決を UI / export / import で共有する
+  Shares legend font choices and style resolution across UI / export / import
 
-### OpenSCAD 実行
+### OpenSCAD execution
 
 - `src/lib/openscad-client.js`
-  Web Worker 起動の薄いクライアント
+  A thin client that launches the Web Worker
 - `src/openscad-worker.js`
-  bundled runtime を使って OpenSCAD ジョブを実行する worker
+  The worker that runs OpenSCAD jobs using the bundled runtime
 - `public/vendor/openscad/`
-  同梱している OpenSCAD WASM ランタイム
+  The bundled OpenSCAD WASM runtime
 
-### SCAD ブリッジ
+### SCAD bridge
 
 - `src/lib/keycap-scad-bundle.js`
-  SCAD ファイル群、フォント、wrapper SCAD を runtime へ渡す橋渡し
+  Bridges the SCAD file set, fonts, and wrapper SCAD to the runtime
 - `scad/base/keycap.scad`
-  キーキャップ全体のエントリポイント
+  The entry point for the whole keycap
 - `scad/modules/`
-  shell、legend、stem、homing bar などの再利用形状
+  Reusable shapes such as shell, legend, stem, and homing bar
 - `scad/presets/`
-  SCAD 固有の nominal constant や sample 用 parameter set
+  SCAD-specific nominal constants and sample parameter sets
 
-### プレビューと export
+### Preview and export
 
 - `src/lib/off-parser.js`
-  OFF メッシュを JS で扱うためのパーサ
+  A parser for handling OFF meshes in JS
 - `src/lib/preview-scene.js`
-  Three.js による preview 表示
+  Preview display via Three.js
 - `src/lib/export-3mf.js`
-  OFF メッシュ群から 3MF パッケージを生成
+  Generates a 3MF package from a set of OFF meshes
 - `src/lib/export-step.js`
-  単一形状の OFF メッシュから STEP AP214 faceted B-rep を生成
+  Generates a STEP AP214 faceted B-rep from a single shape's OFF mesh
 - `public/assets/j-stem-lp01/`
-  J-STEM-LP01 の公式 STEP と、参照 preview 用の公式 STEP 由来 OFF メッシュ
+  The official STEP for J-STEM-LP01, and an OFF mesh derived from that official STEP for reference preview
 
-## データの流れ
+## Data flow
 
-1. `src/main.js` で UI 入力を state に保持する
-2. `src/lib/keycap-scad-bundle.js` が `user_*` 定義を含む wrapper SCAD を生成する
-3. worker が bundled OpenSCAD runtime で SCAD を実行する
-4. preview では OFF を解析して Three.js 表示に渡す
-5. J-STEM-LP01 選択時の preview では、公式 STEP 由来 OFF を色選択付きの位置合わせ参照として追加する
-6. export では OFF を part ごとに集めて 3MF を生成するか、単一形状の OFF から STEP を生成するか、OpenSCAD runtime から単一 STL を生成する。編集データ JSON は state から生成する
-7. project では複数の編集データ JSON と preview 画像を `KeycapMaker.json` manifest で束ねる
-8. import ではプロジェクトディレクトリ、保存済みの編集データ JSON、または sparse な互換入力 JSON を読み込み、defaults とマージして state を復元する
+1. `src/main.js` holds UI input in state
+2. `src/lib/keycap-scad-bundle.js` generates wrapper SCAD containing `user_*` definitions
+3. The worker runs the SCAD via the bundled OpenSCAD runtime
+4. In preview, the OFF is parsed and passed to the Three.js display
+5. When J-STEM-LP01 is selected, the preview adds the OFF derived from the official STEP as a color-selectable alignment reference
+6. In export, OFF meshes are collected per part to generate a 3MF, or a STEP is generated from a single shape's OFF, or a single STL is generated from the OpenSCAD runtime. Editor data JSON is generated from state
+7. A project bundles multiple editor data JSON files and preview images together via a `KeycapMaker.json` manifest
+8. On import, the app reads a project directory, a saved editor data JSON, or a sparse compatible input JSON, merges it with defaults, and restores state
 
-### Mermaid で見る全体フロー
+### Overall flow as a Mermaid diagram
 
 ```mermaid
 flowchart LR
-  screen["画面 / src/main.js"] --> state["editor state"]
+  screen["Screen / src/main.js"] --> state["editor state"]
   shapeJson["shape JSON / src/data/keycap-shapes/*.json"] --> state
-  state --> editorJson["編集データ JSON"]
-  state --> projectJson["プロジェクト / KeycapMaker.json + keycaps/"]
+  state --> editorJson["editor data JSON"]
+  state --> projectJson["project / KeycapMaker.json + keycaps/"]
   state --> bridge["SCAD bridge / src/lib/keycap-scad-bundle.js"]
   shapeJson --> bridge
   bridge --> wrapper["wrapper SCAD / user_*"]
@@ -107,32 +107,34 @@ flowchart LR
   wasm --> exportStl["single-material STL export"]
 ```
 
-## 現在のユーザー向け出力
+## Current user-facing output
 
 - `3MF`
-  body / rim / homing / キートップ legend / sidewall legend の各メッシュを part object として保持し、components 親 object にまとめる
+  Holds the body / rim / homing / keytop legend / sidewall legend meshes as part objects, and bundles them under a parent `components` object
 - `STEP`
-  `single_material_shape` 由来の単一形状を STEP AP214 faceted B-rep として保存する。色、legend、part 分離は含めない
+  Saves the single shape derived from `single_material_shape` as a STEP AP214 faceted B-rep. Does not include color, legend, or part separation
 - `STL`
-  オプション扱いの単色形状出力。色と legend は含めず、単一メッシュとして保存する
-- `編集データ JSON`
-  UI 状態を保存し、あとで再読み込みするためのフォーマット
-- `プロジェクト`
-  複数の編集データ JSON と preview 画像を `KeycapMaker.json` manifest で束ねるディレクトリ形式
+  An optional single-material shape output. Does not include color or legend, and is saved as a single mesh
+- `Editor data JSON`
+  A format for saving UI state and reloading it later
+- `Project`
+  A directory format that bundles multiple editor data JSON files and preview images via a `KeycapMaker.json` manifest
 
-## 現時点の実装制約
+## Current implementation constraints
 
-- legend はキートップ上の中央 / 右上 / 右下 / 左上 / 左下と sidewall front / back / left / right の固定モデル
-- キートップ legend の露出面は top dish 前提
-- sidewall legend は各側面の中央基準面の傾きに合わせて配置し、壁の内側面まで自動で埋め込む。角丸や JIS Enter の欠き込み面へは自動追従しない
-- variable font の native style は使えるが、italic / slanted は font 側に実データがない限り出せない
-- 3MF の色情報は付与しているが、スライサー互換性は別途手動確認が必要
-- OpenSCAD runtime とフォント同梱のライセンス確認は人間の最終確認が必要
+- legend uses a fixed model of center / top-right / bottom-right / top-left / bottom-left on the keytop, and front / back / left / right on the sidewall
+- The keytop legend's exposed face assumes a top dish
+- The sidewall legend is placed to match the tilt of each side's center reference plane, and is automatically embedded up to the wall's inner surface. It does not automatically follow rounded corners or the notch face of JIS Enter
+- Variable fonts' native styles can be used, but italic / slanted cannot be produced unless the font itself has that data
+- 3MF includes color information, but slicer compatibility must be separately verified manually
+- License review of the bundled OpenSCAD runtime and fonts requires final human confirmation
 
-## 関連資料
+## Related documents
 
 - [scad-and-export.md](scad-and-export.md)
 - [project-data.md](project-data.md)
 - [../guide/development.md](../guide/development.md)
 - [../guide/manual-verification.md](../guide/manual-verification.md)
 - [../backlog/legend-extensibility-todo.md](../backlog/legend-extensibility-todo.md)
+</content>
+</invoke>

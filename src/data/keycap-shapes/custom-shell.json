@@ -1,6 +1,6 @@
 {
   "key": "custom-shell",
-  "label": "カスタムシェル",
+  "label": "Custom Shell",
   "geometryType": "shell",
   "geometryDefaults": {
     "profileFrontAngle": 15,
@@ -218,8 +218,8 @@
   "fieldGroups": [
     {
       "id": "shape",
-      "title": "キーキャップの形",
-      "description": "キーキャップ全体の大きさ、上面中央の高さ、上に向かって細くなる具合、上端Rと本体の肩Rを調整します。横幅と奥行きは 1u 換算カードの基準で換算します。",
+      "title": "Keycap Shape",
+      "description": "Adjust the overall keycap size, top center height, taper, top edge radius, and body shoulder radius. Width and depth are converted from the 1u reference size.",
       "fieldKeys": [
         "shapeProfile",
         "keyWidth",
@@ -234,8 +234,8 @@
     },
     {
       "id": "top",
-      "title": "キートップ",
-      "description": "フラット / シンドリカル / スフェリカルと、前後左右の傾きを調整できます。端の高さに切り替えた場合も内部では pitch / roll に正規化されます。",
+      "title": "Keytop",
+      "description": "Switch the top surface between flat / cylindrical / spherical, and adjust front-back or left-right tilt. Edge-height input is also normalized internally to pitch / roll.",
       "fieldKeys": [
         "topOffsetX",
         "topOffsetY",
@@ -253,8 +253,8 @@
     },
     {
       "id": "topHat",
-      "title": "トップハット",
-      "description": "既存のキートップ上へ追加する小さな上面の有無、天面 / 底面寸法、R、高さ、肩角度を調整します。",
+      "title": "Top Hat",
+      "description": "Adjust whether a small additional surface is added above the existing keytop, its top / bottom dimensions, radius, height, and shoulder angle.",
       "fieldKeys": [
         "topHatEnabled",
         "topHatSeparateColorEnabled",
@@ -274,8 +274,8 @@
     },
     {
       "id": "legend",
-      "title": "印字",
-      "description": "入れる文字、書体、見た目、位置、盛り上がり、埋め込み量をまとめて調整します。複数文字もそのまま入力できます。",
+      "title": "Legend",
+      "description": "Adjust the text, typeface, appearance, position, height, and embed depth all together. Multiple characters can be entered as-is.",
       "fieldKeys": [
         "legendEnabled",
         "legendColor",
@@ -421,8 +421,8 @@
     },
     {
       "id": "homing",
-      "title": "指の目印",
-      "description": "F キーや J キーのように、指で触って分かる出っ張りを調整します。印字とは別に設定できます。",
+      "title": "Homing Mark",
+      "description": "Adjust a tactile bump you can feel with your finger, like on the F or J keys. It can be set separately from the legend.",
       "fieldKeys": [
         "homingBarEnabled",
         "homingBarColor",
@@ -435,7 +435,7 @@
     },
     {
       "id": "stem",
-      "title": "取り付け部分",
+      "title": "Mount",
       "descriptionKey": "stem-group",
       "fieldKeys": [
         "stemType",
