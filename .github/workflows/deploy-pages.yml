@@ -135,7 +135,7 @@ jobs:
               "commit": "$COMMIT_HASH",
               "date": "$COMMIT_DATE"
             }
-            META
+          META
 
             # Generate index.html
             cd dev
@@ -162,7 +162,7 @@ jobs:
                   <th>Link</th>
                 </tr>
             <!-- DYNAMIC_CONTENT_START -->
-            HTML
+          HTML
 
             # Find all meta.json and create a list
             node -e "
@@ -208,7 +208,7 @@ jobs:
               </table>
             </body>
             </html>
-            HTML
+          HTML
             cd ..
 
             git add dev/
