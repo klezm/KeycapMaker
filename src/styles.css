@@ -3941,3 +3941,43 @@ pre {
     display: none;
   }
 }
+
+/* New CSS for Project Actions Panel */
+.project-actions-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.project-action-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.project-action-row > * {
+  flex: 1;
+}
+
+.project-action-group {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+  flex: 1;
+}
+
+.export-format-select {
+  flex: 1;
+  padding: 0 0.5rem;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+  background-color: var(--card-bg-color);
+  color: var(--text-color);
+  font-family: inherit;
+  font-size: 0.875rem;
+  min-width: 0; /* Prevent overflow */
+}
+
+.project-action-group .export-save-button {
+  flex: 2; /* The button takes more space */
+}

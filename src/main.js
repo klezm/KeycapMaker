@@ -4255,10 +4255,40 @@ function renderProjectTab() {
           </div>
         </section>
 
-        <button class="export-save-button project-save-button" type="button" data-project-save ${isProjectBusy ? "disabled" : ""}>
-          ${EXPORT_ICON_MARKUP.download}
-          <span>${isProjectBusy ? t("actions.saving") : t("project.save")}</span>
-        </button>
+        <div class="project-actions-panel">
+          <div class="project-action-row">
+            <button class="export-save-button project-secondary-button" type="button" data-project-import-upload ${isProjectBusy ? "disabled" : ""}>
+              ${EXPORT_ICON_MARKUP.file}
+              <span>Upload</span>
+            </button>
+            <button class="export-save-button project-secondary-button" type="button" data-project-import-paste ${isProjectBusy ? "disabled" : ""}>
+              ${EXPORT_ICON_MARKUP.file}
+              <span>Paste</span>
+            </button>
+          </div>
+          <div class="project-action-row">
+            <div class="project-action-group">
+              <select class="export-format-select" data-project-download-format ${isProjectBusy ? "disabled" : ""}>
+                <option value="zip">ZIP</option>
+                <option value="json">Monolithic JSON</option>
+                ${state.project.keycaps.length === 1 ? `<option value="3mf">3MF</option><option value="stl">STL</option>` : ""}
+              </select>
+              <button class="export-save-button project-save-button" type="button" data-project-download ${isProjectBusy ? "disabled" : ""}>
+                ${EXPORT_ICON_MARKUP.download}
+                <span>${isProjectBusy ? t("actions.saving") : t("project.save")}</span>
+              </button>
+            </div>
+            <div class="project-action-group">
+              <select class="export-format-select" data-project-copy-format ${isProjectBusy ? "disabled" : ""}>
+                <option value="json">Monolithic JSON</option>
+              </select>
+              <button class="export-save-button project-save-button" type="button" data-project-copy ${isProjectBusy ? "disabled" : ""}>
+                ${EXPORT_ICON_MARKUP.file}
+                <span>Copy</span>
+              </button>
+            </div>
+          </div>
+        </div>
         <p class="project-status" aria-live="polite">${escapeHtml(state.projectSummary)}</p>
       </div>
     </div>
@@ -6625,9 +6655,27 @@ function handleInspectorCardClick(event) {
     return;
   }
 
-  const projectSaveButton = getClosestFromEventTarget(event, "[data-project-save]");
-  if (projectSaveButton) {
-    void saveProject();
+  const projectUploadButton = getClosestFromEventTarget(event, "[data-project-import-upload]");
+  if (projectUploadButton) {
+    void handleProjectUploadClick();
+    return;
+  }
+
+  const projectPasteButton = getClosestFromEventTarget(event, "[data-project-import-paste]");
+  if (projectPasteButton) {
+    void handleProjectPasteClick();
+    return;
+  }
+
+  const projectDownloadButton = getClosestFromEventTarget(event, "[data-project-download]");
+  if (projectDownloadButton) {
+    void handleProjectDownloadClick();
+    return;
+  }
+
+  const projectCopyButton = getClosestFromEventTarget(event, "[data-project-copy]");
+  if (projectCopyButton) {
+    void handleProjectCopyClick();
     return;
   }
 
@@ -10647,3 +10695,275 @@ executeKeycapPreview({ silent: true, refreshActiveProjectPreview: true });
 ensureColorisLoaded().catch((error) => {
   console.warn(error);
 });
+
+// MONOLITHIC JSON EXPORT & IMPORT
+async function createMonolithicProjectJson(project) {
+  const projectDirectoryName = normalizeProjectName(project.name, DEFAULT_PROJECT_NAME);
+  const manifest = createProjectManifest(project);
+
+  const files = {
+    [`${projectDirectoryName}/${PROJECT_MANIFEST_FILENAME}`]: JSON.stringify(manifest, null, 2),
+  };
+
+  for (const entry of project.keycaps) {
+    files[`${projectDirectoryName}/${entry.jsonPath}`] = JSON.stringify(entry.editorDataPayload, null, 2);
+
+    // We base64 encode the preview image for the monolithic JSON to keep it as a string map
+    files[`${projectDirectoryName}/${entry.previewPath}`] = entry.previewImageDataUrl || createProjectPreviewPlaceholderDataUrl(entry.params);
+
+    // For monolithic JSON, we intentionally skip 3MF binary files to keep it pure text.
+  }
+
+  return JSON.stringify(files, null, 2);
+}
+
+async function importMonolithicProjectJsonPayload(payload) {
+  const startedAt = performance.now();
+
+  // Find manifest
+  let manifestPath = null;
+  for (const key in payload) {
+    if (key.endsWith(PROJECT_MANIFEST_FILENAME)) {
+      manifestPath = key;
+      break;
+    }
+  }
+
+  if (!manifestPath) {
+    throw new Error(t("project.missingProjectFile", { path: PROJECT_MANIFEST_FILENAME }));
+  }
+
+  const rootPrefix = manifestPath.substring(0, manifestPath.length - PROJECT_MANIFEST_FILENAME.length);
+  const manifestPayload = JSON.parse(payload[manifestPath]);
+  const manifest = parseProjectManifest(manifestPayload, getDroppedProjectFallbackName(rootPrefix));
+  const keycaps = [];
+
+  for (const manifestEntry of manifest.keycaps) {
+    const editorDataPath = rootPrefix + manifestEntry.jsonPath;
+    if (!payload[editorDataPath]) {
+      throw new Error(t("project.missingProjectFile", { path: manifestEntry.jsonPath }));
+    }
+
+    const editorDataPayload = JSON.parse(payload[editorDataPath]);
+    const entryWithoutPreview = createProjectKeycapEntry({}, {
+      manifestEntry,
+      editorDataPayload,
+    });
+
+    let previewImageDataUrl = null;
+    if (manifestEntry.previewPath) {
+       const previewPath = rootPrefix + manifestEntry.previewPath;
+       if (payload[previewPath]) {
+         previewImageDataUrl = payload[previewPath];
+       }
+    }
+
+    if (!previewImageDataUrl) {
+       previewImageDataUrl = createProjectPreviewPlaceholderDataUrl(entryWithoutPreview.params);
+    }
+
+    keycaps.push(createProjectKeycapEntry(entryWithoutPreview.params, {
+      manifestEntry,
+      editorDataPayload,
+      previewImageDataUrl,
+    }));
+  }
+
+  state.project.name = manifest.name;
+  state.project.savedAt = manifest.savedAt;
+  state.project.keycaps = keycaps;
+  state.project.activeKeycapId = manifest.activeKeycapId;
+  state.project.isDirty = false;
+  state.lastImportBindingReport = null;
+  state.sidebarTab = "project";
+
+  setProjectStatus("success", t("project.loaded", { name: state.project.name }));
+
+  setExportStatus(
+    "success",
+    t("importExport.loaded", { fileName: "Project JSON" }),
+    {
+      format: "project-import",
+      label: t("importExport.loadLabel"),
+      elapsedMs: Math.round(performance.now() - startedAt),
+      byteLength: JSON.stringify(payload).length,
+      notes: t("importExport.loadNote", { fileName: state.project.name }),
+    },
+  );
+
+  const didCreateFallbackKeycap = supplementFallbackProjectKeycap(state.project);
+  if (state.project.activeKeycapId) {
+    applyProjectKeycapToCurrent(state.project.activeKeycapId);
+  }
+
+  render({ animateInspector: true });
+  await executeKeycapPreview({ silent: true, refreshActiveProjectPreview: didCreateFallbackKeycap });
+}
+
+// ACTIONS HANDLERS
+async function handleProjectUploadClick() {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".zip,.json";
+  input.style.display = "none";
+  document.body.appendChild(input);
+
+  input.addEventListener("change", async () => {
+    const file = input.files[0];
+    if (!file) return;
+
+    try {
+      if (file.name.toLowerCase().endsWith(".zip")) {
+        await importProjectArchiveFile(file);
+      } else if (file.name.toLowerCase().endsWith(".json")) {
+        const text = await file.text();
+        const payload = JSON.parse(text);
+        if (payload.kind === "keycap-maker/project" || payload.schemaVersion) {
+           // Might be a single keycap editor data json
+           if (payload.params) {
+              await importEditorDataFile(file);
+           } else {
+              throw new Error("Invalid single keycap JSON");
+           }
+        } else {
+           // Assume monolithic project JSON
+           await importMonolithicProjectJsonPayload(payload);
+        }
+      }
+    } catch (e) {
+      setProjectStatus("error", `Failed to load: ${e.message}`);
+      render();
+    } finally {
+      document.body.removeChild(input);
+    }
+  });
+
+  input.click();
+}
+
+async function handleProjectPasteClick() {
+  try {
+    const text = await navigator.clipboard.readText();
+    if (!text || text.trim() === "") {
+      throw new Error("Clipboard is empty");
+    }
+
+    const payload = JSON.parse(text);
+    if (payload.kind === "keycap-maker/project" || payload.schemaVersion) {
+       if (payload.params) {
+          // Mock a file object for single editor data json
+          await importEditorDataFile(new File([text], "pasted.json", { type: "application/json" }));
+       } else {
+          throw new Error("Invalid JSON pasted.");
+       }
+    } else {
+       // Assume monolithic project json
+       await importMonolithicProjectJsonPayload(payload);
+    }
+  } catch (e) {
+    setProjectStatus("error", `Failed to paste: ${e.message}`);
+    render();
+  }
+}
+
+async function downloadProjectJson(project) {
+  const jsonStr = await createMonolithicProjectJson(project);
+  const blob = new Blob([jsonStr], { type: "application/json" });
+  const projectDirectoryName = normalizeProjectName(project.name, DEFAULT_PROJECT_NAME);
+  downloadBlob(blob, `${projectDirectoryName}.json`);
+}
+
+async function downloadProject3mf(project) {
+  if (project.keycaps.length === 1) {
+    const entry = project.keycaps[0];
+    const { blob } = await create3mfExportBlob(entry.params);
+    downloadBlob(blob, build3mfFilename(entry.params));
+  }
+}
+
+async function downloadProjectStl(project) {
+  if (project.keycaps.length === 1) {
+    const entry = project.keycaps[0];
+    const result = await runOpenScad({
+      files: await createKeycapFiles({
+        params: entry.params,
+        exportTarget: "single_material_shape",
+      }),
+      args: buildKeycapArgs({
+        outputPath: keycapStlExportPath,
+        outputFormat: "stl",
+      }),
+      outputPaths: [keycapStlExportPath],
+    });
+    const [output] = result.outputs;
+    const blob = new Blob([output.bytes], { type: "model/stl" });
+    downloadBlob(blob, buildStlFilename(entry.params));
+  }
+}
+
+async function handleProjectDownloadClick() {
+  const select = app.querySelector("[data-project-download-format]");
+  const format = select ? select.value : "zip";
+
+  setProjectStatus("running", t("project.saving"));
+  render();
+
+  try {
+    const project = prepareProjectForSave();
+
+    if (format === "zip") {
+      await downloadProjectZip(project);
+    } else if (format === "json") {
+      await downloadProjectJson(project);
+    } else if (format === "3mf") {
+      await downloadProject3mf(project);
+    } else if (format === "stl") {
+      await downloadProjectStl(project);
+    }
+
+    state.project.isDirty = false;
+    setProjectStatus("success", t("project.saved"));
+  } catch (error) {
+    setProjectStatus("error", t("project.saveFailed", { message: `${error}` }));
+  }
+
+  render({ animateInspector: true });
+}
+
+async function handleProjectCopyClick() {
+  const select = app.querySelector("[data-project-copy-format]");
+  const format = select ? select.value : "json";
+
+  setProjectStatus("running", "Copying...");
+  render();
+
+  try {
+    const project = prepareProjectForSave();
+
+    if (format === "json") {
+      const jsonStr = await createMonolithicProjectJson(project);
+
+      // Attempt generic clipboard copy
+      try {
+        await navigator.clipboard.writeText(jsonStr);
+      } catch (err) {
+        // Fallback
+        const textarea = document.createElement("textarea");
+        textarea.value = jsonStr;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "absolute";
+        textarea.style.left = "-9999px";
+        document.body.append(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
+    }
+
+    setProjectStatus("success", "Copied to clipboard!");
+  } catch (error) {
+    setProjectStatus("error", `Copy failed: ${error.message}`);
+  }
+
+  render({ animateInspector: true });
+}
