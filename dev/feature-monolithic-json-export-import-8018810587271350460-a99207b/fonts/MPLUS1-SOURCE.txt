@@ -1,0 +1,39 @@
+M PLUS 1 source and license note
+================================
+
+Review date:
+2026-04-25
+
+Repo first-added date:
+2026-04-21
+
+Source page at review:
+https://github.com/coz-m/MPLUS_FONTS/tree/12ab700ad3ed69902c253a5d3e04b1fa21cbb6f4/fonts/MPLUS1/variable
+
+Bundled download URL:
+https://raw.githubusercontent.com/coz-m/MPLUS_FONTS/12ab700ad3ed69902c253a5d3e04b1fa21cbb6f4/fonts/MPLUS1/variable/MPLUS1%5Bwght%5D.ttf
+
+Bundled license URL:
+https://raw.githubusercontent.com/coz-m/MPLUS_FONTS/12ab700ad3ed69902c253a5d3e04b1fa21cbb6f4/OFL.txt
+
+Bundled files in this repository:
+- MPLUS1-Variable.ttf
+- MPLUS1-OFL.txt
+
+Bundled SHA-256:
+- MPLUS1-Variable.ttf: 8a1b600f1ee5853c04bb952dfe04393256394f762dd1f8e20593d7d3a7980812
+- MPLUS1-OFL.txt: 04971e3fcee60b247395150d93b3616f6a0b092572332c96187b472976553abc
+
+License evidence:
+- M+ FONTS OFL.txt says this Font Software is licensed under the SIL Open Font License, Version 1.1.
+- The bundled TTF nameID 13 says this Font Software is licensed under the SIL Open Font License, Version 1.1.
+
+Font metadata observed from the bundled TTF:
+- nameID 0: Copyright 2021 The M+ FONTS Project Authors (https://github.com/coz-m/MPLUS_FONTS)
+- nameID 1: M PLUS 1 Thin
+- nameID 4: M PLUS 1 Thin
+- nameID 5: Version 1.100
+- nameID 14: https://openfontlicense.org
+
+Use note:
+The bundled font is used unmodified as a legend font asset and redistributed with its OFL text.

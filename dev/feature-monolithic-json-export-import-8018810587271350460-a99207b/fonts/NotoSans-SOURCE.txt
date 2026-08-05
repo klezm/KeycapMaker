@@ -1,0 +1,45 @@
+Noto Sans source and license note
+=================================
+
+Source page:
+https://github.com/google/fonts/tree/main/ofl/notosans
+
+Source page at review:
+https://github.com/google/fonts/tree/46d8a043641ec6f446cddf39749c0b8d0dc71467/ofl/notosans
+
+Bundled download URL:
+https://raw.githubusercontent.com/google/fonts/46d8a043641ec6f446cddf39749c0b8d0dc71467/ofl/notosans/NotoSans%5Bwdth,wght%5D.ttf
+
+Bundled license URL:
+https://raw.githubusercontent.com/google/fonts/46d8a043641ec6f446cddf39749c0b8d0dc71467/ofl/notosans/OFL.txt
+
+Download date:
+2026-04-25
+
+Review date:
+2026-04-25
+
+Bundled files in this repository:
+- NotoSans-Variable.ttf
+- NotoSans-OFL.txt
+
+Bundled SHA-256:
+- NotoSans-Variable.ttf: bfb7bb691513f12e734dc346c03a03f784912432d7e3fa8e56efcf906fe86b3d
+- NotoSans-OFL.txt: e2e177a32561584d4fc13aaa3cd8e53758a12910f013fe9ca125419111722029
+
+License evidence:
+- The Google Fonts OFL.txt in the same directory says:
+  Copyright 2022 The Noto Project Authors (https://github.com/notofonts/latin-greek-cyrillic)
+  This Font Software is licensed under the SIL Open Font License, Version 1.1.
+- The bundled TTF name table has nameID 13:
+  This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://openfontlicense.org
+
+Font metadata observed from the bundled TTF:
+- nameID 0: Copyright 2022 The Noto Project Authors (https://github.com/notofonts/latin-greek-cyrillic)
+- nameID 1: Noto Sans
+- nameID 4: Noto Sans Regular
+- nameID 5: Version 2.015
+- nameID 14: https://openfontlicense.org
+
+Use note:
+The bundled font is used unmodified as a legend font asset and redistributed with its OFL text.
