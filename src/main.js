@@ -265,6 +265,11 @@ const MOON_ICON_MARKUP = `
   </svg>
 `;
 const EXPORT_ICON_MARKUP = Object.freeze({
+  chevronDown: `
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  `,
   file: `
     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
       <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
@@ -2969,6 +2974,10 @@ const state = {
   exportHistory: [],
   projectStatus: "idle",
   projectSummary: "",
+  projectDownloadFormat: "zip",
+  projectCopyFormat: "json",
+  isProjectDownloadDropdownOpen: false,
+  isProjectCopyDropdownOpen: false,
   project: createProjectStateWithActiveKeycap({
     fallbackKeycapParams: initialKeycapParams,
   }),
@@ -4255,10 +4264,47 @@ function renderProjectTab() {
           </div>
         </section>
 
-        <button class="export-save-button project-save-button" type="button" data-project-save ${isProjectBusy ? "disabled" : ""}>
-          ${EXPORT_ICON_MARKUP.download}
-          <span>${isProjectBusy ? t("actions.saving") : t("project.save")}</span>
-        </button>
+        <div class="project-actions-panel">
+          <div class="project-action-row">
+            <button class="export-save-button project-secondary-button" type="button" data-project-import-upload ${isProjectBusy ? "disabled" : ""}>
+              ${EXPORT_ICON_MARKUP.file}
+              <span>Upload</span>
+            </button>
+            <button class="export-save-button project-secondary-button" type="button" data-project-import-paste ${isProjectBusy ? "disabled" : ""}>
+              ${EXPORT_ICON_MARKUP.file}
+              <span>Paste</span>
+            </button>
+          </div>
+          <div class="project-action-row">
+            <div class="split-button-group" data-split-group="download">
+              <button class="export-save-button project-save-button split-button-main" type="button" data-project-download ${isProjectBusy ? "disabled" : ""}>
+                ${EXPORT_ICON_MARKUP.download}
+                <span>${isProjectBusy ? t("actions.saving") : "Download " + (state.projectDownloadFormat || "ZIP").toUpperCase()}</span>
+              </button>
+              <button class="export-save-button project-save-button split-button-toggle" type="button" data-split-toggle="download" ${isProjectBusy ? "disabled" : ""} aria-haspopup="menu" aria-expanded="${state.isProjectDownloadDropdownOpen ? "true" : "false"}">
+                ${EXPORT_ICON_MARKUP.chevronDown}
+              </button>
+              <div class="dropdown-menu" role="menu" ${state.isProjectDownloadDropdownOpen ? "" : "hidden"}>
+                <button class="dropdown-item" role="menuitem" data-split-select="download" data-value="zip">ZIP</button>
+                <button class="dropdown-item" role="menuitem" data-split-select="download" data-value="json">Monolithic JSON</button>
+                ${state.project.keycaps.length === 1 ? `<button class="dropdown-item" role="menuitem" data-split-select="download" data-value="3mf">3MF</button><button class="dropdown-item" role="menuitem" data-split-select="download" data-value="stl">STL</button>` : ""}
+              </div>
+            </div>
+
+            <div class="split-button-group" data-split-group="copy">
+              <button class="export-save-button project-save-button split-button-main" type="button" data-project-copy ${isProjectBusy ? "disabled" : ""}>
+                ${EXPORT_ICON_MARKUP.file}
+                <span>Copy ${(state.projectCopyFormat || "JSON").toUpperCase()}</span>
+              </button>
+              <button class="export-save-button project-save-button split-button-toggle" type="button" data-split-toggle="copy" ${isProjectBusy ? "disabled" : ""} aria-haspopup="menu" aria-expanded="${state.isProjectCopyDropdownOpen ? "true" : "false"}">
+                ${EXPORT_ICON_MARKUP.chevronDown}
+              </button>
+              <div class="dropdown-menu dropdown-menu-right" role="menu" ${state.isProjectCopyDropdownOpen ? "" : "hidden"}>
+                <button class="dropdown-item" role="menuitem" data-split-select="copy" data-value="json">Monolithic JSON</button>
+              </div>
+            </div>
+          </div>
+        </div>
         <p class="project-status" aria-live="polite">${escapeHtml(state.projectSummary)}</p>
       </div>
     </div>
@@ -6625,9 +6671,63 @@ function handleInspectorCardClick(event) {
     return;
   }
 
-  const projectSaveButton = getClosestFromEventTarget(event, "[data-project-save]");
-  if (projectSaveButton) {
-    void saveProject();
+  const splitToggle = getClosestFromEventTarget(event, "[data-split-toggle]");
+  if (splitToggle) {
+    const group = splitToggle.dataset.splitToggle;
+    if (group === "download") {
+      state.isProjectDownloadDropdownOpen = !state.isProjectDownloadDropdownOpen;
+      state.isProjectCopyDropdownOpen = false;
+    } else if (group === "copy") {
+      state.isProjectCopyDropdownOpen = !state.isProjectCopyDropdownOpen;
+      state.isProjectDownloadDropdownOpen = false;
+    }
+    render();
+    return;
+  }
+
+  const splitSelect = getClosestFromEventTarget(event, "[data-split-select]");
+  if (splitSelect) {
+    const group = splitSelect.dataset.splitSelect;
+    const value = splitSelect.dataset.value;
+    if (group === "download") {
+      state.projectDownloadFormat = value;
+      state.isProjectDownloadDropdownOpen = false;
+    } else if (group === "copy") {
+      state.projectCopyFormat = value;
+      state.isProjectCopyDropdownOpen = false;
+    }
+    render();
+    return;
+  }
+
+  // Close dropdowns if clicking elsewhere
+  if (state.isProjectDownloadDropdownOpen || state.isProjectCopyDropdownOpen) {
+    state.isProjectDownloadDropdownOpen = false;
+    state.isProjectCopyDropdownOpen = false;
+    render();
+  }
+
+  const projectUploadButton = getClosestFromEventTarget(event, "[data-project-import-upload]");
+  if (projectUploadButton) {
+    void handleProjectUploadClick();
+    return;
+  }
+
+  const projectPasteButton = getClosestFromEventTarget(event, "[data-project-import-paste]");
+  if (projectPasteButton) {
+    void handleProjectPasteClick();
+    return;
+  }
+
+  const projectDownloadButton = getClosestFromEventTarget(event, "[data-project-download]");
+  if (projectDownloadButton) {
+    void handleProjectDownloadClick();
+    return;
+  }
+
+  const projectCopyButton = getClosestFromEventTarget(event, "[data-project-copy]");
+  if (projectCopyButton) {
+    void handleProjectCopyClick();
     return;
   }
 
@@ -10647,3 +10747,273 @@ executeKeycapPreview({ silent: true, refreshActiveProjectPreview: true });
 ensureColorisLoaded().catch((error) => {
   console.warn(error);
 });
+
+// MONOLITHIC JSON EXPORT & IMPORT
+async function createMonolithicProjectJson(project) {
+  const projectDirectoryName = normalizeProjectName(project.name, DEFAULT_PROJECT_NAME);
+  const manifest = createProjectManifest(project);
+
+  const files = {
+    [`${projectDirectoryName}/${PROJECT_MANIFEST_FILENAME}`]: manifest,
+  };
+
+  for (const entry of project.keycaps) {
+    files[`${projectDirectoryName}/${entry.jsonPath}`] = entry.editorDataPayload;
+
+    // We base64 encode the preview image for the monolithic JSON to keep it as a string map
+    files[`${projectDirectoryName}/${entry.previewPath}`] = entry.previewImageDataUrl || createProjectPreviewPlaceholderDataUrl(entry.params);
+
+    // For monolithic JSON, we intentionally skip 3MF binary files to keep it pure text.
+  }
+
+  return JSON.stringify(files, null, 2);
+}
+
+async function importMonolithicProjectJsonPayload(payload) {
+  const startedAt = performance.now();
+
+  // Find manifest
+  let manifestPath = null;
+  for (const key in payload) {
+    if (key.endsWith(PROJECT_MANIFEST_FILENAME)) {
+      manifestPath = key;
+      break;
+    }
+  }
+
+  if (!manifestPath) {
+    throw new Error(t("project.missingProjectFile", { path: PROJECT_MANIFEST_FILENAME }));
+  }
+
+  const rootPrefix = manifestPath.substring(0, manifestPath.length - PROJECT_MANIFEST_FILENAME.length);
+  const manifestPayload = typeof payload[manifestPath] === 'string' ? JSON.parse(payload[manifestPath]) : payload[manifestPath];
+  const manifest = parseProjectManifest(manifestPayload, getDroppedProjectFallbackName(rootPrefix));
+  const keycaps = [];
+
+  for (const manifestEntry of manifest.keycaps) {
+    const editorDataPath = rootPrefix + manifestEntry.jsonPath;
+    if (!payload[editorDataPath]) {
+      throw new Error(t("project.missingProjectFile", { path: manifestEntry.jsonPath }));
+    }
+
+    const editorDataPayload = typeof payload[editorDataPath] === 'string' ? JSON.parse(payload[editorDataPath]) : payload[editorDataPath];
+    const entryWithoutPreview = createProjectKeycapEntry({}, {
+      manifestEntry,
+      editorDataPayload,
+    });
+
+    let previewImageDataUrl = null;
+    if (manifestEntry.previewPath) {
+       const previewPath = rootPrefix + manifestEntry.previewPath;
+       if (payload[previewPath]) {
+         previewImageDataUrl = payload[previewPath];
+       }
+    }
+
+    if (!previewImageDataUrl) {
+       previewImageDataUrl = createProjectPreviewPlaceholderDataUrl(entryWithoutPreview.params);
+    }
+
+    keycaps.push(createProjectKeycapEntry(entryWithoutPreview.params, {
+      manifestEntry,
+      editorDataPayload,
+      previewImageDataUrl,
+    }));
+  }
+
+  state.project.name = manifest.name;
+  state.project.savedAt = manifest.savedAt;
+  state.project.keycaps = keycaps;
+  state.project.activeKeycapId = manifest.activeKeycapId;
+  state.project.isDirty = false;
+  state.lastImportBindingReport = null;
+  state.sidebarTab = "project";
+
+  setProjectStatus("success", t("project.loaded", { name: state.project.name }));
+
+  setExportStatus(
+    "success",
+    t("importExport.loaded", { fileName: "Project JSON" }),
+    {
+      format: "project-import",
+      label: t("importExport.loadLabel"),
+      elapsedMs: Math.round(performance.now() - startedAt),
+      byteLength: JSON.stringify(payload).length,
+      notes: t("importExport.loadNote", { fileName: state.project.name }),
+    },
+  );
+
+  const didCreateFallbackKeycap = supplementFallbackProjectKeycap(state.project);
+  if (state.project.activeKeycapId) {
+    applyProjectKeycapToCurrent(state.project.activeKeycapId);
+  }
+
+  render({ animateInspector: true });
+  await executeKeycapPreview({ silent: true, refreshActiveProjectPreview: didCreateFallbackKeycap });
+}
+
+// ACTIONS HANDLERS
+async function handleProjectUploadClick() {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".zip,.json";
+  input.style.display = "none";
+  document.body.appendChild(input);
+
+  input.addEventListener("change", async () => {
+    const file = input.files[0];
+    if (!file) return;
+
+    try {
+      if (file.name.toLowerCase().endsWith(".zip")) {
+        await importProjectArchiveFile(file);
+      } else if (file.name.toLowerCase().endsWith(".json")) {
+        const text = await file.text();
+        const payload = JSON.parse(text);
+        if (payload.kind === "keycap-maker/project" || payload.schemaVersion) {
+           // Might be a single keycap editor data json
+           if (payload.params) {
+              await importEditorDataFile(file);
+           } else {
+              throw new Error("Invalid single keycap JSON");
+           }
+        } else {
+           // Assume monolithic project JSON
+           await importMonolithicProjectJsonPayload(payload);
+        }
+      }
+    } catch (e) {
+      setProjectStatus("error", `Failed to load: ${e.message}`);
+      render();
+    } finally {
+      document.body.removeChild(input);
+    }
+  });
+
+  input.click();
+}
+
+async function handleProjectPasteClick() {
+  try {
+    const text = await navigator.clipboard.readText();
+    if (!text || text.trim() === "") {
+      throw new Error("Clipboard is empty");
+    }
+
+    const payload = JSON.parse(text);
+    if (payload.kind === "keycap-maker/project" || payload.schemaVersion) {
+       if (payload.params) {
+          // Mock a file object for single editor data json
+          await importEditorDataFile(new File([text], "pasted.json", { type: "application/json" }));
+       } else {
+          throw new Error("Invalid JSON pasted.");
+       }
+    } else {
+       // Assume monolithic project json
+       await importMonolithicProjectJsonPayload(payload);
+    }
+  } catch (e) {
+    setProjectStatus("error", `Failed to paste: ${e.message}`);
+    render();
+  }
+}
+
+async function downloadProjectJson(project) {
+  const jsonStr = await createMonolithicProjectJson(project);
+  const blob = new Blob([jsonStr], { type: "application/json" });
+  const projectDirectoryName = normalizeProjectName(project.name, DEFAULT_PROJECT_NAME);
+  downloadBlob(blob, `${projectDirectoryName}.json`);
+}
+
+async function downloadProject3mf(project) {
+  if (project.keycaps.length === 1) {
+    const entry = project.keycaps[0];
+    const { blob } = await create3mfExportBlob(entry.params);
+    downloadBlob(blob, build3mfFilename(entry.params));
+  }
+}
+
+async function downloadProjectStl(project) {
+  if (project.keycaps.length === 1) {
+    const entry = project.keycaps[0];
+    const result = await runOpenScad({
+      files: await createKeycapFiles({
+        params: entry.params,
+        exportTarget: "single_material_shape",
+      }),
+      args: buildKeycapArgs({
+        outputPath: keycapStlExportPath,
+        outputFormat: "stl",
+      }),
+      outputPaths: [keycapStlExportPath],
+    });
+    const [output] = result.outputs;
+    const blob = new Blob([output.bytes], { type: "model/stl" });
+    downloadBlob(blob, buildStlFilename(entry.params));
+  }
+}
+
+async function handleProjectDownloadClick() {
+  const format = state.projectDownloadFormat || "zip";
+
+  setProjectStatus("running", t("project.saving"));
+  render();
+
+  try {
+    const project = prepareProjectForSave();
+
+    if (format === "zip") {
+      await downloadProjectZip(project);
+    } else if (format === "json") {
+      await downloadProjectJson(project);
+    } else if (format === "3mf") {
+      await downloadProject3mf(project);
+    } else if (format === "stl") {
+      await downloadProjectStl(project);
+    }
+
+    state.project.isDirty = false;
+    setProjectStatus("success", t("project.saved"));
+  } catch (error) {
+    setProjectStatus("error", t("project.saveFailed", { message: `${error}` }));
+  }
+
+  render({ animateInspector: true });
+}
+
+async function handleProjectCopyClick() {
+  const format = state.projectCopyFormat || "json";
+
+  setProjectStatus("running", "Copying...");
+  render();
+
+  try {
+    const project = prepareProjectForSave();
+
+    if (format === "json") {
+      const jsonStr = await createMonolithicProjectJson(project);
+
+      // Attempt generic clipboard copy
+      try {
+        await navigator.clipboard.writeText(jsonStr);
+      } catch (err) {
+        // Fallback
+        const textarea = document.createElement("textarea");
+        textarea.value = jsonStr;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "absolute";
+        textarea.style.left = "-9999px";
+        document.body.append(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
+    }
+
+    setProjectStatus("success", "Copied to clipboard!");
+  } catch (error) {
+    setProjectStatus("error", `Copy failed: ${error.message}`);
+  }
+
+  render({ animateInspector: true });
+}
