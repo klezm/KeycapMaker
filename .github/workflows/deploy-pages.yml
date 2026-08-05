@@ -15,9 +15,19 @@ on:
       - "!src/**/*.md"
       - "vite.config.js"
   workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to build (defaults to selected workflow branch)'
+        required: false
+        type: string
+      dev_deploy:
+        description: 'Deploy to a subdirectory in dev/ (leave existing page untouched)'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -32,14 +42,31 @@ jobs:
       - name: Configure Git defaults
         run: git config --global init.defaultBranch main
 
-      - name: Checkout
+      - name: Determine Branch
+        id: branch_info
+        env:
+          INPUT_BRANCH: ${{ inputs.branch }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          TARGET_BRANCH="${INPUT_BRANCH}"
+          if [ -z "$TARGET_BRANCH" ]; then
+            TARGET_BRANCH="${REF_NAME}"
+          fi
+          echo "Target branch: $TARGET_BRANCH"
+          echo "TARGET_BRANCH=$TARGET_BRANCH" >> $GITHUB_ENV
+
+      - name: Checkout Source Branch
         uses: actions/checkout@v6
+        with:
+          ref: ${{ env.TARGET_BRANCH }}
+          path: source
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: npm
+          cache-dependency-path: source/package-lock.json
 
       - name: Configure Pages
         uses: actions/configure-pages@v6
@@ -47,18 +74,160 @@ jobs:
           enablement: true
 
       - name: Install dependencies
+        working-directory: ./source
         run: npm ci
 
       - name: Build site
+        working-directory: ./source
         env:
           GITHUB_ACTIONS: "true"
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: npm run build
 
+      - name: Checkout gh-pages branch
+        id: checkout_pages
+        uses: actions/checkout@v6
+        with:
+          ref: gh-pages
+          path: gh-pages-dir
+        continue-on-error: true
+
+      - name: Initialize gh-pages if not exists
+        if: steps.checkout_pages.outcome != 'success'
+        run: |
+          echo "gh-pages branch not found, initializing..."
+          rm -rf gh-pages-dir
+          mkdir gh-pages-dir
+          cd gh-pages-dir
+          git init
+          git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b gh-pages
+          git commit --allow-empty -m "Initial commit"
+          cd ..
+
+      - name: Prepare gh-pages content
+        run: |
+          cd gh-pages-dir
+
+          # Git config
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if [ "${{ inputs.dev_deploy }}" == "true" ]; then
+            cd ../source
+            COMMIT_HASH=$(git rev-parse --short HEAD)
+            COMMIT_DATE=$(git show -s --format=%ci HEAD)
+            cd ../gh-pages-dir
+
+            BRANCH_NAME="${{ env.TARGET_BRANCH }}"
+            SAFE_BRANCH_NAME=$(echo "$BRANCH_NAME" | tr '/' '-')
+            DEV_DIR="dev/${SAFE_BRANCH_NAME}-${COMMIT_HASH}"
+
+            mkdir -p "$DEV_DIR"
+            cp -r ../source/dist/. "$DEV_DIR/"
+
+            # Save metadata
+            cat <<META > "$DEV_DIR/meta.json"
+            {
+              "branch": "$BRANCH_NAME",
+              "commit": "$COMMIT_HASH",
+              "date": "$COMMIT_DATE"
+            }
+          META
+
+            # Generate index.html
+            cd dev
+            cat <<'HTML' > index.html
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <title>Dev Deployments</title>
+              <style>
+                body { font-family: sans-serif; margin: 2rem; }
+                table { border-collapse: collapse; width: 100%; }
+                th, td { border: 1px solid #ccc; padding: 0.5rem; text-align: left; }
+                th { background: #eee; }
+                .highlight { background-color: #e6f7ff; font-weight: bold; }
+              </style>
+            </head>
+            <body>
+              <h1>Dev Deployments</h1>
+              <table>
+                <tr>
+                  <th>Branch</th>
+                  <th>Commit</th>
+                  <th>Date</th>
+                  <th>Link</th>
+                </tr>
+            <!-- DYNAMIC_CONTENT_START -->
+          HTML
+
+            # Find all meta.json and create a list
+            node -e "
+              const fs = require('fs');
+              const path = require('path');
+              const dirs = fs.readdirSync('.').filter(d => fs.statSync(d).isDirectory());
+              let data = [];
+              for (const d of dirs) {
+                if (fs.existsSync(path.join(d, 'meta.json'))) {
+                  const meta = JSON.parse(fs.readFileSync(path.join(d, 'meta.json')));
+                  meta.path = d;
+                  data.push(meta);
+                }
+              }
+              // Sort by date descending
+              data.sort((a, b) => new Date(b.date) - new Date(a.date));
+              // We need the top 3 overall to highlight
+              const top3 = data.slice(0, 3).map(d => d.commit);
+              // Now sort by branch, then date
+              data.sort((a, b) => {
+                if (a.branch < b.branch) return -1;
+                if (a.branch > b.branch) return 1;
+                return new Date(b.date) - new Date(a.date);
+              });
+
+              let html = '';
+              for (const d of data) {
+                const hlClass = top3.includes(d.commit) ? ' class=\"highlight\"' : '';
+                const repo = process.env.GITHUB_REPOSITORY;
+                const commitLink = \`https://github.com/\${repo}/commit/\${d.commit}\`;
+                const branchLink = \`https://github.com/\${repo}/tree/\${d.branch}\`;
+                html += \`<tr\${hlClass}>\`;
+                html += \`<td><a href=\"\${branchLink}\">\${d.branch}</a></td>\`;
+                html += \`<td><a href=\"\${commitLink}\">\${d.commit}</a></td>\`;
+                html += \`<td>\${d.date}</td>\`;
+                html += \`<td><a href=\"\${d.path}/\">View Deployment</a></td>\`;
+                html += \`</tr>\n\`;
+              }
+              fs.appendFileSync('index.html', html);
+            "
+
+            cat <<'HTML' >> index.html
+              </table>
+            </body>
+            </html>
+          HTML
+            cd ..
+
+            git add dev/
+            git commit -m "Add dev deployment for ${BRANCH_NAME} at ${COMMIT_HASH}" || echo "No changes to commit"
+          else
+            # Clear everything except .git and dev
+            find . -maxdepth 1 ! -name '.' ! -name '.git' ! -name 'dev' -exec rm -rf {} +
+            cp -r ../source/dist/. .
+            git add -A
+            git commit -m "Deploy main site" || echo "No changes to commit"
+          fi
+
+          # Push changes back to gh-pages branch
+          git push origin gh-pages
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
         with:
-          path: dist
+          path: gh-pages-dir
 
   deploy:
     needs: build
