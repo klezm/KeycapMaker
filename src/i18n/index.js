@@ -3,7 +3,7 @@ import en from "./locales/en.js";
 import zh from "./locales/zh.js";
 import ko from "./locales/ko.js";
 
-export const DEFAULT_LOCALE = "ja";
+export const DEFAULT_LOCALE = "en";
 export const LOCALE_STORAGE_KEY = "keycap-maker:locale";
 export const LOCALE_OPTIONS = Object.freeze([
   { value: "ja", labelKey: "language.options.ja" },
