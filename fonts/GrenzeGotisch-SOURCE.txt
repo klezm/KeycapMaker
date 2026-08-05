@@ -1,0 +1,39 @@
+Grenze Gotisch source and license note
+======================================
+
+Review date:
+2026-04-25
+
+Repo first-added date:
+2026-04-22
+
+Source page at review:
+https://github.com/google/fonts/tree/46d8a043641ec6f446cddf39749c0b8d0dc71467/ofl/grenzegotisch
+
+Bundled download URL:
+https://raw.githubusercontent.com/google/fonts/46d8a043641ec6f446cddf39749c0b8d0dc71467/ofl/grenzegotisch/GrenzeGotisch%5Bwght%5D.ttf
+
+Bundled license URL:
+https://raw.githubusercontent.com/google/fonts/46d8a043641ec6f446cddf39749c0b8d0dc71467/ofl/grenzegotisch/OFL.txt
+
+Bundled files in this repository:
+- GrenzeGotisch-Variable.ttf
+- GrenzeGotisch-OFL.txt
+
+Bundled SHA-256:
+- GrenzeGotisch-Variable.ttf: 701b299d8dc002a2b4bea2ff0f1272c0e4081a2835914354804565c410d0c637
+- GrenzeGotisch-OFL.txt: bca29af2c3c9e142d11f523f414902ab8fb9ab8ffa3c34c63b6b72aa4e7d6acc
+
+License evidence:
+- Google Fonts OFL.txt says this Font Software is licensed under the SIL Open Font License, Version 1.1.
+- The bundled TTF nameID 13 says this Font Software is licensed under the SIL Open Font License, Version 1.1.
+
+Font metadata observed from the bundled TTF:
+- nameID 0: Copyright 2020 The Grenze Gotisch Project Authors (https://github.com/Omnibus-Type/Grenze-Gotisch)
+- nameID 1: Grenze Gotisch
+- nameID 4: Grenze Gotisch Regular
+- nameID 5: Version 1.002
+- nameID 14: http://scripts.sil.org/OFL
+
+Use note:
+The bundled font is used unmodified as a legend font asset and redistributed with its OFL text.

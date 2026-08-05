@@ -1,0 +1,39 @@
+DotGothic16 source and license note
+===================================
+
+Review date:
+2026-04-25
+
+Repo first-added date:
+2026-04-18
+
+Source page at review:
+https://github.com/google/fonts/tree/46d8a043641ec6f446cddf39749c0b8d0dc71467/ofl/dotgothic16
+
+Bundled download URL:
+https://raw.githubusercontent.com/google/fonts/46d8a043641ec6f446cddf39749c0b8d0dc71467/ofl/dotgothic16/DotGothic16-Regular.ttf
+
+Bundled license URL:
+https://raw.githubusercontent.com/google/fonts/46d8a043641ec6f446cddf39749c0b8d0dc71467/ofl/dotgothic16/OFL.txt
+
+Bundled files in this repository:
+- DotGothic16-Regular.ttf
+- DotGothic16-OFL.txt
+
+Bundled SHA-256:
+- DotGothic16-Regular.ttf: 3ad9af88726d42b40f7f365f0dcac785af73cf20ea6f1d5b44e57cc21150b8f1
+- DotGothic16-OFL.txt: b6630c61ea078cacd7fabe37d14ffe557a0b45b06683374a9aa9e24262993e33
+
+License evidence:
+- Google Fonts OFL.txt says this Font Software is licensed under the SIL Open Font License, Version 1.1.
+- The bundled TTF nameID 13 says this Font Software is licensed under the SIL Open Font License, Version 1.1.
+
+Font metadata observed from the bundled TTF:
+- nameID 0: Copyright 2020 The DotGothic16 Project Authors (https://github.com/fontworks-fonts/DotGothic16/)
+- nameID 1: DotGothic16
+- nameID 4: DotGothic16 Regular
+- nameID 5: Version 1.100
+- nameID 14: https://scripts.sil.org/OFL
+
+Use note:
+The bundled font is used unmodified as a legend font asset and redistributed with its OFL text.
