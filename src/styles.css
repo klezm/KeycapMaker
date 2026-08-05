@@ -3959,25 +3959,62 @@ pre {
   flex: 1;
 }
 
-.project-action-group {
+.split-button-group {
+  position: relative;
   display: flex;
-  gap: 0.5rem;
-  align-items: stretch;
   flex: 1;
 }
 
-.export-format-select {
+.split-button-main {
   flex: 1;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  margin-right: 1px;
+}
+
+.split-button-toggle {
+  flex: 0 0 auto;
   padding: 0 0.5rem;
-  border-radius: 4px;
-  border: 1px solid var(--border-color);
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 0.25rem;
   background-color: var(--card-bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  z-index: 10;
+  min-width: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 0.25rem 0;
+}
+
+.dropdown-menu-right {
+  left: auto;
+  right: 0;
+}
+
+.dropdown-menu[hidden] {
+  display: none;
+}
+
+.dropdown-item {
+  padding: 0.5rem 1rem;
+  background: none;
+  border: none;
   color: var(--text-color);
+  text-align: left;
+  cursor: pointer;
   font-family: inherit;
   font-size: 0.875rem;
-  min-width: 0; /* Prevent overflow */
 }
 
-.project-action-group .export-save-button {
-  flex: 2; /* The button takes more space */
+.dropdown-item:hover {
+  background-color: var(--border-color);
 }

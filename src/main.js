@@ -265,6 +265,11 @@ const MOON_ICON_MARKUP = `
   </svg>
 `;
 const EXPORT_ICON_MARKUP = Object.freeze({
+  chevronDown: `
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  `,
   file: `
     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
       <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
@@ -2969,6 +2974,10 @@ const state = {
   exportHistory: [],
   projectStatus: "idle",
   projectSummary: "",
+  projectDownloadFormat: "zip",
+  projectCopyFormat: "json",
+  isProjectDownloadDropdownOpen: false,
+  isProjectCopyDropdownOpen: false,
   project: createProjectStateWithActiveKeycap({
     fallbackKeycapParams: initialKeycapParams,
   }),
@@ -4267,25 +4276,32 @@ function renderProjectTab() {
             </button>
           </div>
           <div class="project-action-row">
-            <div class="project-action-group">
-              <select class="export-format-select" data-project-download-format ${isProjectBusy ? "disabled" : ""}>
-                <option value="zip">ZIP</option>
-                <option value="json">Monolithic JSON</option>
-                ${state.project.keycaps.length === 1 ? `<option value="3mf">3MF</option><option value="stl">STL</option>` : ""}
-              </select>
-              <button class="export-save-button project-save-button" type="button" data-project-download ${isProjectBusy ? "disabled" : ""}>
+            <div class="split-button-group" data-split-group="download">
+              <button class="export-save-button project-save-button split-button-main" type="button" data-project-download ${isProjectBusy ? "disabled" : ""}>
                 ${EXPORT_ICON_MARKUP.download}
-                <span>${isProjectBusy ? t("actions.saving") : t("project.save")}</span>
+                <span>${isProjectBusy ? t("actions.saving") : "Download " + (state.projectDownloadFormat || "ZIP").toUpperCase()}</span>
               </button>
+              <button class="export-save-button project-save-button split-button-toggle" type="button" data-split-toggle="download" ${isProjectBusy ? "disabled" : ""} aria-haspopup="menu" aria-expanded="${state.isProjectDownloadDropdownOpen ? "true" : "false"}">
+                ${EXPORT_ICON_MARKUP.chevronDown}
+              </button>
+              <div class="dropdown-menu" role="menu" ${state.isProjectDownloadDropdownOpen ? "" : "hidden"}>
+                <button class="dropdown-item" role="menuitem" data-split-select="download" data-value="zip">ZIP</button>
+                <button class="dropdown-item" role="menuitem" data-split-select="download" data-value="json">Monolithic JSON</button>
+                ${state.project.keycaps.length === 1 ? `<button class="dropdown-item" role="menuitem" data-split-select="download" data-value="3mf">3MF</button><button class="dropdown-item" role="menuitem" data-split-select="download" data-value="stl">STL</button>` : ""}
+              </div>
             </div>
-            <div class="project-action-group">
-              <select class="export-format-select" data-project-copy-format ${isProjectBusy ? "disabled" : ""}>
-                <option value="json">Monolithic JSON</option>
-              </select>
-              <button class="export-save-button project-save-button" type="button" data-project-copy ${isProjectBusy ? "disabled" : ""}>
+
+            <div class="split-button-group" data-split-group="copy">
+              <button class="export-save-button project-save-button split-button-main" type="button" data-project-copy ${isProjectBusy ? "disabled" : ""}>
                 ${EXPORT_ICON_MARKUP.file}
-                <span>Copy</span>
+                <span>Copy ${(state.projectCopyFormat || "JSON").toUpperCase()}</span>
               </button>
+              <button class="export-save-button project-save-button split-button-toggle" type="button" data-split-toggle="copy" ${isProjectBusy ? "disabled" : ""} aria-haspopup="menu" aria-expanded="${state.isProjectCopyDropdownOpen ? "true" : "false"}">
+                ${EXPORT_ICON_MARKUP.chevronDown}
+              </button>
+              <div class="dropdown-menu dropdown-menu-right" role="menu" ${state.isProjectCopyDropdownOpen ? "" : "hidden"}>
+                <button class="dropdown-item" role="menuitem" data-split-select="copy" data-value="json">Monolithic JSON</button>
+              </div>
             </div>
           </div>
         </div>
@@ -6653,6 +6669,42 @@ function handleInspectorCardClick(event) {
   if (projectAddCurrentButton) {
     void addCurrentKeycapToProject();
     return;
+  }
+
+  const splitToggle = getClosestFromEventTarget(event, "[data-split-toggle]");
+  if (splitToggle) {
+    const group = splitToggle.dataset.splitToggle;
+    if (group === "download") {
+      state.isProjectDownloadDropdownOpen = !state.isProjectDownloadDropdownOpen;
+      state.isProjectCopyDropdownOpen = false;
+    } else if (group === "copy") {
+      state.isProjectCopyDropdownOpen = !state.isProjectCopyDropdownOpen;
+      state.isProjectDownloadDropdownOpen = false;
+    }
+    render();
+    return;
+  }
+
+  const splitSelect = getClosestFromEventTarget(event, "[data-split-select]");
+  if (splitSelect) {
+    const group = splitSelect.dataset.splitSelect;
+    const value = splitSelect.dataset.value;
+    if (group === "download") {
+      state.projectDownloadFormat = value;
+      state.isProjectDownloadDropdownOpen = false;
+    } else if (group === "copy") {
+      state.projectCopyFormat = value;
+      state.isProjectCopyDropdownOpen = false;
+    }
+    render();
+    return;
+  }
+
+  // Close dropdowns if clicking elsewhere
+  if (state.isProjectDownloadDropdownOpen || state.isProjectCopyDropdownOpen) {
+    state.isProjectDownloadDropdownOpen = false;
+    state.isProjectCopyDropdownOpen = false;
+    render();
   }
 
   const projectUploadButton = getClosestFromEventTarget(event, "[data-project-import-upload]");
@@ -10702,11 +10754,11 @@ async function createMonolithicProjectJson(project) {
   const manifest = createProjectManifest(project);
 
   const files = {
-    [`${projectDirectoryName}/${PROJECT_MANIFEST_FILENAME}`]: JSON.stringify(manifest, null, 2),
+    [`${projectDirectoryName}/${PROJECT_MANIFEST_FILENAME}`]: manifest,
   };
 
   for (const entry of project.keycaps) {
-    files[`${projectDirectoryName}/${entry.jsonPath}`] = JSON.stringify(entry.editorDataPayload, null, 2);
+    files[`${projectDirectoryName}/${entry.jsonPath}`] = entry.editorDataPayload;
 
     // We base64 encode the preview image for the monolithic JSON to keep it as a string map
     files[`${projectDirectoryName}/${entry.previewPath}`] = entry.previewImageDataUrl || createProjectPreviewPlaceholderDataUrl(entry.params);
@@ -10734,7 +10786,7 @@ async function importMonolithicProjectJsonPayload(payload) {
   }
 
   const rootPrefix = manifestPath.substring(0, manifestPath.length - PROJECT_MANIFEST_FILENAME.length);
-  const manifestPayload = JSON.parse(payload[manifestPath]);
+  const manifestPayload = typeof payload[manifestPath] === 'string' ? JSON.parse(payload[manifestPath]) : payload[manifestPath];
   const manifest = parseProjectManifest(manifestPayload, getDroppedProjectFallbackName(rootPrefix));
   const keycaps = [];
 
@@ -10744,7 +10796,7 @@ async function importMonolithicProjectJsonPayload(payload) {
       throw new Error(t("project.missingProjectFile", { path: manifestEntry.jsonPath }));
     }
 
-    const editorDataPayload = JSON.parse(payload[editorDataPath]);
+    const editorDataPayload = typeof payload[editorDataPath] === 'string' ? JSON.parse(payload[editorDataPath]) : payload[editorDataPath];
     const entryWithoutPreview = createProjectKeycapEntry({}, {
       manifestEntry,
       editorDataPayload,
@@ -10902,8 +10954,7 @@ async function downloadProjectStl(project) {
 }
 
 async function handleProjectDownloadClick() {
-  const select = app.querySelector("[data-project-download-format]");
-  const format = select ? select.value : "zip";
+  const format = state.projectDownloadFormat || "zip";
 
   setProjectStatus("running", t("project.saving"));
   render();
@@ -10931,8 +10982,7 @@ async function handleProjectDownloadClick() {
 }
 
 async function handleProjectCopyClick() {
-  const select = app.querySelector("[data-project-copy-format]");
-  const format = select ? select.value : "json";
+  const format = state.projectCopyFormat || "json";
 
   setProjectStatus("running", "Copying...");
   render();
