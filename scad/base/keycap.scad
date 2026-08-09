@@ -333,8 +333,13 @@ legend_outline_delta = required_param(user_legend_outline_delta, "user_legend_ou
 legend_offset_x = required_param(user_legend_offset_x, "user_legend_offset_x");
 legend_offset_y = required_param(user_legend_offset_y, "user_legend_offset_y");
 requested_legend_embed = max(required_param(user_legend_embed, "user_legend_embed"), 0);
+legend_shine_through_enabled = is_undef(user_legend_shine_through_enabled) ? false : user_legend_shine_through_enabled;
 // Keep a thin body-colored floor under flush legends so the top shell remains continuous.
-legend_bottom_skin = min(0.2, max(top_thickness * 0.5, 0.05));
+// Shine-through drops that floor to 0, so the cut pierces the shell and the legend part
+// becomes a full-depth insert that lets LED light through.
+function legend_bottom_skin_amount(shine_through_enabled) =
+    shine_through_enabled ? 0 : min(0.2, max(top_thickness * 0.5, 0.05));
+legend_bottom_skin = legend_bottom_skin_amount(legend_shine_through_enabled);
 legend_embed = min(max(requested_legend_embed, 0), max(top_thickness - legend_bottom_skin, 0));
 // keycap_shell() builds the top face from a 0.01-thick slab, so subtraction must overshoot the surface slightly.
 legend_visible_surface_overlap = 0.02;
@@ -360,11 +365,11 @@ function top_legend_anchor_y(anchor) =
         : anchor == "bottom"
             ? -top_legend_anchor_depth * top_legend_anchor_offset_ratio
             : 0;
-function top_legend_auto_embed(embed) =
-    max(embed, max(top_thickness - legend_bottom_skin, 0));
-function top_legend_below_surface(surface_height, embed) =
+function top_legend_auto_embed(embed, bottom_skin) =
+    max(embed, max(top_thickness - bottom_skin, 0));
+function top_legend_below_surface(surface_height, embed, bottom_skin) =
     surface_height <= 0
-        ? max(top_legend_auto_embed(embed), -surface_height + legend_bottom_skin)
+        ? max(top_legend_auto_embed(embed, bottom_skin), -surface_height + bottom_skin)
         : embed;
 function top_legend_total_height(surface_height, below_surface) =
     max(below_surface + surface_height, 0);
@@ -387,9 +392,11 @@ top_legend_right_top_height = required_param(user_top_legend_right_top_height, "
 top_legend_right_top_outline_delta = required_param(user_top_legend_right_top_outline_delta, "user_top_legend_right_top_outline_delta");
 top_legend_right_top_offset_x = required_param(user_top_legend_right_top_offset_x, "user_top_legend_right_top_offset_x");
 top_legend_right_top_offset_y = required_param(user_top_legend_right_top_offset_y, "user_top_legend_right_top_offset_y");
-top_legend_right_top_embed = min(max(required_param(user_top_legend_right_top_embed, "user_top_legend_right_top_embed"), 0), max(top_thickness - legend_bottom_skin, 0));
+top_legend_right_top_shine_through_enabled = is_undef(user_top_legend_right_top_shine_through_enabled) ? false : user_top_legend_right_top_shine_through_enabled;
+top_legend_right_top_bottom_skin = legend_bottom_skin_amount(top_legend_right_top_shine_through_enabled);
+top_legend_right_top_embed = min(max(required_param(user_top_legend_right_top_embed, "user_top_legend_right_top_embed"), 0), max(top_thickness - top_legend_right_top_bottom_skin, 0));
 top_legend_right_top_surface_height = top_legend_right_top_height;
-top_legend_right_top_below_surface = top_legend_below_surface(top_legend_right_top_surface_height, top_legend_right_top_embed);
+top_legend_right_top_below_surface = top_legend_below_surface(top_legend_right_top_surface_height, top_legend_right_top_embed, top_legend_right_top_bottom_skin);
 top_legend_right_top_total_height = top_legend_total_height(top_legend_right_top_surface_height, top_legend_right_top_below_surface);
 
 top_legend_right_bottom_enabled = required_param(user_top_legend_right_bottom_enabled, "user_top_legend_right_bottom_enabled");
@@ -408,9 +415,11 @@ top_legend_right_bottom_height = required_param(user_top_legend_right_bottom_hei
 top_legend_right_bottom_outline_delta = required_param(user_top_legend_right_bottom_outline_delta, "user_top_legend_right_bottom_outline_delta");
 top_legend_right_bottom_offset_x = required_param(user_top_legend_right_bottom_offset_x, "user_top_legend_right_bottom_offset_x");
 top_legend_right_bottom_offset_y = required_param(user_top_legend_right_bottom_offset_y, "user_top_legend_right_bottom_offset_y");
-top_legend_right_bottom_embed = min(max(required_param(user_top_legend_right_bottom_embed, "user_top_legend_right_bottom_embed"), 0), max(top_thickness - legend_bottom_skin, 0));
+top_legend_right_bottom_shine_through_enabled = is_undef(user_top_legend_right_bottom_shine_through_enabled) ? false : user_top_legend_right_bottom_shine_through_enabled;
+top_legend_right_bottom_bottom_skin = legend_bottom_skin_amount(top_legend_right_bottom_shine_through_enabled);
+top_legend_right_bottom_embed = min(max(required_param(user_top_legend_right_bottom_embed, "user_top_legend_right_bottom_embed"), 0), max(top_thickness - top_legend_right_bottom_bottom_skin, 0));
 top_legend_right_bottom_surface_height = top_legend_right_bottom_height;
-top_legend_right_bottom_below_surface = top_legend_below_surface(top_legend_right_bottom_surface_height, top_legend_right_bottom_embed);
+top_legend_right_bottom_below_surface = top_legend_below_surface(top_legend_right_bottom_surface_height, top_legend_right_bottom_embed, top_legend_right_bottom_bottom_skin);
 top_legend_right_bottom_total_height = top_legend_total_height(top_legend_right_bottom_surface_height, top_legend_right_bottom_below_surface);
 
 top_legend_left_top_enabled = required_param(user_top_legend_left_top_enabled, "user_top_legend_left_top_enabled");
@@ -429,9 +438,11 @@ top_legend_left_top_height = required_param(user_top_legend_left_top_height, "us
 top_legend_left_top_outline_delta = required_param(user_top_legend_left_top_outline_delta, "user_top_legend_left_top_outline_delta");
 top_legend_left_top_offset_x = required_param(user_top_legend_left_top_offset_x, "user_top_legend_left_top_offset_x");
 top_legend_left_top_offset_y = required_param(user_top_legend_left_top_offset_y, "user_top_legend_left_top_offset_y");
-top_legend_left_top_embed = min(max(required_param(user_top_legend_left_top_embed, "user_top_legend_left_top_embed"), 0), max(top_thickness - legend_bottom_skin, 0));
+top_legend_left_top_shine_through_enabled = is_undef(user_top_legend_left_top_shine_through_enabled) ? false : user_top_legend_left_top_shine_through_enabled;
+top_legend_left_top_bottom_skin = legend_bottom_skin_amount(top_legend_left_top_shine_through_enabled);
+top_legend_left_top_embed = min(max(required_param(user_top_legend_left_top_embed, "user_top_legend_left_top_embed"), 0), max(top_thickness - top_legend_left_top_bottom_skin, 0));
 top_legend_left_top_surface_height = top_legend_left_top_height;
-top_legend_left_top_below_surface = top_legend_below_surface(top_legend_left_top_surface_height, top_legend_left_top_embed);
+top_legend_left_top_below_surface = top_legend_below_surface(top_legend_left_top_surface_height, top_legend_left_top_embed, top_legend_left_top_bottom_skin);
 top_legend_left_top_total_height = top_legend_total_height(top_legend_left_top_surface_height, top_legend_left_top_below_surface);
 
 top_legend_left_bottom_enabled = required_param(user_top_legend_left_bottom_enabled, "user_top_legend_left_bottom_enabled");
@@ -450,9 +461,11 @@ top_legend_left_bottom_height = required_param(user_top_legend_left_bottom_heigh
 top_legend_left_bottom_outline_delta = required_param(user_top_legend_left_bottom_outline_delta, "user_top_legend_left_bottom_outline_delta");
 top_legend_left_bottom_offset_x = required_param(user_top_legend_left_bottom_offset_x, "user_top_legend_left_bottom_offset_x");
 top_legend_left_bottom_offset_y = required_param(user_top_legend_left_bottom_offset_y, "user_top_legend_left_bottom_offset_y");
-top_legend_left_bottom_embed = min(max(required_param(user_top_legend_left_bottom_embed, "user_top_legend_left_bottom_embed"), 0), max(top_thickness - legend_bottom_skin, 0));
+top_legend_left_bottom_shine_through_enabled = is_undef(user_top_legend_left_bottom_shine_through_enabled) ? false : user_top_legend_left_bottom_shine_through_enabled;
+top_legend_left_bottom_bottom_skin = legend_bottom_skin_amount(top_legend_left_bottom_shine_through_enabled);
+top_legend_left_bottom_embed = min(max(required_param(user_top_legend_left_bottom_embed, "user_top_legend_left_bottom_embed"), 0), max(top_thickness - top_legend_left_bottom_bottom_skin, 0));
 top_legend_left_bottom_surface_height = top_legend_left_bottom_height;
-top_legend_left_bottom_below_surface = top_legend_below_surface(top_legend_left_bottom_surface_height, top_legend_left_bottom_embed);
+top_legend_left_bottom_below_surface = top_legend_below_surface(top_legend_left_bottom_surface_height, top_legend_left_bottom_embed, top_legend_left_bottom_bottom_skin);
 top_legend_left_bottom_total_height = top_legend_total_height(top_legend_left_bottom_surface_height, top_legend_left_bottom_below_surface);
 
 side_legend_front_enabled = required_param(user_side_legend_front_enabled, "user_side_legend_front_enabled");
