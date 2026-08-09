@@ -335,3 +335,94 @@ test("shine-through legend cuts a full-depth hole and produces a matching insert
     restoreBrowserMocks();
   }
 });
+
+test("a shine-through legend placed clear of the stem has an open light path", async (t) => {
+  const restoreBrowserMocks = installBrowserMocks({
+    width: 60,
+    actualBoundingBoxLeft: 30,
+    actualBoundingBoxRight: 30,
+    actualBoundingBoxAscent: 35,
+    actualBoundingBoxDescent: 15,
+  });
+  const server = await createServer({
+    root: PROJECT_ROOT,
+    appType: "custom",
+    logLevel: "silent",
+    server: { middlewareMode: true },
+  });
+
+  try {
+    const [bundle, registry, keyset, wasmBinary] = await Promise.all([
+      server.ssrLoadModule("/src/lib/keycap-scad-bundle.js"),
+      server.ssrLoadModule("/src/data/keycap-shape-registry.js"),
+      server.ssrLoadModule("/src/data/keysets/iso-105-de-he.js"),
+      readFile(OPENSCAD_WASM_PATH),
+    ]);
+
+    // A vertical ray's crossings pair into solid intervals. Light reaches the
+    // legend only if nothing fills the cavity between the keycap's open bottom
+    // and the underside of the top wall - most importantly, not the MX stem.
+    function lightPathBlocked(mesh, x, y) {
+      const crossings = [];
+      for (const face of mesh.faces) {
+        const [a, b, c] = face.map((index) => mesh.vertices[index]);
+        const denominator = ((b.y - c.y) * (a.x - c.x)) + ((c.x - b.x) * (a.y - c.y));
+        if (Math.abs(denominator) <= 1e-9) {
+          continue;
+        }
+        const aWeight = (((b.y - c.y) * (x - c.x)) + ((c.x - b.x) * (y - c.y))) / denominator;
+        const bWeight = (((c.y - a.y) * (x - c.x)) + ((a.x - c.x) * (y - c.y))) / denominator;
+        const cWeight = 1 - aWeight - bWeight;
+        if (aWeight < -1e-9 || bWeight < -1e-9 || cWeight < -1e-9) {
+          continue;
+        }
+        crossings.push((aWeight * a.z) + (bWeight * b.z) + (cWeight * c.z));
+      }
+      crossings.sort((left, right) => left - right);
+      for (let index = 0; index + 1 < crossings.length; index += 2) {
+        if (crossings[index + 1] > 0.3 && crossings[index] < 7.9) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    // The alphanumerics are the keys that matter for a backlit board, and they
+    // carry single-character legends in both scripts.
+    for (const keyId of ["a", "f", "z"]) {
+      const key = keyset.ISO_105_DE_HE_KEYS.find((entry) => entry.id === keyId);
+      const params = keyset.createKeycapParamsForKey(
+        key,
+        registry.createDefaultKeycapParams(keyset.resolveShapeProfileForKey(key)),
+      );
+      const body = await renderMesh({ bundle, wasmBinary, exportTarget: "body", params });
+      assertHealthyMesh(body, `${keyId} body`);
+
+      for (const [target, label] of [["legend", "German"], ["top_legend_right_bottom", "Hebrew"]]) {
+        const insert = await renderMesh({ bundle, wasmBinary, exportTarget: target, params });
+        assertHealthyMesh(insert, `${keyId} ${label} insert`);
+
+        // Centroids of the insert's own top-face triangles are strictly inside
+        // the glyph, so they are exactly the points that must transmit light.
+        const topZ = Math.max(...insert.mesh.vertices.map((vertex) => vertex.z));
+        const samples = insert.mesh.faces
+          .map((face) => face.map((index) => insert.mesh.vertices[index]))
+          .filter((triangle) => triangle.every((vertex) => Math.abs(vertex.z - topZ) < 1e-6))
+          .map((triangle) => ({
+            x: (triangle[0].x + triangle[1].x + triangle[2].x) / 3,
+            y: (triangle[0].y + triangle[1].y + triangle[2].y) / 3,
+          }));
+        assert.ok(samples.length > 0, `${keyId} ${label} insert should have a top face`);
+
+        const blocked = samples.filter((point) => lightPathBlocked(body.mesh, point.x, point.y));
+        assert.ok(
+          blocked.length / samples.length <= 0.02,
+          `${keyId} ${label} legend should be lit: ${blocked.length}/${samples.length} sample points blocked`,
+        );
+      }
+    }
+  } finally {
+    await server.close();
+    restoreBrowserMocks();
+  }
+});

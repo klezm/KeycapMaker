@@ -6,6 +6,7 @@ KeycapMaker is a client-side-only keycap editing app served via GitHub Pages. Th
 
 - Editing keycap shapes
 - Editing the legend's text, typeface, in-font style, explicit weight correction, position, and height. The keytop legend's embed depth can also be edited
+- Cutting a keytop legend clean through the top shell as a shine-through insert for LED backlight
 - Switching between homing bar and stem types
 - Adding a key rim dedicated to the typewriter shape
 - Preview via Three.js
@@ -68,7 +69,11 @@ KeycapMaker is a client-side-only keycap editing app served via GitHub Pages. Th
 - `src/lib/preview-scene.js`
   Preview display via Three.js
 - `src/lib/export-3mf.js`
-  Generates a 3MF package from a set of OFF meshes
+  Generates a 3MF package from a set of OFF meshes, for a single keycap or for a whole keycap set
+- `src/data/keysets/iso-105-de-he.js`
+  Physical layout and German / Hebrew legend tables for the ISO-105 keycap set
+- `scripts/build-iso-de-he-keyset.mjs`
+  Renders that whole set headlessly and packs it into one 3MF. See [../guide/iso-105-de-he-keyset.md](../guide/iso-105-de-he-keyset.md)
 - `src/lib/export-step.js`
   Generates a STEP AP214 faceted B-rep from a single shape's OFF mesh
 - `public/assets/j-stem-lp01/`

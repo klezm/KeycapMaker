@@ -56,6 +56,8 @@ legend has `text` and `icon` as content types. `text` uses a font and `text()` a
 When a user adds a TTF / OTF, that font is kept in an in-browser temporary registry as `My Font`, and is injected as a runtime asset under `/fonts/user/` only during preview / export execution. The editor data JSON does not store the font body itself; it only keeps a `user-font:*` key derived from a hash of the file bytes. Re-adding the same font file produces a matching key, allowing it to be restored. An unresolved `user-font:*` is not silently replaced with a default font; instead, the UI prompts the user to re-add it.
 The legend's character size is based directly on the UI's `legendSize`; there is no automatic shrinking based on character count, nor automatic enlargement for a single character.
 legend's `legendHeight` treats 0 as flush with the surface; a positive value is treated as the height it rises above the surface, and a negative value as the depth it sinks into the surface as a recess. Even for a negative value, the legend part remains a separate volume, and the body side is displayed with the surface cut away down to the top of the recessed legend.
+
+Each keytop legend slot also accepts a shine-through option, for LED backlighting. Normally a thin body-colored floor (`legend_bottom_skin`, at most 0.2mm) is kept under a flush or recessed legend so the top shell stays continuous. `user_legend_shine_through_enabled` and the four `user_top_legend_<corner>_shine_through_enabled` flags drop that floor to 0 for their own slot only, so the cut goes clean through the top wall. Because the body cut and the separate legend part are generated from the same volume, the legend part then comes out as an exact full-depth insert: with `legendHeight` at 0 its height equals `top_thickness`, and it fills the hole flush at both the top surface and the inner ceiling. Printed in a translucent material against an opaque body, that insert is what the LED lights. The flags are per-slot and default to `false` when absent, so existing saved JSON is unaffected. Sidewall legends do not take part; the JS bridge only emits these definitions for the keytop slots. Note that a legend placed over the stem is cut through but still unlit, because the stem itself sits in the light path - see the keyset notes below.
 The legend's working area is not capped by the footprint of the keycap's top surface. Even if the text is too large, it is not automatically shrunk; the surface-fitting area on the SCAD side is made wide enough to allow the legend part to extend beyond the top surface of the key.
 The volume that follows the curved surface for a top legend is treated as a band between the top surface and a copy of that surface translated downward. Whether the curve is a deep cylindrical / spherical concave dish or a high convex surface, the flat-plane-based working area is expanded on both the drop and rise sides of the curve, to avoid the legend part becoming empty.
 
@@ -204,6 +206,16 @@ Samples are currently used for geometry regression.
 - The parent object has no material / color of its own; the child part objects' material / color are preserved
 - For Bambu Studio / OrcaSlicer, `Metadata/model_settings.config` is added; for PrusaSlicer / Slic3r PE, `Metadata/Slic3r_PE_model.config` is added, keeping part display names as `body` / `rim` / `homing` / `legend` / `legend-*`
 - For importers centered on standard 3MF, such as Cura, the child objects' `name` and `partnumber` are preserved
+
+### 3MF for a whole keycap set
+
+`create3mfKeysetBlob()` in `src/lib/export-3mf.js` packs many keycaps into one 3MF, alongside the existing single-keycap `create3mfBlob()`, which is unchanged.
+
+- Every keycap keeps its own parent `components` object, exactly as in the single-keycap export
+- `build` contains one `item` per keycap, and each `item` carries the translate transform that places that cap
+- Placement lives in the build transform, not in the vertex coordinates, so the same mesh stays comparable between keycaps and between arrangements
+- Object ids are handed out per keycap - that cap's parts, then its assembly - so a 105-key plate keeps ids unique and each cap's objects contiguous
+- Every part keeps its own color entry, and part names are prefixed with the keycap name in the PrusaSlicer config so a large plate stays readable
 
 ### STEP
 
