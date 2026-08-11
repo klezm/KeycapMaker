@@ -11,7 +11,7 @@ The current goal is to keep the existing implementation in a state where it can 
 - SCAD / export contract: [docs/architecture/scad-and-export.md](docs/architecture/scad-and-export.md)
 - Project data specification: [docs/architecture/project-data.md](docs/architecture/project-data.md)
 - Development operations: [docs/guide/development.md](docs/guide/development.md)
-- ISO-105 German + Hebrew keycap set: [docs/guide/iso-105-de-he-keyset.md](docs/guide/iso-105-de-he-keyset.md)
+- Keycap sets (layouts + languages): [docs/guide/keysets.md](docs/guide/keysets.md)
 
 ## Supplementary Material
 
@@ -46,7 +46,7 @@ The current goal is to keep the existing implementation in a state where it can 
 - Verify production build: `npm run build`
 - Check build output: `npm run preview`
 - Run tests: `npm test`
-- Build the ISO-105 German + Hebrew keycap set as a single 3MF: `npm run build:keyset`
+- Build a whole keycap set as a single 3MF: `npm run build:keyset`
 
 ## Branch Operations
 

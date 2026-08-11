@@ -355,7 +355,7 @@ test("a shine-through legend placed clear of the stem has an open light path", a
     const [bundle, registry, keyset, wasmBinary] = await Promise.all([
       server.ssrLoadModule("/src/lib/keycap-scad-bundle.js"),
       server.ssrLoadModule("/src/data/keycap-shape-registry.js"),
-      server.ssrLoadModule("/src/data/keysets/iso-105-de-he.js"),
+      server.ssrLoadModule("/src/data/keysets/index.js"),
       readFile(OPENSCAD_WASM_PATH),
     ]);
 
@@ -389,12 +389,14 @@ test("a shine-through legend placed clear of the stem has an open light path", a
 
     // The alphanumerics are the keys that matter for a backlit board, and they
     // carry single-character legends in both scripts.
-    for (const keyId of ["a", "f", "z"]) {
-      const key = keyset.ISO_105_DE_HE_KEYS.find((entry) => entry.id === keyId);
-      const params = keyset.createKeycapParamsForKey(
-        key,
-        registry.createDefaultKeycapParams(keyset.resolveShapeProfileForKey(key)),
-      );
+    const built = keyset.buildKeyset({
+      layoutId: "iso-105",
+      primaryLanguageId: "de",
+      secondaryLanguageId: "il",
+      createDefaults: (profileKey) => registry.createDefaultKeycapParams(profileKey),
+    });
+    for (const keyId of ["AC01", "AC04", "AD06"]) {
+      const { params } = built.keys.find((entry) => entry.code === keyId);
       const body = await renderMesh({ bundle, wasmBinary, exportTarget: "body", params });
       assertHealthyMesh(body, `${keyId} body`);
 

@@ -1,9 +1,14 @@
 #!/usr/bin/env node
-// Render the full ISO-105 German + Hebrew keycap set and pack it into one 3MF.
+// Render a full keycap set and pack it into one 3MF.
 //
-//   node scripts/build-iso-de-he-keyset.mjs [--out <path>] [--no-shine-through]
-//                                           [--only <id,id,...>] [--jobs <n>]
+//   node scripts/build-keyset.mjs [--out <path>] [--no-shine-through]
+//                                           [--only <code,code,...>] [--jobs <n>]
 //                                           [--arrange board|grid] [--bed <mm>]
+//                                           [--layout <id>] [--primary <lang>]
+//                                           [--secondary <lang>|none]
+//
+// Defaults to the ISO-105 German + Hebrew set. Layouts and languages come from
+// src/data/keysets/; --only takes xkb key codes such as AC01,RTRN,SPCE.
 //
 // --arrange board (default) places every cap at its true position on the
 // keyboard, which is ~410mm wide and so wider than a common print bed. Use
@@ -36,6 +41,9 @@ function parseArgs(argv) {
     jobs: Math.max(1, Math.min(availableParallelism?.() ?? 4, 8)),
     arrange: "board",
     bedMm: 250,
+    layout: "iso-105",
+    primary: "de",
+    secondary: "il",
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -55,6 +63,13 @@ function parseArgs(argv) {
       }
     } else if (arg === "--bed") {
       options.bedMm = Math.max(50, Number(argv[index += 1]) || 250);
+    } else if (arg === "--layout") {
+      options.layout = argv[index += 1];
+    } else if (arg === "--primary") {
+      options.primary = argv[index += 1];
+    } else if (arg === "--secondary") {
+      const value = argv[index += 1];
+      options.secondary = value === "none" ? null : value;
     } else {
       throw new Error(`Unknown argument: ${arg}`);
     }
@@ -175,49 +190,6 @@ async function renderTarget({ bundle, parseOff, wasmBinary, params, exportTarget
   return mesh;
 }
 
-/**
- * Repack keycaps into bed-sized rows instead of their keyboard positions.
- * Each cap is measured from its own meshes, so tall keys and the 6.25u
- * spacebar get the room they actually need.
- */
-function arrangeIntoGrid(keycaps, bedMm) {
-  const margin = 2;
-  const measured = keycaps.map((keycap) => {
-    const vertices = keycap.meshes.flatMap((mesh) => mesh.vertices);
-    const minX = Math.min(...vertices.map((vertex) => vertex.x));
-    const maxX = Math.max(...vertices.map((vertex) => vertex.x));
-    const minY = Math.min(...vertices.map((vertex) => vertex.y));
-    const maxY = Math.max(...vertices.map((vertex) => vertex.y));
-    return { keycap, minX, minY, width: maxX - minX, depth: maxY - minY };
-  });
-
-  // Tallest-first keeps rows tidy; caps are all similar in height so a simple
-  // shelf pack is enough here.
-  measured.sort((left, right) => right.depth - left.depth || right.width - left.width);
-
-  const placed = [];
-  let cursorX = margin;
-  let cursorY = margin;
-  let rowDepth = 0;
-
-  for (const entry of measured) {
-    if (cursorX + entry.width + margin > bedMm && cursorX > margin) {
-      cursorX = margin;
-      cursorY += rowDepth + margin;
-      rowDepth = 0;
-    }
-    placed.push({
-      ...entry.keycap,
-      // Shift the cap's own bounding box to the cursor.
-      position: { x: cursorX - entry.minX, y: cursorY - entry.minY, z: 0 },
-    });
-    cursorX += entry.width + margin;
-    rowDepth = Math.max(rowDepth, entry.depth);
-  }
-
-  return { placed, depthMm: cursorY + rowDepth + margin };
-}
-
 async function main() {
   const options = parseArgs(process.argv.slice(2));
   installBrowserMocks();
@@ -235,17 +207,27 @@ async function main() {
       server.ssrLoadModule("/src/data/keycap-shape-registry.js"),
       server.ssrLoadModule("/src/lib/export-3mf.js"),
       server.ssrLoadModule("/src/lib/off-parser.js"),
-      server.ssrLoadModule("/src/data/keysets/iso-105-de-he.js"),
+      server.ssrLoadModule("/src/data/keysets/index.js"),
       readFile(OPENSCAD_WASM_PATH),
     ]);
+    const keysetLayout = await server.ssrLoadModule("/src/lib/keyset-layout.js");
 
-    const keys = keyset.ISO_105_DE_HE_KEYS.filter((key) => !options.only || options.only.has(key.id));
+    const built = keyset.buildKeyset({
+      layoutId: options.layout,
+      primaryLanguageId: options.primary,
+      secondaryLanguageId: options.secondary,
+      shineThrough: options.shineThrough,
+      createDefaults: (profileKey) => registry.createDefaultKeycapParams(profileKey),
+    });
+    const keys = built.keys.filter((key) => !options.only || options.only.has(key.code));
     if (keys.length === 0) {
       throw new Error("No keys selected.");
     }
 
+    const secondaryLabel = built.secondaryLanguage ? built.secondaryLanguage.label : "none";
     console.log(
       `Rendering ${keys.length} keycap${keys.length === 1 ? "" : "s"}`
+      + ` - ${built.layout.label}, ${built.primaryLanguage?.label ?? "no primary"} + ${secondaryLabel}`
       + ` (shine-through ${options.shineThrough ? "on" : "off"}, ${options.jobs} in parallel)...`,
     );
 
@@ -253,8 +235,7 @@ async function main() {
     let completed = 0;
 
     async function buildKeycap(key) {
-      const defaults = registry.createDefaultKeycapParams(keyset.resolveShapeProfileForKey(key));
-      const params = keyset.createKeycapParamsForKey(key, defaults, { shineThrough: options.shineThrough });
+      const { params } = key;
 
       // Only render the targets this key actually uses: an empty legend slot
       // yields an empty mesh, which is an error rather than something to pack.
@@ -284,10 +265,9 @@ async function main() {
 
       completed += 1;
       const elapsed = ((Date.now() - startedAt) / 1000).toFixed(0);
-      console.log(`  [${String(completed).padStart(3)}/${keys.length}] ${key.id} (${meshes.length} parts, ${elapsed}s elapsed)`);
+      console.log(`  [${String(completed).padStart(3)}/${keys.length}] ${key.code} (${meshes.length} parts, ${elapsed}s elapsed)`);
 
-      const center = keyset.resolveKeyCenterMm(key);
-      return { name: key.id, position: { x: center.x, y: center.y, z: 0 }, meshes };
+      return { name: key.code, position: { x: key.position.x, y: key.position.y, z: 0 }, meshes };
     }
 
     // Bounded worker pool: each OpenSCAD instance is its own WASM heap, so
@@ -308,7 +288,7 @@ async function main() {
 
     let arranged = results;
     if (options.arrange === "grid") {
-      const { placed, depthMm } = arrangeIntoGrid(results, options.bedMm);
+      const { placed, depthMm } = keysetLayout.arrangeIntoGrid(results, options.bedMm);
       arranged = placed;
       console.log(`\nPacked into a ${options.bedMm}mm-wide grid, ${depthMm.toFixed(0)}mm deep.`);
       if (depthMm > options.bedMm) {

@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "node --test",
-    "build:keyset": "node scripts/build-iso-de-he-keyset.mjs"
+    "build:keyset": "node scripts/build-keyset.mjs"
   },
   "devDependencies": {
     "vite": "^7.1.10"
