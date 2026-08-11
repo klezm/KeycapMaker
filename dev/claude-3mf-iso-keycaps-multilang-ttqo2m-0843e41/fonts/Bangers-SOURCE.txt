@@ -1,0 +1,39 @@
+Bangers source and license note
+================================
+
+Review date:
+2026-04-25
+
+Repo first-added date:
+2026-04-22
+
+Source page at review:
+https://github.com/google/fonts/tree/46d8a043641ec6f446cddf39749c0b8d0dc71467/ofl/bangers
+
+Bundled download URL:
+https://raw.githubusercontent.com/google/fonts/46d8a043641ec6f446cddf39749c0b8d0dc71467/ofl/bangers/Bangers-Regular.ttf
+
+Bundled license URL:
+https://raw.githubusercontent.com/google/fonts/46d8a043641ec6f446cddf39749c0b8d0dc71467/ofl/bangers/OFL.txt
+
+Bundled files in this repository:
+- Bangers-Regular.ttf
+- Bangers-OFL.txt
+
+Bundled SHA-256:
+- Bangers-Regular.ttf: 4160a7311de9342674cce9160cde9fcbb30f48190397d86ff1b70b455af65824
+- Bangers-OFL.txt: 630dd5a307c0657b094d324e069b390edf90182fe5003639e06c02a0e5769af7
+
+License evidence:
+- Google Fonts OFL.txt says this Font Software is licensed under the SIL Open Font License, Version 1.1.
+- The bundled TTF nameID 13 says this Font Software is licensed under the SIL Open Font License, Version 1.1.
+
+Font metadata observed from the bundled TTF:
+- nameID 0: Copyright 2010 The Bangers Project Authors (https://github.com/googlefonts/bangers)
+- nameID 1: Bangers
+- nameID 4: Bangers Regular
+- nameID 5: Version 2.100; ttfautohint (v1.8.4.7-5d5b);gftools[0.9.31]
+- nameID 14: https://scripts.sil.org/OFL
+
+Use note:
+The bundled font is used unmodified as a legend font asset and redistributed with its OFL text.

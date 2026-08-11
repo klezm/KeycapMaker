@@ -1,0 +1,40 @@
+M PLUS Rounded 1c source and license note
+=========================================
+
+Review date:
+2026-04-25
+
+Repo first-added date:
+2026-04-18
+
+Source page at review:
+https://github.com/google/fonts/tree/46d8a043641ec6f446cddf39749c0b8d0dc71467/ofl/mplusrounded1c
+
+Bundled download URL:
+https://raw.githubusercontent.com/google/fonts/46d8a043641ec6f446cddf39749c0b8d0dc71467/ofl/mplusrounded1c/MPLUSRounded1c-Regular.ttf
+
+License metadata URL:
+https://raw.githubusercontent.com/google/fonts/46d8a043641ec6f446cddf39749c0b8d0dc71467/ofl/mplusrounded1c/METADATA.pb
+
+Bundled files in this repository:
+- MPLUSRounded1c-Regular.ttf
+- MPLUSRounded1c-OFL.txt
+
+Bundled SHA-256:
+- MPLUSRounded1c-Regular.ttf: b75708b53e45b06d17d470aeeca5b766e3d1b3999f03f13ec4eb863ca846c14c
+- MPLUSRounded1c-OFL.txt: 1bd6eceefce3edcb25cad3d5a4fbec6405d66946a6672daf69fe667c7e52f591
+
+License evidence:
+- Google Fonts METADATA.pb at the reviewed commit says license: "OFL". The reviewed Google Fonts directory did not include a standalone OFL.txt file.
+- The bundled MPLUSRounded1c-OFL.txt in this repository contains the SIL Open Font License, Version 1.1 text.
+- The bundled TTF nameID 13 says this Font Software is licensed under the SIL Open Font License, Version 1.1.
+
+Font metadata observed from the bundled TTF:
+- nameID 0: Copyright 2016 The Rounded M+ Project Authors.
+- nameID 1: Rounded Mplus 1c
+- nameID 4: Rounded Mplus 1c
+- nameID 5: Version 1.059.20150529
+- nameID 14: http://scripts.sil.org/OFL
+
+Use note:
+The bundled font is used unmodified as a legend font asset and redistributed with its OFL text.

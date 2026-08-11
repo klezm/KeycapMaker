@@ -1,0 +1,55 @@
+黒薔薇シンデレラ provenance note
+
+Source page:
+https://modi.jpn.org/font_kurobara-cinderella.php
+
+Downloaded archive:
+https://modi.jpn.org/download/MODI_kurobara-cinderella_2018_0805.zip
+
+Review date:
+2026-04-25
+
+Downloaded for this repository:
+2026-04-21
+
+Archive contents used here:
+- kurobara-cinderella.ttf
+- readme.txt
+
+Bundled files in this repository:
+- KurobaraCinderella-Regular.ttf
+
+Bundled SHA-256:
+- KurobaraCinderella-Regular.ttf: 7eb144f6781107438b35f8d761efff9a6db6a8c2710b560bee520f73e5928025
+
+Bundled readme summary (UTF-8 transcription):
+- 黒薔薇シンデレラ Version 1.00.20180805
+- MODI工場／倒神神倒
+- オリジナルのかなフォント「シンデレラ」と、それに合うように M+ FONTS を加工した、M+ FONTS 派生フォント
+- 飴鞭シンデレラの後継フォントとして作成
+- M+ FONTS TESTFLIGHT-063 使用
+- 使用は無保証
+
+License evidence:
+- The bundled TTF nameID 13 grants unlimited commercial/noncommercial use, copy, and distribution, with or without modification, and disclaims warranty.
+- The official MODI source page identifies 黒薔薇シンデレラ as an M+ FONTS derived font and allows use as a web font, embedding, redistribution, modification, and inclusion in material books for M+ FONTS derived fonts when copyright and license notices are retained.
+
+License notes from the official MODI site:
+- 「商用、非商用問わずお使いいただけます。」
+- 「連絡・報告・表記、必要ありません。」
+- 「M+ FONTS 派生」欄では、WEBフォント、埋め込み、再配布、改造、素材集書籍への収録はいずれも可
+- 上記の M+ FONTS 派生用途には「著作権及びライセンス表記が必要」と注記あり
+
+Font metadata observed from the bundled TTF:
+- nameID 0: Copyright(c) 2017 M+ FONTS PROJECT/MODI
+- nameID 5: Version 1.00.20180805
+- nameID 13: This font is free software. Unlimited permission is granted to use, copy, and distribute it, with or without modification, either commercially or noncommercially. THIS FONT IS PROVIDED "AS IS" WITHOUT WARRANTY.
+
+Related upstream license:
+- M+ FONTS is released under the SIL Open Font License.
+- Keep the SIL OFL text available in this directory as MPLUS1-OFL.txt.
+
+Use note:
+The bundled font is used unmodified as a legend font asset. Keep the MODI/M+ attribution lines exposed from the font definition when this font is selected.
+
+For the original terms, consult the source page above.
