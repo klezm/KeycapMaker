@@ -33,6 +33,7 @@ function createVariableWeightStyleOptions(fontName) {
 const MPLUS1_VARIABLE_STYLE_OPTIONS = createVariableWeightStyleOptions("M PLUS 1");
 const NOTO_SANS_VARIABLE_STYLE_OPTIONS = createVariableWeightStyleOptions("Noto Sans");
 const NOTO_SANS_JP_VARIABLE_STYLE_OPTIONS = createVariableWeightStyleOptions("Noto Sans JP");
+const NOTO_SANS_HEBREW_VARIABLE_STYLE_OPTIONS = createVariableWeightStyleOptions("Noto Sans Hebrew");
 
 export const KEYCAP_LEGEND_FONTS = Object.freeze([
   {
@@ -81,6 +82,22 @@ export const KEYCAP_LEGEND_FONTS = Object.freeze([
     ...createGoogleFontsLandingPageMeta("Noto Sans"),
     licenseLabel: "SIL Open Font License 1.1",
     measurementFamily: "Keycap Legend Noto Sans Variable",
+  },
+  {
+    key: "noto-sans-hebrew-variable",
+    label: "Noto Sans Hebrew Variable",
+    searchLabel: "Noto Sans Hebrew Variable עברית ivrit hebrew standard sans",
+    fontKind: "variable",
+    fontName: "Noto Sans Hebrew",
+    fontQuery: "Noto Sans Hebrew",
+    nativeStyleOptions: NOTO_SANS_HEBREW_VARIABLE_STYLE_OPTIONS,
+    defaultStyleKey: "regular",
+    assetPath: "fonts/NotoSansHebrew-Variable.ttf",
+    runtimePath: "/fonts/NotoSansHebrew-Variable.ttf",
+    landingPageUrl: "https://fonts.google.com/noto/specimen/Noto%2BSans%2BHebrew",
+    ...createGoogleFontsLandingPageMeta("Noto Sans Hebrew"),
+    licenseLabel: "SIL Open Font License 1.1",
+    measurementFamily: "Keycap Legend Noto Sans Hebrew Variable",
   },
   {
     key: "noto-sans-jp-variable",

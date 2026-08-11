@@ -3941,3 +3941,36 @@ pre {
     display: none;
   }
 }
+
+.keyset-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.keyset-actions button {
+  flex: 1 1 auto;
+}
+
+.keyset-progress {
+  background: var(--surface-sunken, rgba(0, 0, 0, 0.08));
+  border-radius: 999px;
+  height: 6px;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.keyset-progress__bar {
+  background: var(--accent, #5d9270);
+  height: 100%;
+  transition: width 120ms linear;
+  width: 0;
+}
+
+.inspector-panel--keyset .field-error {
+  color: var(--danger, #b3413a);
+  font-size: 12px;
+  line-height: 1.35;
+  margin-top: 6px;
+}

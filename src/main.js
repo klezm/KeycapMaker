@@ -35,7 +35,7 @@ import {
   sanitizeExportBaseName,
   syncDerivedKeycapParams,
 } from "./lib/editor-data.js";
-import { create3mfBlob } from "./lib/export-3mf.js";
+import { create3mfBlob, create3mfKeysetBlob } from "./lib/export-3mf.js";
 import { createStepBlob } from "./lib/export-step.js";
 import { resolveUserFontSource } from "./lib/font-source-resolver.js";
 import {
@@ -67,6 +67,20 @@ import {
   expandPixelBounds,
   findOpaquePixelBounds,
 } from "./lib/preview-thumbnail.js";
+import {
+  DEFAULT_LAYOUT_ID,
+  DEFAULT_PRIMARY_LANGUAGE_ID,
+  DEFAULT_SECONDARY_LANGUAGE_ID,
+  buildKeyset,
+  listKeysetLanguages,
+  listKeysetLayouts,
+} from "./data/keysets/index.js";
+import {
+  createKeysetPreviewLayers,
+  planKeysetJobs,
+  renderKeyset,
+} from "./lib/keyset-render.js";
+import { arrangeIntoGrid } from "./lib/keyset-layout.js";
 import {
   DEFAULT_KEYCAP_LEGEND_FONT_KEY,
   buildLegendIconSvg,
@@ -361,7 +375,26 @@ let previewDebounceTimer = 0;
 let previewSceneModulePromise = null;
 let colorisLoadPromise = null;
 let latestPreviewRequestId = 0;
+let latestKeysetRequestId = 0;
+let keysetAbortController = null;
+// Matches the default bed the keyset CLI packs for.
+const KEYSET_EXPORT_BED_MM = 250;
 let previewViewState = null;
+// The board and the single keycap want very different framing, so each keeps
+// its own camera state instead of inheriting the other's.
+let keysetViewState = null;
+let isPreviewShowingKeyset = false;
+// A wide, shallow board reads best from close to overhead, where the
+// single-keycap default sits far too far back for a ~410mm object. The stage
+// spans the whole window with the inspector card floating over its left edge,
+// so the board is also nudged right to clear the panel. Compact viewports
+// ignore the offset and re-frame themselves, which is what we want there.
+const KEYSET_DEFAULT_VIEW_STATE = Object.freeze({
+  direction: [0, 0.62, 0.78],
+  distanceScale: 1.9,
+  targetScale: [0, 0, 0],
+  viewOffsetRatio: [-0.045, 0.02],
+});
 let jStemLp01ReferenceMeshPromise = null;
 let viewportLayoutMode = getViewportLayoutMode();
 let hasAttachedEditorDataDropListeners = false;
@@ -565,6 +598,10 @@ const workspaceSections = [
   {
     id: "design",
     labelKey: "navigation.design",
+  },
+  {
+    id: "keyset",
+    labelKey: "navigation.keyset",
   },
 ];
 
@@ -2996,6 +3033,21 @@ const state = {
   collapsedFieldGroups: createFieldGroupCollapseState(),
   keyUnitMm: readKeyUnitMmPreference(),
   keycapParams: initialKeycapParams,
+  previewMode: "keycap",
+  keyset: {
+    layoutId: DEFAULT_LAYOUT_ID,
+    primaryLanguageId: DEFAULT_PRIMARY_LANGUAGE_ID,
+    secondaryLanguageId: DEFAULT_SECONDARY_LANGUAGE_ID,
+    shineThrough: true,
+    isBuilding: false,
+    progress: null,
+    status: "",
+    error: "",
+    // Rendered keycaps stay in memory so export needs no second render:
+    // preview and export share one geometry.
+    keycaps: null,
+    builtSummary: null,
+  },
 };
 
 applyDocumentLocale(state.locale);
@@ -3705,6 +3757,10 @@ function renderInspectorContent() {
     return renderProjectTab();
   }
 
+  if (state.sidebarTab === "keyset") {
+    return renderKeysetTab();
+  }
+
   return renderDesignTab();
 }
 
@@ -4260,6 +4316,155 @@ function renderProjectTab() {
           <span>${isProjectBusy ? t("actions.saving") : t("project.save")}</span>
         </button>
         <p class="project-status" aria-live="polite">${escapeHtml(state.projectSummary)}</p>
+      </div>
+    </div>
+  `;
+}
+
+function renderKeysetSelect({ field, label, hint, value, options }) {
+  return `
+    <label class="field">
+      <span class="field-copy">
+        <span class="field-label">${escapeHtml(label)}</span>
+        <span class="field-hint">${escapeHtml(hint)}</span>
+      </span>
+      <span class="field-control field-control--select">
+        <select data-keyset-field="${field}">
+          ${options
+            .map((option) => `
+              <option value="${escapeHtml(option.value)}" ${option.value === value ? "selected" : ""}>${escapeHtml(option.label)}</option>
+            `)
+            .join("")}
+        </select>
+      </span>
+    </label>
+  `;
+}
+
+function getKeysetLayoutOptions() {
+  return listKeysetLayouts().map((layout) => ({
+    value: layout.id,
+    label: t(`options.keysetLayout.${layout.id}`, {}, layout.label),
+  }));
+}
+
+function getKeysetLanguageOptions({ includeNone = false } = {}) {
+  const options = listKeysetLanguages().map((language) => ({
+    value: language.id,
+    label: t(`options.keysetLanguage.${language.id}`, {}, language.label),
+  }));
+
+  if (includeNone) {
+    return [{ value: "", label: t("keyset.secondaryNone") }, ...options];
+  }
+
+  return options;
+}
+
+function renderKeysetTab() {
+  const keyset = state.keyset;
+  const progress = keyset.progress;
+  const percent = progress && progress.total > 0
+    ? Math.round((progress.done / progress.total) * 100)
+    : 0;
+  const hasBuild = Array.isArray(keyset.keycaps) && keyset.keycaps.length > 0;
+
+  return `
+    <div class="inspector-panel inspector-panel--keyset">
+      <div class="panel-intro">
+        <h1 class="panel-title">${t("panels.keyset.title")}</h1>
+        <p class="panel-body">${t("panels.keyset.body")}</p>
+      </div>
+
+      <div class="parameter-card">
+        <div class="parameter-card__header">
+          <h2 class="parameter-card__title">${t("keyset.settingsTitle")}</h2>
+        </div>
+        <div class="field-grid">
+          ${renderKeysetSelect({
+            field: "layoutId",
+            label: t("keyset.layout.label"),
+            hint: t("keyset.layout.hint"),
+            value: keyset.layoutId,
+            options: getKeysetLayoutOptions(),
+          })}
+          ${renderKeysetSelect({
+            field: "primaryLanguageId",
+            label: t("keyset.primaryLanguage.label"),
+            hint: t("keyset.primaryLanguage.hint"),
+            value: keyset.primaryLanguageId,
+            options: getKeysetLanguageOptions(),
+          })}
+          ${renderKeysetSelect({
+            field: "secondaryLanguageId",
+            label: t("keyset.secondaryLanguage.label"),
+            hint: t("keyset.secondaryLanguage.hint"),
+            value: keyset.secondaryLanguageId ?? "",
+            options: getKeysetLanguageOptions({ includeNone: true }),
+          })}
+          <label class="field">
+            <span class="field-copy">
+              <span class="field-label">${t("keyset.shineThrough.label")}</span>
+              <span class="field-hint">${t("keyset.shineThrough.hint")}</span>
+            </span>
+            <span class="field-control">
+              <label class="checkbox-pill checkbox-toggle">
+                <input
+                  class="checkbox-toggle__input"
+                  type="checkbox"
+                  data-keyset-field="shineThrough"
+                  aria-label="${escapeHtml(t("keyset.shineThrough.label"))}"
+                  ${keyset.shineThrough ? "checked" : ""}
+                />
+                <span class="checkbox-toggle__label" aria-hidden="true">${getCheckboxStatusLabel(keyset.shineThrough)}</span>
+                <span class="checkbox-toggle__switch" aria-hidden="true"></span>
+              </label>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <div class="parameter-card">
+        <div class="parameter-card__header">
+          <h2 class="parameter-card__title">${t("keyset.buildTitle")}</h2>
+        </div>
+        <div class="keyset-actions">
+          ${keyset.isBuilding
+            ? `
+              <button class="ghost-button" type="button" data-keyset-cancel>
+                <span>${t("keyset.cancel")}</span>
+              </button>
+            `
+            : `
+              <button class="primary-button" type="button" data-keyset-build>
+                <span>${t("keyset.build")}</span>
+              </button>
+            `}
+        </div>
+        ${keyset.isBuilding && progress
+          ? `
+            <div class="keyset-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}">
+              <div class="keyset-progress__bar" style="width: ${percent}%;"></div>
+            </div>
+          `
+          : ""}
+        <p class="project-status" aria-live="polite">${escapeHtml(keyset.status)}</p>
+        ${keyset.error ? `<p class="field-error" role="alert">${escapeHtml(keyset.error)}</p>` : ""}
+      </div>
+
+      <div class="parameter-card">
+        <div class="parameter-card__header">
+          <h2 class="parameter-card__title">${t("keyset.exportTitle")}</h2>
+        </div>
+        <p class="panel-body">${t("keyset.exportBody")}</p>
+        <div class="keyset-actions">
+          <button class="ghost-button" type="button" data-keyset-export="board" ${hasBuild ? "" : "disabled"}>
+            <span>${t("keyset.exportBoard")}</span>
+          </button>
+          <button class="ghost-button" type="button" data-keyset-export="grid" ${hasBuild ? "" : "disabled"}>
+            <span>${t("keyset.exportGrid")}</span>
+          </button>
+        </div>
       </div>
     </div>
   `;
@@ -6590,6 +6795,24 @@ function handleInspectorCardDragEnd() {
 }
 
 function handleInspectorCardClick(event) {
+  const keysetBuildButton = getClosestFromEventTarget(event, "[data-keyset-build]");
+  if (keysetBuildButton) {
+    void executeKeysetBuild();
+    return;
+  }
+
+  const keysetCancelButton = getClosestFromEventTarget(event, "[data-keyset-cancel]");
+  if (keysetCancelButton) {
+    cancelKeysetBuild();
+    return;
+  }
+
+  const keysetExportButton = getClosestFromEventTarget(event, "[data-keyset-export]");
+  if (keysetExportButton) {
+    void executeKeysetExport(keysetExportButton.dataset.keysetExport);
+    return;
+  }
+
   const projectKeycapDragHandle = getClosestFromEventTarget(event, "[data-project-keycap-drag]");
   if (projectKeycapDragHandle) {
     return;
@@ -6901,6 +7124,12 @@ function handleInspectorCardWheel(event) {
 }
 
 function handleInspectorCardChange(event) {
+  const keysetField = getClosestFromEventTarget(event, "[data-keyset-field]");
+  if (keysetField) {
+    handleKeysetFieldChange(keysetField.dataset.keysetField, keysetField);
+    return;
+  }
+
   const userFontInput = getClosestFromEventTarget(event, "[data-user-font-file]");
   if (userFontInput) {
     void handleUserLegendFontFileInput(userFontInput);
@@ -7359,8 +7588,18 @@ function handleSidebarTabChange(event) {
     return;
   }
 
+  const previousTab = state.sidebarTab;
   state.sidebarTab = nextTab;
   render({ animateInspector: false });
+
+  // Keep the stage in step with the panel: the board belongs to the keyset tab,
+  // the single keycap to the others.
+  if (nextTab === "keyset") {
+    showKeysetPreviewIfBuilt();
+  } else if (previousTab === "keyset" && state.previewMode === "keyset") {
+    state.previewMode = "keycap";
+    void executeKeycapPreview({ silent: true, refreshActiveProjectPreview: false });
+  }
 }
 
 function toggleFieldGroup(groupId) {
@@ -10282,6 +10521,18 @@ function syncLinkedSizeInputs(changedField) {
   syncKeyUnitBasisCopy();
 }
 
+function showKeysetPreviewIfBuilt() {
+  const keycaps = state.keyset.keycaps;
+  if (!Array.isArray(keycaps) || keycaps.length === 0) {
+    return false;
+  }
+
+  state.previewLayers = createKeysetPreviewLayers(keycaps);
+  state.previewMode = "keyset";
+  void renderPreviewViewer();
+  return true;
+}
+
 function schedulePreviewRefresh(options = {}) {
   const { refreshActiveProjectPreview = true } = options;
   window.clearTimeout(previewDebounceTimer);
@@ -10291,8 +10542,18 @@ function schedulePreviewRefresh(options = {}) {
 }
 
 async function renderPreviewViewer() {
+  // Which camera state applies depends on what is currently on stage, so read
+  // it before the scene is torn down.
+  const wasShowingKeyset = isPreviewShowingKeyset;
+  const willShowKeyset = state.previewMode === "keyset";
+
   if (disposePreviewScene) {
-    previewViewState = disposePreviewScene.captureViewState();
+    const captured = disposePreviewScene.captureViewState();
+    if (wasShowingKeyset) {
+      keysetViewState = captured;
+    } else {
+      previewViewState = captured;
+    }
     disposePreviewScene.dispose();
     disposePreviewScene = null;
   }
@@ -10318,8 +10579,11 @@ async function renderPreviewViewer() {
   }
 
   disposePreviewScene = mountPreviewScene(container, state.previewLayers, {
-    initialViewState: previewViewState,
+    initialViewState: willShowKeyset
+      ? (keysetViewState ?? KEYSET_DEFAULT_VIEW_STATE)
+      : previewViewState,
   });
+  isPreviewShowingKeyset = willShowKeyset;
 }
 
 function createColorLayerJob({ name, exportTarget, outputPath, colorFieldKey, params = state.keycapParams }) {
@@ -10436,6 +10700,8 @@ async function runKeycapOffJobs(jobs, params = state.keycapParams) {
 
 async function executeKeycapPreview(options = {}) {
   const { silent = false, refreshActiveProjectPreview = false } = options;
+  // Rendering a single keycap always takes the stage back from a keyset board.
+  state.previewMode = "keycap";
   const requestId = ++latestPreviewRequestId;
   const previewParams = { ...state.keycapParams };
   let didGeneratePreview = false;
@@ -10499,6 +10765,168 @@ async function executeKeycapPreview(options = {}) {
   if (didGeneratePreview && refreshActiveProjectPreview) {
     refreshActiveProjectKeycapPreviewFromCurrent();
   }
+}
+
+function buildKeysetFilename(arrangement) {
+  const keyset = state.keyset;
+  const parts = [
+    keyset.layoutId,
+    keyset.primaryLanguageId,
+    keyset.secondaryLanguageId,
+    arrangement === "grid" ? "plate" : null,
+  ].filter(Boolean);
+  return `${parts.join("-")}.3mf`;
+}
+
+function describeKeysetBuild(built) {
+  const secondary = built.secondaryLanguage?.label ?? t("keyset.secondaryNone");
+  return `${built.layout.label} · ${built.primaryLanguage?.label ?? ""} + ${secondary}`;
+}
+
+/**
+ * Render the whole selected keyset and show it as one board in the preview.
+ *
+ * The rendered meshes are kept on state so the export buttons need no second
+ * render - preview and export are the same geometry.
+ */
+async function executeKeysetBuild() {
+  const keyset = state.keyset;
+  if (keyset.isBuilding) {
+    return;
+  }
+
+  // Same stale-guard idiom as the single-keycap preview: a superseded run must
+  // not overwrite the newer one's results.
+  const requestId = ++latestKeysetRequestId;
+  const controller = new AbortController();
+  keysetAbortController = controller;
+
+  const built = buildKeyset({
+    layoutId: keyset.layoutId,
+    primaryLanguageId: keyset.primaryLanguageId,
+    secondaryLanguageId: keyset.secondaryLanguageId || null,
+    shineThrough: keyset.shineThrough,
+    createDefaults: (profileKey) => createDefaultKeycapParams(profileKey),
+  });
+  const plan = planKeysetJobs(built);
+
+  keyset.isBuilding = true;
+  keyset.error = "";
+  keyset.progress = { done: 0, total: plan.uniqueJobs - plan.cachedJobs };
+  keyset.status = t("keyset.statusPreparing", { count: built.keys.length });
+  render({ animateInspector: false });
+
+  try {
+    const { keycaps } = await renderKeyset(built, {
+      signal: controller.signal,
+      onProgress: ({ done, total }) => {
+        if (requestId !== latestKeysetRequestId) {
+          return;
+        }
+        state.keyset.progress = { done, total };
+        state.keyset.status = t("keyset.statusRendering", { done, total });
+        syncKeysetProgressDom();
+      },
+    });
+
+    if (requestId !== latestKeysetRequestId) {
+      return;
+    }
+
+    state.keyset.keycaps = keycaps;
+    state.keyset.builtSummary = describeKeysetBuild(built);
+    state.keyset.status = t("keyset.statusReady", {
+      count: keycaps.length,
+      summary: describeKeysetBuild(built),
+    });
+    state.previewLayers = createKeysetPreviewLayers(keycaps);
+    state.previewMode = "keyset";
+    await renderPreviewViewer();
+  } catch (error) {
+    if (requestId !== latestKeysetRequestId) {
+      return;
+    }
+    if (error?.name === "AbortError") {
+      state.keyset.status = t("keyset.statusCancelled");
+    } else {
+      state.keyset.error = error instanceof Error ? error.message : String(error);
+      state.keyset.status = t("keyset.statusFailed");
+    }
+  } finally {
+    if (requestId === latestKeysetRequestId) {
+      state.keyset.isBuilding = false;
+      state.keyset.progress = null;
+      keysetAbortController = null;
+      render({ animateInspector: false });
+    }
+  }
+}
+
+function cancelKeysetBuild() {
+  keysetAbortController?.abort();
+}
+
+async function executeKeysetExport(arrangement) {
+  const keycaps = state.keyset.keycaps;
+  if (!Array.isArray(keycaps) || keycaps.length === 0) {
+    return;
+  }
+
+  try {
+    const placed = arrangement === "grid"
+      ? arrangeIntoGrid(keycaps, KEYSET_EXPORT_BED_MM).placed
+      : keycaps;
+    const blob = create3mfKeysetBlob(placed);
+    downloadBlob(blob, buildKeysetFilename(arrangement));
+    state.keyset.status = t("keyset.statusExported", { count: placed.length });
+  } catch (error) {
+    state.keyset.error = error instanceof Error ? error.message : String(error);
+    state.keyset.status = t("keyset.statusFailed");
+  }
+
+  render({ animateInspector: false });
+}
+
+/**
+ * Patch just the progress bar and status line.
+ *
+ * A full render() re-serialises the entire inspector, which is far too heavy to
+ * run on every one of ~200 job completions.
+ */
+function syncKeysetProgressDom() {
+  const progress = state.keyset.progress;
+  const statusElement = app.querySelector(".inspector-panel--keyset .project-status");
+  if (statusElement) {
+    statusElement.textContent = state.keyset.status;
+  }
+
+  const barElement = app.querySelector(".keyset-progress__bar");
+  const progressElement = app.querySelector(".keyset-progress");
+  if (barElement && progressElement && progress && progress.total > 0) {
+    const percent = Math.round((progress.done / progress.total) * 100);
+    barElement.style.width = `${percent}%`;
+    progressElement.setAttribute("aria-valuenow", `${percent}`);
+  }
+}
+
+function handleKeysetFieldChange(field, input) {
+  if (field === "shineThrough") {
+    state.keyset.shineThrough = input.checked;
+    syncCheckboxToggleDom(input);
+  } else if (field === "secondaryLanguageId") {
+    state.keyset.secondaryLanguageId = input.value || null;
+  } else if (field === "layoutId" || field === "primaryLanguageId") {
+    state.keyset[field] = input.value;
+  } else {
+    return;
+  }
+
+  // The previous board no longer matches the settings, so drop it rather than
+  // leaving a stale export available.
+  state.keyset.keycaps = null;
+  state.keyset.builtSummary = null;
+  state.keyset.status = t("keyset.statusStale");
+  render({ animateInspector: false });
 }
 
 async function executeExport(format, options = {}) {

@@ -308,8 +308,22 @@ export function mountPreviewScene(container, layers, options = {}) {
   rimLight.position.set(-18, -16, 22);
   scene.add(rimLight);
 
+  // A keycap set reuses one mesh object across every cap that shares it, so
+  // build the GPU geometry once per distinct mesh rather than once per layer.
+  const geometryByMesh = new Map();
+  const buildGeometry = (mesh) => {
+    const cached = geometryByMesh.get(mesh);
+    if (cached) {
+      return cached;
+    }
+    const geometry = createPreviewGeometry(mesh);
+    geometry.computeBoundingBox();
+    geometryByMesh.set(mesh, geometry);
+    return geometry;
+  };
+
   const layerEntries = normalizeLayers(layers).map((layer) => {
-    const geometry = createPreviewGeometry(layer.mesh);
+    const geometry = buildGeometry(layer.mesh);
     const isOverlayLayer = OVERLAY_LAYER_NAMES.has(layer.name);
     const opacity = Number.isFinite(layer.opacity) ? Math.min(Math.max(layer.opacity, 0), 1) : 1;
     const isTransparentLayer = opacity < 1;
@@ -328,15 +342,24 @@ export function mountPreviewScene(container, layers, options = {}) {
     const previewMesh = new THREE.Mesh(geometry, material);
     previewMesh.renderOrder = REFERENCE_LAYER_NAMES.has(layer.name) ? 2 : (isOverlayLayer ? 1 : 0);
     scene.add(previewMesh);
-    geometry.computeBoundingBox();
-    return { geometry, material, previewMesh };
+    // Layers may carry a placement offset - that is how a keycap set puts each
+    // cap on the board without duplicating the mesh per position.
+    const offset = new THREE.Vector3(
+      layer.offset?.x ?? 0,
+      layer.offset?.y ?? 0,
+      layer.offset?.z ?? 0,
+    );
+    return { geometry, material, previewMesh, offset };
   });
 
-  const boundingBox = layerEntries.reduce((box, entry) => box.union(entry.geometry.boundingBox), new THREE.Box3());
+  const boundingBox = layerEntries.reduce(
+    (box, entry) => box.union(entry.geometry.boundingBox.clone().translate(entry.offset)),
+    new THREE.Box3(),
+  );
   const center = boundingBox.getCenter(new THREE.Vector3());
   const size = boundingBox.getSize(new THREE.Vector3());
   layerEntries.forEach((entry) => {
-    entry.previewMesh.position.sub(center);
+    entry.previewMesh.position.copy(entry.offset).sub(center);
   });
 
   const sceneScale = Math.max(size.x, size.y, size.z, 1);
@@ -562,9 +585,12 @@ export function mountPreviewScene(container, layers, options = {}) {
     controls.removeEventListener("end", handleControlEnd);
     controls.removeEventListener("change", syncOrbitTargetToObjectCenter);
     controls.dispose();
+    // Geometries are shared between layers, so dispose each one once.
     layerEntries.forEach((entry) => {
-      entry.geometry.dispose();
       entry.material.dispose();
+    });
+    geometryByMesh.forEach((geometry) => {
+      geometry.dispose();
     });
     renderer.dispose();
     container.replaceChildren();

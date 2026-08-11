@@ -103,6 +103,7 @@ const LEGEND_FIELD_SUFFIXES = Object.freeze({
   embed: "Embed",
   offsetX: "OffsetX",
   offsetY: "OffsetY",
+  shineThrough: "ShineThroughEnabled",
 });
 const TOP_LEGEND_CONFIGS = Object.freeze([
   { slot: "center", paramPrefix: "legend", userPrefix: "legend", exportTarget: "legend" },
@@ -859,6 +860,7 @@ async function resolveLegendBridgeDefinitions({
   minimumWidth,
   minimumDepth,
   includeEmbed = true,
+  includeShineThrough = true,
 }) {
   const enabledKey = legendParamKey(paramPrefix, LEGEND_FIELD_SUFFIXES.enabled);
   const contentTypeKey = legendParamKey(paramPrefix, LEGEND_FIELD_SUFFIXES.contentType);
@@ -875,6 +877,7 @@ async function resolveLegendBridgeDefinitions({
   const embedKey = legendParamKey(paramPrefix, LEGEND_FIELD_SUFFIXES.embed);
   const offsetXKey = legendParamKey(paramPrefix, LEGEND_FIELD_SUFFIXES.offsetX);
   const offsetYKey = legendParamKey(paramPrefix, LEGEND_FIELD_SUFFIXES.offsetY);
+  const shineThroughKey = legendParamKey(paramPrefix, LEGEND_FIELD_SUFFIXES.shineThrough);
   const contentType = resolveLegendContentType(params[contentTypeKey] ?? DEFAULT_LEGEND_CONTENT_TYPE);
   const isIconLegend = contentType === LEGEND_CONTENT_TYPE_ICON;
   const iconSet = resolveLegendIconSet(params[iconSetKey] ?? DEFAULT_LEGEND_ICON_SET);
@@ -943,6 +946,7 @@ async function resolveLegendBridgeDefinitions({
     [`user_${userPrefix}_text_size`]: resolvedTextSize,
     [`user_${userPrefix}_height`]: params[heightKey],
     ...(includeEmbed ? { [`user_${userPrefix}_embed`]: params[embedKey] } : {}),
+    ...(includeShineThrough ? { [`user_${userPrefix}_shine_through_enabled`]: Boolean(params[shineThroughKey]) } : {}),
     [`user_${userPrefix}_outline_delta`]: outlineDelta,
     [`user_${userPrefix}_offset_x`]: params[offsetXKey],
     [`user_${userPrefix}_offset_y`]: params[offsetYKey],
@@ -1011,6 +1015,7 @@ async function createKeycapDefinitions({ params, exportTarget }) {
       minimumWidth: positiveTextMetric(params[config.minimumWidthField]),
       minimumDepth: positiveTextMetric(params.topCenterHeight),
       includeEmbed: false,
+      includeShineThrough: false,
     })
   )));
   const sideLegendDefinitions = Object.assign({}, ...sideLegendDefinitionList);

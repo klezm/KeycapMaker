@@ -6,6 +6,8 @@ KeycapMaker is a client-side-only keycap editing app served via GitHub Pages. Th
 
 - Editing keycap shapes
 - Editing the legend's text, typeface, in-font style, explicit weight correction, position, and height. The keytop legend's embed depth can also be edited
+- Cutting a keytop legend clean through the top shell as a shine-through insert for LED backlight
+- Rendering a whole keyboard's worth of keycaps at once from a layout preset and one or two languages, and exporting the set as a single 3MF
 - Switching between homing bar and stem types
 - Adding a key rim dedicated to the typewriter shape
 - Preview via Three.js
@@ -68,11 +70,24 @@ KeycapMaker is a client-side-only keycap editing app served via GitHub Pages. Th
 - `src/lib/preview-scene.js`
   Preview display via Three.js
 - `src/lib/export-3mf.js`
-  Generates a 3MF package from a set of OFF meshes
+  Generates a 3MF package from a set of OFF meshes, for a single keycap or for a whole keycap set
 - `src/lib/export-step.js`
   Generates a STEP AP214 faceted B-rep from a single shape's OFF mesh
 - `public/assets/j-stem-lp01/`
   The official STEP for J-STEM-LP01, and an OFF mesh derived from that official STEP for reference preview
+
+### Keycap sets
+
+- `src/data/keysets/`
+  Physical layouts under `layouts/`, generated per-language legend tables under `languages/`, authored modifier words, and the registry that joins a layout to one or two languages
+- `src/lib/keyset-render.js`
+  Renders a whole keyset in the browser with job deduplication, a worker pool, progress and cancellation
+- `src/lib/keyset-layout.js`
+  Board and print-plate arrangement, shared by the app and the CLI
+- `scripts/build-keyset.mjs`, `scripts/generate-keyset-languages.mjs`
+  Headless set builder and the xkb-based language table generator
+
+See [../guide/keysets.md](../guide/keysets.md).
 
 ## Data flow
 
@@ -134,6 +149,7 @@ flowchart LR
 - [scad-and-export.md](scad-and-export.md)
 - [project-data.md](project-data.md)
 - [../guide/development.md](../guide/development.md)
+- [../guide/keysets.md](../guide/keysets.md)
 - [../guide/manual-verification.md](../guide/manual-verification.md)
 - [../backlog/legend-extensibility-todo.md](../backlog/legend-extensibility-todo.md)
 </content>
