@@ -47,9 +47,15 @@ import {
 } from "./lib/j-stem-lp01-reference.js";
 import { parseOff } from "./lib/off-parser.js";
 import {
+  KEYBOARD_TEMPLATES,
+  createKeyboardTemplateKeycaps,
+  getKeyboardTemplate,
+} from "./data/keyboard-templates.js";
+import {
   DEFAULT_PROJECT_NAME,
   PROJECT_MANIFEST_FILENAME,
   assignProjectKeycapDisplayOrder,
+  createProjectBundlePayload,
   createProjectStateWithActiveKeycap,
   createProjectKeycapEntriesForSave,
   createProjectKeycapEntry,
@@ -59,7 +65,9 @@ import {
   getProjectAssetMimeType,
   getProjectPreviewImageExtension,
   isProjectArchiveFileName,
+  isProjectBundlePayload,
   normalizeProjectName,
+  parseProjectBundlePayload,
   parseProjectManifest,
 } from "./lib/project-data.js";
 import {
@@ -264,7 +272,20 @@ const MOON_ICON_MARKUP = `
     <path d="M20.99 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.78 9.79Z" />
   </svg>
 `;
+const CLIPBOARD_EXPORT_ENCODING = Object.freeze({
+  "editor-data": "text",
+  step: "text",
+  "3mf": "base64",
+  stl: "base64",
+});
+
 const EXPORT_ICON_MARKUP = Object.freeze({
+  copy: `
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <rect x="8" y="8" width="14" height="14" rx="2" ry="2" />
+      <path d="M4 16a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2" />
+    </svg>
+  `,
   file: `
     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
       <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
@@ -640,7 +661,7 @@ const DOCUMENT_LOCALE_ATTRIBUTES = Object.freeze({
 
 function applyDocumentLocale(locale) {
   const nextLocale = normalizeLocale(locale);
-  const attributes = DOCUMENT_LOCALE_ATTRIBUTES[nextLocale] ?? DOCUMENT_LOCALE_ATTRIBUTES.ja;
+  const attributes = DOCUMENT_LOCALE_ATTRIBUTES[nextLocale] ?? DOCUMENT_LOCALE_ATTRIBUTES.en;
   const root = document.documentElement;
 
   root.lang = attributes.lang;
@@ -2969,6 +2990,8 @@ const state = {
   exportHistory: [],
   projectStatus: "idle",
   projectSummary: "",
+  isProjectImportOpen: false,
+  projectImportText: "",
   project: createProjectStateWithActiveKeycap({
     fallbackKeycapParams: initialKeycapParams,
   }),
@@ -4051,15 +4074,31 @@ function renderKeycapExportOverlayOption({ format, chip, title, body, action }) 
         </span>
       </div>
       <p class="export-action-card__text">${escapeHtml(body)}</p>
-      <button
-        class="export-save-button"
-        type="button"
-        data-keycap-export-format="${escapeHtml(format)}"
-        ${state.exportsStatus === "running" ? "disabled" : ""}
-      >
-        ${EXPORT_ICON_MARKUP.download}
-        <span>${state.exportsStatus === "running" ? t("actions.saving") : escapeHtml(action)}</span>
-      </button>
+      <div class="export-action-card__actions">
+        <button
+          class="export-save-button"
+          type="button"
+          data-keycap-export-format="${escapeHtml(format)}"
+          ${state.exportsStatus === "running" ? "disabled" : ""}
+        >
+          ${EXPORT_ICON_MARKUP.download}
+          <span>${state.exportsStatus === "running" ? t("actions.saving") : escapeHtml(action)}</span>
+        </button>
+        <button
+          class="export-copy-button"
+          type="button"
+          data-keycap-copy-format="${escapeHtml(format)}"
+          title="${escapeHtml(t("exportPanel.copyHint"))}"
+          ${state.exportsStatus === "running" ? "disabled" : ""}
+        >
+          ${EXPORT_ICON_MARKUP.copy}
+          <span>${escapeHtml(
+            CLIPBOARD_EXPORT_ENCODING[format] === "base64"
+              ? t("exportPanel.copyBase64")
+              : t("exportPanel.copy"),
+          )}</span>
+        </button>
+      </div>
     </section>
   `;
 }
@@ -4259,6 +4298,75 @@ function renderProjectTab() {
           ${EXPORT_ICON_MARKUP.download}
           <span>${isProjectBusy ? t("actions.saving") : t("project.save")}</span>
         </button>
+
+        <div class="project-json-actions">
+          <button class="export-copy-button" type="button" data-project-save-json ${isProjectBusy ? "disabled" : ""}>
+            ${EXPORT_ICON_MARKUP.file}
+            <span>${escapeHtml(t("project.saveJson"))}</span>
+          </button>
+          <button class="export-copy-button" type="button" data-project-copy-json ${isProjectBusy ? "disabled" : ""}>
+            ${EXPORT_ICON_MARKUP.copy}
+            <span>${escapeHtml(t("project.copyJson"))}</span>
+          </button>
+          <button
+            class="export-copy-button"
+            type="button"
+            data-project-import-toggle
+            aria-expanded="${state.isProjectImportOpen ? "true" : "false"}"
+            ${isProjectBusy ? "disabled" : ""}
+          >
+            ${EXPORT_ICON_MARKUP.file}
+            <span>${escapeHtml(t("project.importJson"))}</span>
+          </button>
+        </div>
+
+        ${state.isProjectImportOpen ? `
+          <div class="project-import">
+            <label class="project-import__label" for="project-import-text">${escapeHtml(t("project.importLabel"))}</label>
+            <textarea
+              id="project-import-text"
+              class="project-import__text"
+              data-project-import-text
+              rows="6"
+              spellcheck="false"
+              placeholder="${escapeHtml(t("project.importPlaceholder"))}"
+            >${escapeHtml(state.projectImportText)}</textarea>
+            <div class="project-import__actions">
+              <button class="export-copy-button" type="button" data-project-import-paste>
+                ${EXPORT_ICON_MARKUP.copy}
+                <span>${escapeHtml(t("project.importPaste"))}</span>
+              </button>
+              <button class="export-copy-button" type="button" data-project-import-upload>
+                ${EXPORT_ICON_MARKUP.file}
+                <span>${escapeHtml(t("project.importUpload"))}</span>
+              </button>
+              <button class="export-save-button" type="button" data-project-import-apply>
+                ${EXPORT_ICON_MARKUP.download}
+                <span>${escapeHtml(t("project.importApply"))}</span>
+              </button>
+            </div>
+            <input type="file" accept="application/json,.json" data-project-import-file hidden />
+          </div>
+        ` : ""}
+
+        <section class="field-group-card project-templates" aria-labelledby="project-templates-title">
+          <h3 id="project-templates-title">${escapeHtml(t("project.templatesTitle"))}</h3>
+          <p class="project-templates__hint">${escapeHtml(t("project.templatesHint"))}</p>
+          <div class="project-templates__actions">
+            ${KEYBOARD_TEMPLATES.map((template) => `
+              <button
+                class="export-copy-button"
+                type="button"
+                data-project-template="${escapeHtml(template.key)}"
+                ${isProjectBusy ? "disabled" : ""}
+              >
+                ${EXPORT_ICON_MARKUP.plus}
+                <span>${escapeHtml(t(`project.templates.${template.key}`))}</span>
+              </button>
+            `).join("")}
+          </div>
+        </section>
+
         <p class="project-status" aria-live="polite">${escapeHtml(state.projectSummary)}</p>
       </div>
     </div>
@@ -6631,6 +6739,48 @@ function handleInspectorCardClick(event) {
     return;
   }
 
+  const projectSaveJsonButton = getClosestFromEventTarget(event, "[data-project-save-json]");
+  if (projectSaveJsonButton) {
+    void saveProjectJson();
+    return;
+  }
+
+  const projectCopyJsonButton = getClosestFromEventTarget(event, "[data-project-copy-json]");
+  if (projectCopyJsonButton) {
+    void copyProjectJson();
+    return;
+  }
+
+  const projectImportToggleButton = getClosestFromEventTarget(event, "[data-project-import-toggle]");
+  if (projectImportToggleButton) {
+    toggleProjectImportPanel();
+    return;
+  }
+
+  const projectImportPasteButton = getClosestFromEventTarget(event, "[data-project-import-paste]");
+  if (projectImportPasteButton) {
+    void pasteProjectImportFromClipboard();
+    return;
+  }
+
+  const projectImportUploadButton = getClosestFromEventTarget(event, "[data-project-import-upload]");
+  if (projectImportUploadButton) {
+    app.querySelector("[data-project-import-file]")?.click();
+    return;
+  }
+
+  const projectImportApplyButton = getClosestFromEventTarget(event, "[data-project-import-apply]");
+  if (projectImportApplyButton) {
+    void applyProjectImportText();
+    return;
+  }
+
+  const projectTemplateButton = getClosestFromEventTarget(event, "[data-project-template]");
+  if (projectTemplateButton) {
+    void applyKeyboardTemplate(projectTemplateButton.dataset.projectTemplate);
+    return;
+  }
+
   const copyFontAttributionButton = getClosestFromEventTarget(event, "[data-copy-font-attribution]");
   if (copyFontAttributionButton) {
     void handleCopyLegendFontAttribution(copyFontAttributionButton.dataset.copyFontAttribution);
@@ -6771,6 +6921,12 @@ function handleInspectorCardInput(event) {
     return;
   }
 
+  const projectImportTextarea = getClosestFromEventTarget(event, "[data-project-import-text]");
+  if (projectImportTextarea) {
+    handleProjectImportInput(projectImportTextarea);
+    return;
+  }
+
   const fontPickerQueryInput = getClosestFromEventTarget(event, "[data-font-picker-query]");
   if (fontPickerQueryInput) {
     handleLegendFontPickerQueryInput(fontPickerQueryInput);
@@ -6904,6 +7060,12 @@ function handleInspectorCardChange(event) {
   const userFontInput = getClosestFromEventTarget(event, "[data-user-font-file]");
   if (userFontInput) {
     void handleUserLegendFontFileInput(userFontInput);
+    return;
+  }
+
+  const projectImportFileInput = getClosestFromEventTarget(event, "[data-project-import-file]");
+  if (projectImportFileInput) {
+    void handleProjectImportFileInput(projectImportFileInput);
     return;
   }
 
@@ -7328,6 +7490,19 @@ async function executeKeycapOverlayExport(format) {
   });
 }
 
+async function executeKeycapOverlayCopy(format) {
+  const entry = getKeycapExportOverlayEntry();
+  if (!entry) {
+    closeKeycapExportOverlay();
+    return;
+  }
+
+  await executeExportToClipboard(format, {
+    params: entry.params,
+    editorDataPayload: entry.editorDataPayload,
+  });
+}
+
 function handleKeycapExportOverlayClick(event) {
   const deleteKeycapButton = getClosestFromEventTarget(event, "[data-keycap-delete]");
   if (deleteKeycapButton) {
@@ -7338,6 +7513,12 @@ function handleKeycapExportOverlayClick(event) {
   const exportFormatButton = getClosestFromEventTarget(event, "[data-keycap-export-format]");
   if (exportFormatButton) {
     void executeKeycapOverlayExport(exportFormatButton.dataset.keycapExportFormat);
+    return;
+  }
+
+  const copyFormatButton = getClosestFromEventTarget(event, "[data-keycap-copy-format]");
+  if (copyFormatButton) {
+    void executeKeycapOverlayCopy(copyFormatButton.dataset.keycapCopyFormat);
     return;
   }
 
@@ -8732,6 +8913,18 @@ async function blobToUint8Array(blob) {
   return new Uint8Array(await blob.arrayBuffer());
 }
 
+async function blobToBase64(blob) {
+  const bytes = await blobToUint8Array(blob);
+  const chunkSize = 0x8000;
+  let binary = "";
+
+  for (let index = 0; index < bytes.length; index += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(index, index + chunkSize));
+  }
+
+  return btoa(binary);
+}
+
 async function create3mfExportBlob(params = state.keycapParams) {
   const offResults = await runKeycapOffJobs(createKeycapOffJobs("3mf", params), params);
   const blob = create3mfBlob(
@@ -8776,6 +8969,26 @@ async function createStepExportBlob(params = state.keycapParams) {
   };
 }
 
+async function createStlExportBlob(params = state.keycapParams) {
+  const result = await runOpenScad({
+    files: await createKeycapFiles({
+      params,
+      exportTarget: "single_material_shape",
+    }),
+    args: buildKeycapArgs({
+      outputPath: keycapStlExportPath,
+      outputFormat: "stl",
+    }),
+    outputPaths: [keycapStlExportPath],
+  });
+  const [output] = result.outputs;
+
+  return {
+    blob: new Blob([output.bytes], { type: "model/stl" }),
+    result,
+  };
+}
+
 function prepareProjectForSave() {
   flushPendingActiveProjectKeycapSync();
 
@@ -8806,6 +9019,208 @@ async function downloadProjectZip(project) {
 
   const zipBytes = zipSync(files, { level: 6 });
   downloadBlob(new Blob([zipBytes], { type: "application/zip" }), `${projectDirectoryName}.zip`);
+}
+
+function createProjectBundleJson({ pretty = true } = {}) {
+  return JSON.stringify(createProjectBundlePayload(prepareProjectForSave()), null, pretty ? 2 : 0);
+}
+
+async function saveProjectJson() {
+  setProjectStatus("running", t("project.saving"));
+  render();
+
+  try {
+    const json = createProjectBundleJson({ pretty: true });
+    const blob = new Blob([json], { type: "application/json;charset=utf-8" });
+    downloadBlob(blob, `${normalizeProjectName(state.project.name, DEFAULT_PROJECT_NAME)}.json`);
+    setProjectStatus("success", t("project.savedJson", { byteLength: blob.size }));
+  } catch (error) {
+    setProjectStatus("error", t("project.saveFailed", { message: `${error}` }));
+  }
+
+  render();
+}
+
+async function copyProjectJson() {
+  setProjectStatus("running", t("project.copying"));
+  render();
+
+  try {
+    const json = createProjectBundleJson({ pretty: false });
+    await copyTextToClipboard(json);
+    setProjectStatus("success", t("project.copiedJson", { byteLength: new Blob([json]).size }));
+  } catch (error) {
+    setProjectStatus("error", t("project.copyFailed", { message: `${error}` }));
+  }
+
+  render();
+}
+
+function handleProjectImportInput(input) {
+  state.projectImportText = input.value;
+}
+
+function toggleProjectImportPanel() {
+  state.isProjectImportOpen = !state.isProjectImportOpen;
+  render();
+}
+
+async function pasteProjectImportFromClipboard() {
+  try {
+    state.projectImportText = await navigator.clipboard.readText();
+    setProjectStatus("idle", t("project.pasted"));
+  } catch (error) {
+    setProjectStatus("error", t("project.pasteFailed", { message: `${error}` }));
+  }
+
+  render();
+}
+
+async function applyImportedProjectBundle(importedProject) {
+  state.project = createProjectStateWithActiveKeycap({
+    name: importedProject.name,
+    keycaps: importedProject.keycaps,
+    activeKeycapId: importedProject.activeKeycapId,
+    directoryHandle: null,
+    isDirty: true,
+    fallbackKeycapParams: state.keycapParams,
+  });
+  const activeEntry = state.project.keycaps.find((entry) => entry.id === state.project.activeKeycapId);
+  activateProjectKeycapEntry(activeEntry);
+
+  state.isProjectImportOpen = false;
+  state.projectImportText = "";
+  state.sidebarTab = "project";
+  state.editorStatus = "dirty";
+  state.editorSummary = t("status.loadedDirty");
+  setProjectStatus("success", t("project.loaded", { name: state.project.name, count: state.project.keycaps.length }));
+  render({ animateInspector: true });
+
+  await executeKeycapPreview({ silent: true, refreshActiveProjectPreview: true });
+}
+
+async function applyProjectImportText() {
+  const textarea = app.querySelector("[data-project-import-text]");
+  const text = String(textarea?.value ?? state.projectImportText ?? "").trim();
+  if (!text) {
+    setProjectStatus("error", t("project.importEmpty"));
+    render();
+    return;
+  }
+
+  setProjectStatus("running", t("project.importing"));
+  render();
+
+  try {
+    const payload = JSON.parse(text);
+    if (!isProjectBundlePayload(payload)) {
+      throw new Error(t("project.importNotBundle"));
+    }
+
+    await applyImportedProjectBundle(parseProjectBundlePayload(payload));
+  } catch (error) {
+    setProjectStatus("error", t("project.importFailed", { message: `${error}` }));
+    render();
+  }
+}
+
+async function applyKeyboardTemplate(templateKey) {
+  const template = getKeyboardTemplate(templateKey);
+  if (!template) {
+    return;
+  }
+
+  const hasUnsavedWork = state.project.isDirty && state.project.keycaps.length > 1;
+  if (hasUnsavedWork && !window.confirm(t("project.templateReplaceConfirm", { count: state.project.keycaps.length }))) {
+    return;
+  }
+
+  setProjectStatus("running", t("project.templateBuilding", { name: template.projectName }));
+  render();
+
+  try {
+    const specs = createKeyboardTemplateKeycaps(templateKey);
+    const basePayload = createEditorDataPayload(state.keycapParams);
+    const keycaps = [];
+
+    for (let index = 0; index < specs.length; index += 1) {
+      const spec = specs[index];
+      keycaps.push(createProjectKeycapEntry(undefined, {
+        name: spec.name,
+        displayOrder: index,
+        editorDataPayload: {
+          ...basePayload,
+          params: {
+            ...basePayload.params,
+            name: spec.name,
+            legendText: spec.legendText,
+            legendEnabled: spec.legendEnabled,
+            keyWidth: spec.keyWidth,
+            homingBarEnabled: spec.homingBarEnabled,
+          },
+        },
+      }));
+
+      if (index % 16 === 15 && index < specs.length - 1) {
+        setProjectStatus("running", t("project.templateProgress", {
+          name: template.projectName,
+          done: index + 1,
+          total: specs.length,
+        }));
+        render();
+        await new Promise((resolve) => {
+          window.setTimeout(resolve, 0);
+        });
+      }
+    }
+
+    state.project = createProjectStateWithActiveKeycap({
+      name: template.projectName,
+      keycaps,
+      activeKeycapId: keycaps[0].id,
+      directoryHandle: null,
+      isDirty: true,
+      fallbackKeycapParams: state.keycapParams,
+    });
+    activateProjectKeycapEntry(state.project.keycaps[0]);
+
+    state.sidebarTab = "project";
+    state.editorStatus = "dirty";
+    state.editorSummary = t("status.loadedDirty");
+    setProjectStatus("success", t("project.templateLoaded", {
+      name: template.projectName,
+      count: state.project.keycaps.length,
+    }));
+    render({ animateInspector: true });
+
+    await executeKeycapPreview({ silent: true, refreshActiveProjectPreview: true });
+  } catch (error) {
+    setProjectStatus("error", t("project.templateFailed", { message: `${error}` }));
+    render();
+  }
+}
+
+async function handleProjectImportFileInput(input) {
+  const [file] = Array.from(input.files ?? []);
+  input.value = "";
+  if (!file) {
+    return;
+  }
+
+  setProjectStatus("running", t("project.importing"));
+  render();
+
+  try {
+    const payload = JSON.parse(await file.text());
+    if (!isProjectBundlePayload(payload)) {
+      throw new Error(t("project.importNotBundle"));
+    }
+
+    await applyImportedProjectBundle(parseProjectBundlePayload(payload));
+  } catch (error) {
+    setProjectStatus("error", t("project.importFailed", { message: `${error}` }));
+    render();
+  }
 }
 
 async function saveProject() {
@@ -8910,6 +9325,11 @@ async function importEditorDataFile(file) {
   const text = await file.text();
   state.lastImportBindingReport = null;
   const payload = JSON.parse(text);
+  if (isProjectBundlePayload(payload)) {
+    await applyImportedProjectBundle(parseProjectBundlePayload(payload));
+    return;
+  }
+
   const {
     params: nextParams,
     bindingReport,
@@ -10501,6 +10921,78 @@ async function executeKeycapPreview(options = {}) {
   }
 }
 
+async function createExportClipboardPayload(format, { params, editorDataPayload }) {
+  if (format === "editor-data") {
+    const payload = editorDataPayload ?? createEditorDataPayload(params);
+    return { text: JSON.stringify(payload, null, 2) };
+  }
+
+  if (format === "step") {
+    const { blob } = await createStepExportBlob(params);
+    return { text: await blob.text(), byteLength: blob.size };
+  }
+
+  if (format === "3mf") {
+    const { blob } = await create3mfExportBlob(params);
+    return { text: await blobToBase64(blob), byteLength: blob.size };
+  }
+
+  if (format === "stl") {
+    const { blob } = await createStlExportBlob(params);
+    return { text: await blobToBase64(blob), byteLength: blob.size };
+  }
+
+  throw new Error(t("importExport.unsupportedExport", { format }));
+}
+
+async function executeExportToClipboard(format, options = {}) {
+  const {
+    params = state.keycapParams,
+    editorDataPayload = null,
+  } = options;
+  state.exportsStatus = "running";
+  state.exportsSummary = t("importExport.preparing");
+  render();
+
+  try {
+    const startedAt = performance.now();
+    const payload = await createExportClipboardPayload(format, { params, editorDataPayload });
+    const byteLength = payload.byteLength ?? new Blob([payload.text]).size;
+    const isBase64 = CLIPBOARD_EXPORT_ENCODING[format] === "base64";
+    await copyTextToClipboard(payload.text);
+
+    setExportStatus(
+      "success",
+      isBase64
+        ? t("importExport.copiedBase64", { byteLength })
+        : t("importExport.copied", { byteLength }),
+      {
+        format,
+        label: t("importExport.copyLabel"),
+        elapsedMs: Math.round(performance.now() - startedAt),
+        byteLength,
+        notes: isBase64
+          ? t("importExport.copyBase64Note", { characters: payload.text.length })
+          : t("importExport.copyTextNote", { characters: payload.text.length }),
+      },
+    );
+  } catch (error) {
+    setExportStatus(
+      "error",
+      t("importExport.copyFailed"),
+      {
+        format,
+        label: t("importExport.copyFailedLabel"),
+        elapsedMs: 0,
+        byteLength: 0,
+        notes: `${error}`,
+      },
+    );
+  }
+
+  render();
+}
+
 async function executeExport(format, options = {}) {
   const {
     params = state.keycapParams,
@@ -10562,19 +11054,7 @@ async function executeExport(format, options = {}) {
         },
       );
     } else if (format === "stl") {
-      const result = await runOpenScad({
-        files: await createKeycapFiles({
-          params,
-          exportTarget: "single_material_shape",
-        }),
-        args: buildKeycapArgs({
-          outputPath: keycapStlExportPath,
-          outputFormat: "stl",
-        }),
-        outputPaths: [keycapStlExportPath],
-      });
-      const [output] = result.outputs;
-      const blob = new Blob([output.bytes], { type: "model/stl" });
+      const { blob, result } = await createStlExportBlob(params);
       downloadBlob(blob, buildStlFilename(params));
 
       setExportStatus(

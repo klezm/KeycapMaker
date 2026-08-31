@@ -7,6 +7,8 @@ import {
 
 export const PROJECT_DATA_KIND = "keycap-maker/project";
 export const PROJECT_DATA_SCHEMA_VERSION = 1;
+export const PROJECT_BUNDLE_KIND = "keycap-maker/project-bundle";
+export const PROJECT_BUNDLE_SCHEMA_VERSION = 1;
 export const PROJECT_MANIFEST_FILENAME = "KeycapMaker.json";
 export const PROJECT_KEYCAPS_DIRNAME = "keycaps";
 export const PROJECT_THREE_MF_DIRNAME = "3mf";
@@ -315,6 +317,80 @@ export function createProjectManifest(project = {}, savedAt = new Date().toISOSt
 
 export function isProjectManifestPayload(payload) {
   return getPlainObject(payload)?.kind === PROJECT_DATA_KIND;
+}
+
+export function createProjectBundlePayload(project = {}, savedAt = new Date().toISOString()) {
+  const keycaps = assignProjectKeycapDisplayOrder(Array.isArray(project.keycaps) ? project.keycaps : []);
+  const activeKeycapId = keycaps.some((entry) => entry.id === project.activeKeycapId)
+    ? project.activeKeycapId
+    : "";
+
+  return {
+    kind: PROJECT_BUNDLE_KIND,
+    schemaVersion: PROJECT_BUNDLE_SCHEMA_VERSION,
+    name: normalizeProjectName(project.name, DEFAULT_PROJECT_NAME),
+    savedAt,
+    activeKeycapId,
+    keycaps: keycaps.map((entry) => ({
+      id: normalizeProjectKeycapId(entry.id),
+      name: sanitizeExportBaseName(entry.name ?? entry.params?.name, DEFAULT_EXPORT_BASE_NAME),
+      displayOrder: normalizeProjectKeycapDisplayOrder(entry.displayOrder),
+      editorData: entry.editorDataPayload ?? createEditorDataPayload(entry.params),
+      ...(normalizeProjectPreviewViewState(entry.previewViewState)
+        ? { previewViewState: normalizeProjectPreviewViewState(entry.previewViewState) }
+        : {}),
+    })),
+  };
+}
+
+export function isProjectBundlePayload(payload) {
+  return getPlainObject(payload)?.kind === PROJECT_BUNDLE_KIND;
+}
+
+export function parseProjectBundlePayload(payload, fallbackName = DEFAULT_PROJECT_NAME) {
+  const bundle = getPlainObject(payload);
+  if (!bundle) {
+    throw new Error("The project JSON is malformed.");
+  }
+
+  if (bundle.kind !== PROJECT_BUNDLE_KIND) {
+    throw new Error("This does not look like a KeycapMaker project JSON.");
+  }
+
+  if (bundle.schemaVersion !== PROJECT_BUNDLE_SCHEMA_VERSION) {
+    throw new Error(`Unsupported project bundle schemaVersion: ${bundle.schemaVersion}`);
+  }
+
+  const rawEntries = Array.isArray(bundle.keycaps) ? bundle.keycaps : [];
+  if (rawEntries.length === 0) {
+    throw new Error("The project JSON contains no keycaps.");
+  }
+
+  const keycaps = rawEntries.map((rawEntry, index) => {
+    const entry = getPlainObject(rawEntry);
+    if (!entry) {
+      throw new Error(`Keycap definition ${index + 1} in the project is malformed.`);
+    }
+
+    const editorData = getPlainObject(entry.editorData);
+    if (!editorData) {
+      throw new Error(`Keycap definition ${index + 1} in the project is missing editorData.`);
+    }
+
+    return createProjectKeycapEntry(undefined, {
+      id: entry.id,
+      name: entry.name,
+      displayOrder: entry.displayOrder ?? index,
+      editorDataPayload: editorData,
+      previewViewState: entry.previewViewState,
+    });
+  });
+
+  return createProjectStateWithActiveKeycap({
+    name: normalizeProjectName(bundle.name, fallbackName),
+    keycaps,
+    activeKeycapId: typeof bundle.activeKeycapId === "string" ? bundle.activeKeycapId : "",
+  });
 }
 
 export function parseProjectManifest(payload, fallbackName = DEFAULT_PROJECT_NAME) {
