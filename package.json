@@ -1,0 +1,27 @@
+{
+  "name": "keycap-bake",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Bake 2D vector graphics through keycaps as real cut-through windows, for transparent legends.",
+  "bin": {
+    "keycap-bake": "./bin/keycap-bake.js"
+  },
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "test": "node --test",
+    "bake": "node bin/keycap-bake.js"
+  },
+  "engines": {
+    "node": ">=20.19"
+  },
+  "dependencies": {
+    "fflate": "^0.8.3",
+    "manifold-3d": "^3.5.3",
+    "svgpath": "^2.6.0",
+    "three": "^0.185.1"
+  }
+}
