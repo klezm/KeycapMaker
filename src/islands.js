@@ -10,6 +10,22 @@
  * to be tied back to the mainland with bridges.
  */
 
+// Booleans between surfaces that graze each other can leave components with no
+// volume at all — seen where a diffuser layer meets the stem/roof junction.
+// A real counter is mm³-scale, so anything this small is numerical noise.
+export const SLIVER_VOLUME = 1e-6;
+
+/**
+ * Count the connected components a solid would actually print as, ignoring
+ * zero-volume slivers left behind by grazing booleans.
+ *
+ * @param {import("manifold-3d").Manifold} solid
+ * @returns {number}
+ */
+export function countSolidParts(solid) {
+  return solid.decompose().filter((part) => part.volume() > SLIVER_VOLUME).length;
+}
+
 /**
  * Split a body into its largest component and everything that floated free.
  *
@@ -20,7 +36,7 @@ export function findIslands(body) {
   const parts = body.decompose();
   if (parts.length <= 1) return { main: body, islands: [] };
   const sorted = [...parts].sort((a, b) => b.volume() - a.volume());
-  return { main: sorted[0], islands: sorted.slice(1) };
+  return { main: sorted[0], islands: sorted.slice(1).filter((part) => part.volume() > SLIVER_VOLUME) };
 }
 
 /**

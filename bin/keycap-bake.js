@@ -39,6 +39,16 @@ Cut
   --bridge-width <mm>   tie-bar width when bridging (default 0.8)
   --bridge-count <n>    tie-bars per island (default 1)
 
+Diffusion layer
+  --diffuser <mm>       line the inside of the roof with the same transparent
+                        material, to spread light behind the legend. Replaces
+                        material in place, so the cap gets no thicker (default 0, off)
+  --diffuser-inset <mm> hold the layer back from the walls; only needed if you
+                        assemble by hand rather than printing two materials (default 0)
+  --diffuser-min-skin <mm>
+                        warn when less than this much opaque material is left
+                        above the layer (default 0.8)
+
 Keycap (ignored when --cap is given)
   --cap <file.stl>      bake into an existing keycap mesh
   --units <n>           key width in U (default 1)
@@ -76,6 +86,9 @@ const OPTIONS = {
   islands: { type: "string", default: "keep" },
   "bridge-width": { type: "string", default: "0.8" },
   "bridge-count": { type: "string", default: "1" },
+  diffuser: { type: "string", default: "0" },
+  "diffuser-inset": { type: "string", default: "0" },
+  "diffuser-min-skin": { type: "string", default: "0.8" },
   units: { type: "string" },
   height: { type: "string" },
   wall: { type: "string" },
@@ -198,6 +211,11 @@ async function commandBake(values) {
         width: num(values["bridge-width"], "--bridge-width"),
         count: num(values["bridge-count"], "--bridge-count"),
       },
+      diffuser: {
+        depth: num(values.diffuser, "--diffuser"),
+        inset: num(values["diffuser-inset"], "--diffuser-inset"),
+        minSkin: num(values["diffuser-min-skin"], "--diffuser-min-skin"),
+      },
     });
   } catch (error) {
     fail(error.message);
@@ -243,6 +261,11 @@ async function commandBake(values) {
       `volumes   cap ${report.capVolume.toFixed(1)} = body ${report.bodyVolume.toFixed(1)} + insert ${report.insertVolume.toFixed(1)} + kerf ${report.volumeGap.toFixed(2)} mm3`,
       `parts     body ${report.bodyParts}, insert ${report.insertParts}`,
     ];
+    if (report.diffuserDepth > 0) {
+      lines.push(
+        `diffuser  ${report.diffuserDepth} mm under the roof, ${report.diffuserVolume.toFixed(1)} mm3 of the insert`,
+      );
+    }
     if (report.bridgesAdded > 0) lines.push(`bridges   ${report.bridgesAdded} tie-bar(s) added`);
     process.stdout.write(lines.join("\n") + "\n");
 
@@ -251,6 +274,13 @@ async function commandBake(values) {
         `\nnote      ${report.islandsRemaining} detached island(s) — the enclosed middles of letters like O or A.\n` +
           `          They are in the body file but only stay put once the insert is printed with them.\n` +
           `          Use --islands bridge for a single-material open window.\n`,
+      );
+    }
+    if (report.thinSkinVolume > 0.001) {
+      process.stdout.write(
+        `\nnote      the diffuser comes within ${report.diffuserMinSkin} mm of the top surface over ` +
+          `${report.thinSkinVolume.toFixed(1)} mm3.\n` +
+          `          Thin opaque skin glows. Lower --diffuser, or build a thicker roof with --top-thickness.\n`,
       );
     }
     if (report.blockedFraction > 0.005) {

@@ -12,7 +12,7 @@
  * body + insert reassemble the original cap minus the clearance gap.
  */
 import { getEngine } from "./engine.js";
-import { findIslands, bridgeProfile } from "./islands.js";
+import { findIslands, bridgeProfile, countSolidParts, SLIVER_VOLUME } from "./islands.js";
 
 const EPSILON = 0.01;
 
@@ -94,6 +94,54 @@ export async function probeRoofUnderside(cap, profile, options = {}) {
 }
 
 /**
+ * Build the transparent layer that lines the underside of the roof.
+ *
+ * `cap - cap.translate(+depth)` keeps every point of the cap that has no cap
+ * material `depth` below it — the bottom `depth` of every downward-facing
+ * surface. That is the roof underside, but also the bottom rim and, because a
+ * keycap's inner wall is tapered rather than vertical, the whole inside of the
+ * wall. Clipping to the roof's own height is what keeps the lining off the walls.
+ *
+ * The layer follows the dished underside instead of sitting flat, and replaces
+ * material that is already there, so the keycap gets no thicker.
+ *
+ * @param {typeof import("manifold-3d").Manifold} Manifold
+ * @param {import("manifold-3d").Manifold} cap
+ * @param {number} depth vertical thickness, mm
+ * @param {number} roofZ the roof underside; everything below it is discarded
+ * @param {number} inset pull the layer back from the walls, mm
+ * @returns {import("manifold-3d").Manifold}
+ */
+function buildDiffuserLayer(Manifold, cap, depth, roofZ, inset) {
+  const capBox = cap.boundingBox();
+  const span = capBox.max[2] - capBox.min[2] + 2;
+
+  const above = Manifold.cube(
+    [capBox.max[0] - capBox.min[0] + 2, capBox.max[1] - capBox.min[1] + 2, span],
+    true,
+  ).translate([(capBox.min[0] + capBox.max[0]) / 2, (capBox.min[1] + capBox.max[1]) / 2, roofZ + span / 2]);
+
+  const layer = cap.subtract(cap.translate([0, 0, depth])).intersect(above);
+  if (layer.isEmpty()) {
+    throw new Error(
+      `A diffuser depth of ${depth} mm finds no roof to line. ` +
+        "The cap may be solid, or --cut-from-z may be set below the roof.",
+    );
+  }
+  if (inset <= 0) return layer;
+
+  // Only needed for hand assembly: a full-width layer is a press fit inside the cap.
+  const pulled = layer.project().offset(-inset, "Round", 2, 32);
+  if (pulled.isEmpty()) {
+    throw new Error(`A diffuser inset of ${inset} mm leaves no layer at all — lower --diffuser-inset.`);
+  }
+  const layerBox = layer.boundingBox();
+  return layer.intersect(
+    pulled.extrude(layerBox.max[2] - layerBox.min[2] + 2).translate([0, 0, layerBox.min[2] - 1]),
+  );
+}
+
+/**
  * Bake a profile through a keycap.
  *
  * @param {object} options
@@ -103,10 +151,11 @@ export async function probeRoofUnderside(cap, profile, options = {}) {
  * @param {number} [options.clearance] total gap between body and insert, mm
  * @param {"keep"|"bridge"|"error"} [options.islands]
  * @param {{width?: number, count?: number}} [options.bridge]
+ * @param {{depth?: number, inset?: number, minSkin?: number}} [options.diffuser]
  * @returns {Promise<{body: import("manifold-3d").Manifold, insert: import("manifold-3d").Manifold, profile: import("manifold-3d").CrossSection, report: object}>}
  */
 export async function bake(options) {
-  const { CrossSection } = await getEngine();
+  const { CrossSection, Manifold } = await getEngine();
   const {
     cap,
     profile: requestedProfile,
@@ -114,7 +163,9 @@ export async function bake(options) {
     clearance = 0.15,
     islands: islandPolicy = "keep",
     bridge = {},
+    diffuser: diffuserOptions = {},
   } = options;
+  const { depth: diffuserDepth = 0, inset: diffuserInset = 0, minSkin: diffuserMinSkin = 0.8 } = diffuserOptions;
 
   const probe =
     cutFromZ === null
@@ -127,6 +178,23 @@ export async function bake(options) {
     throw new Error(`--cut-from-z (${probe.z}) is at or above the top of the keycap (${zTop}).`);
   }
 
+  // The layer does not depend on the graphic, so build it once even though the
+  // bridging loop may recut the plug several times.
+  const diffuserLayer = diffuserDepth > 0 ? buildDiffuserLayer(Manifold, cap, diffuserDepth, probe.z - EPSILON, diffuserInset) : null;
+
+  if (diffuserLayer) {
+    // How close the layer comes to the outer surface. `cap - cap.translate(-t)`
+    // is the material within `t` of the top, so intersecting says whether the
+    // opaque skin above the layer has thinned past the point of usefulness.
+    const skinWithin = (t) => diffuserLayer.intersect(cap.subtract(cap.translate([0, 0, -t]))).volume();
+    if (skinWithin(EPSILON) > EPSILON) {
+      throw new Error(
+        `A diffuser depth of ${diffuserDepth} mm breaks through the top surface — there would be no opaque skin ` +
+          "left over it. Lower --diffuser, or build a thicker roof with --top-thickness.",
+      );
+    }
+  }
+
   const cutWith = (profile) => {
     const grow = profile.offset(clearance / 2, "Round", 2, 32);
     const shrink = clearance > 0 ? profile.offset(-clearance / 2, "Round", 2, 32) : profile;
@@ -136,14 +204,28 @@ export async function bake(options) {
           "Lower --clearance or scale the graphic up with --size.",
       );
     }
-    return {
-      body: cap.subtract(grow.extrude(height).translate([0, 0, zFrom])),
-      insert: cap.intersect(shrink.extrude(height).translate([0, 0, zFrom])),
-    };
+    const plug = cap.intersect(shrink.extrude(height).translate([0, 0, zFrom]));
+    const body = cap.subtract(grow.extrude(height).translate([0, 0, zFrom]));
+    if (!diffuserLayer) return { body, insert: plug, plugVolume: plug.volume() };
+
+    // The insert is the transparent path from the cavity to the legend, so keep
+    // only what actually reaches the plug. Layer stranded behind the stem cannot
+    // deliver light to the window; leaving it in would ship a stray body and
+    // hollow out the cap for nothing.
+    const reachable = plug
+      .add(diffuserLayer)
+      .decompose()
+      .filter((part) => part.volume() > SLIVER_VOLUME && !part.intersect(plug).isEmpty());
+    const insert = reachable.reduce((accumulated, part) => accumulated.add(part), plug);
+
+    // No clearance against the layer: its edge is the cap's own inner wall, a
+    // free surface, and its one mating face is the horizontal join with the skin
+    // above, which must stay coincident for a two-material print.
+    return { body: body.subtract(insert), insert, plugVolume: plug.volume() };
   };
 
   let profile = requestedProfile;
-  let { body, insert } = cutWith(profile);
+  let { body, insert, plugVolume } = cutWith(profile);
   let found = findIslands(body);
   const detectedIslands = found.islands.length;
   let bars = 0;
@@ -163,7 +245,7 @@ export async function bake(options) {
       if (bridged.bars === 0) break;
       profile = bridged.profile;
       bars += bridged.bars;
-      ({ body, insert } = cutWith(profile));
+      ({ body, insert, plugVolume } = cutWith(profile));
       found = findIslands(body);
     }
   }
@@ -176,6 +258,11 @@ export async function bake(options) {
   const capVolume = cap.volume();
   const bodyVolume = body.volume();
   const insertVolume = insert.volume();
+
+  // Volume of layer sitting closer to the top surface than the caller wants.
+  const thinSkinVolume = diffuserLayer
+    ? diffuserLayer.intersect(cap.subtract(cap.translate([0, 0, -diffuserMinSkin]))).volume()
+    : 0;
 
   return {
     body,
@@ -193,12 +280,19 @@ export async function bake(options) {
       // The shortfall is the clearance gap; anything larger means something is wrong.
       volumeGap: capVolume - bodyVolume - insertVolume,
       blockedFraction,
+      diffuserDepth,
+      diffuserInset,
+      diffuserMinSkin,
+      // What the layer actually contributes, after anything the stem stranded
+      // has been dropped.
+      diffuserVolume: insert.volume() - plugVolume,
+      thinSkinVolume,
       islandPolicy,
       islandsDetected: detectedIslands,
       islandsRemaining: found.islands.length,
       bridgesAdded: bars,
-      bodyParts: body.decompose().length,
-      insertParts: insert.decompose().length,
+      bodyParts: countSolidParts(body),
+      insertParts: countSolidParts(insert),
       bodyStatus: body.status(),
       insertStatus: insert.status(),
     },

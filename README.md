@@ -16,7 +16,7 @@ Each bake produces two solids that fit together exactly:
 | part | what it is |
 | --- | --- |
 | **body** | the keycap with a window cut clean through its roof |
-| **insert** | the plug that fills that window, flush on both faces |
+| **insert** | the plug that fills that window, flush on both faces — plus the optional diffusion layer |
 
 Print the body in an opaque filament and the insert in a transparent one and the
 legend lights up. The `.3mf` carries both as separate objects with their own
@@ -121,6 +121,58 @@ the enclosed middle — floating free. `decompose()` detects this exactly, and
   material, so they are as unobtrusive as the shape allows.
 - `error` — refuse to write anything.
 
+## Diffusion layer
+
+A legend window on its own is lit straight through by whatever is under the
+switch, so a single LED reads as a bright spot rather than an evenly lit
+character. `--diffuser` lines the **inside** of the roof with the same
+transparent material, turning the roof into a two-layer sandwich:
+
+```
+top surface  ─────────────────────────────
+             ████████████░░░█████████████   opaque skin (body)
+             ░░░░░░░░░░░░░░░░░░░░░░░░░░░░   transparent (insert)
+roof underside ──────────────────────────
+                  hollow cavity, LED below
+```
+
+Light entering that layer anywhere in the cavity spreads sideways and leaves
+through the legend. Crucially it **replaces material that is already there**, so
+the keycap does not get any thicker:
+
+```
+node bin/keycap-bake.js bake --svg logo.svg --out out --top-thickness 2 --diffuser 0.8
+```
+
+The layer follows the dished underside rather than sitting flat, and it is merged
+into the existing `insert` — still two objects, still two materials. It stops at
+the roof: a keycap's inner wall is tapered rather than vertical, so it would
+otherwise collect a lining of its own all the way down.
+
+Anything the stem strands from the legend is dropped rather than shipped as a
+stray body, on the grounds that transparent material with no path to the window
+cannot light it.
+
+- `--diffuser <mm>` — layer thickness, measured vertically. Off by default.
+- `--diffuser-min-skin <mm>` — warn below this much opaque material above the
+  layer (default 0.8).
+- `--diffuser-inset <mm>` — hold the layer back from the walls. Only needed if
+  you assemble by hand; a two-material print wants the default 0 so the
+  materials meet exactly.
+
+Two things worth knowing before you print:
+
+- **Leave enough opaque skin.** The default 1.5 mm roof minus a 0.6 mm layer
+  leaves 0.9 mm, and thin opaque walls glow. `--top-thickness 2` or more gives a
+  crisper legend. The tool warns when the skin drops below `--diffuser-min-skin`
+  and refuses outright if the layer would break through the top surface — but
+  whether a given filament is actually light-tight at 0.9 mm is a print-and-look
+  question, not something these checks can settle.
+- **Clear filament guides light; it does not scatter it.** A frosted or milky
+  translucent filament diffuses noticeably better. If you want the legend clear
+  and the layer milky, that is two different materials rather than one, which
+  this option does not do — it deliberately reuses the legend's material.
+
 ## Input SVGs
 
 `<path>`, `<rect>`, `<circle>`, `<ellipse>`, `<polygon>` and `<polyline>` are
@@ -161,12 +213,15 @@ printability is not.
 npm test
 ```
 
-68 tests, about two seconds, no network. The ones that matter most assert that
+87 tests, a few seconds, no network. The ones that matter most assert that
 the cut genuinely goes through (no body material anywhere inside the footprint,
 at any height between the cut plane and the top surface), that `body + insert`
 reconstructs the cap to within the clearance kerf, that the probed cut depth
 matches the depth the generator actually built, and that an MX stem is untouched
-below the cut.
+below the cut. For the diffusion layer they assert that the cap's bounding box is
+unchanged, that opaque skin survives above the layer at every sampled column,
+that the layer rises with the dish instead of lying flat, and that the roof skin
+is not severed from the walls.
 
 ### Layout
 
@@ -177,7 +232,7 @@ src/svg/               SVG document -> flattened contours
 src/graphic.js         contours -> a placed, scaled 2D cut profile
 src/cap/generate.js    the built-in parametric MX keycap
 src/cap/import-mesh.js loading a keycap from STL
-src/bake.js            the cut itself, and the cut-depth probe
+src/bake.js            the cut itself, the cut-depth probe, the diffusion layer
 src/islands.js         detached counters: detection and bridging
 src/io/                STL, 3MF and cut-plan output
 src/preview/           the self-contained WebGL preview page

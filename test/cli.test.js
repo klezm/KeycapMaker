@@ -87,6 +87,43 @@ test("cap writes a bare keycap and inspect reads it back", async () => {
   });
 });
 
+test("--diffuser reports the layer it added", async () => {
+  await inTempDir(async (out) => {
+    const { stdout } = await run("node", [
+      CLI, "bake", "--svg", EXAMPLE, "--out", out,
+      "--stem", "none", "--format", "stl", "--diffuser", "0.6",
+    ]);
+    assert.match(stdout, /diffuser\s+0\.6 mm under the roof, [\d.]+ mm3 of the insert/);
+  });
+});
+
+test("--diffuser warns when it leaves too little opaque skin", async () => {
+  await inTempDir(async (out) => {
+    const { stdout } = await run("node", [
+      CLI, "bake", "--svg", EXAMPLE, "--out", out,
+      "--stem", "none", "--format", "stl", "--diffuser", "0.9",
+    ]);
+    assert.match(stdout, /comes within 0\.8 mm of the top surface/);
+    assert.match(stdout, /Thin opaque skin glows/);
+  });
+});
+
+test("--diffuser refuses a depth that breaks through the top", async () => {
+  await inTempDir(async (out) => {
+    const failure = await run("node", [
+      CLI, "bake", "--svg", EXAMPLE, "--out", out, "--format", "stl", "--diffuser", "3",
+    ]).catch((e) => e);
+    assert.match(failure.stderr, /breaks through the top surface/);
+  });
+});
+
+test("no diffuser note appears when the flag is not used", async () => {
+  await inTempDir(async (out) => {
+    const { stdout } = await run("node", [CLI, "bake", "--svg", EXAMPLE, "--out", out, "--format", "stl"]);
+    assert.doesNotMatch(stdout, /diffuser/);
+  });
+});
+
 test("--help succeeds and a bare invocation does not", async () => {
   const { stdout } = await run("node", [CLI, "bake", "--help"]);
   assert.match(stdout, /keycap-bake — cut 2D vector graphics/);

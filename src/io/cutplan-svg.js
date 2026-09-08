@@ -47,6 +47,10 @@ export async function createCutPlanSvg({ cap, body, profile, report }) {
     notes.push(`${report.islandsRemaining} detached island(s), in red — only the insert holds them`);
   }
   if (report.bridgesAdded > 0) notes.push(`${report.bridgesAdded} bridge(s) added`);
+  if (report.diffuserDepth > 0) {
+    // The layer spans the whole roof, so it adds nothing to a top-down drawing.
+    notes.push(`plus a ${report.diffuserDepth} mm diffusion layer under the whole roof`);
+  }
   if (report.blockedFraction > 0.005) {
     notes.push(`${(report.blockedFraction * 100).toFixed(0)}% sits over solid material, so it is not see-through`);
   }
