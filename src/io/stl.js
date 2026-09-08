@@ -168,13 +168,18 @@ export async function stlToManifold(bytes) {
 
   const mesh = new Mesh(raw);
   mesh.merge();
-  const solid = Manifold.ofMesh(mesh);
+
+  const advice = "Repair it in a mesh tool — it likely has holes, duplicate faces, or self-intersections.";
+  let solid;
+  try {
+    solid = Manifold.ofMesh(mesh);
+  } catch (error) {
+    // manifold raises on a surface that cannot bound a volume at all.
+    throw new Error(`STL is not a solid manifold (${error.message}). ${advice}`);
+  }
   const status = solid.status();
   if (status !== "NoError") {
-    throw new Error(
-      `STL is not a solid manifold (manifold status: ${status}). ` +
-        "Repair it in a mesh tool — it likely has holes, duplicate faces, or self-intersections.",
-    );
+    throw new Error(`STL is not a solid manifold (manifold status: ${status}). ${advice}`);
   }
   return solid;
 }

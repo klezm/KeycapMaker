@@ -21,7 +21,6 @@
   "dependencies": {
     "fflate": "^0.8.3",
     "manifold-3d": "^3.5.3",
-    "svgpath": "^2.6.0",
-    "three": "^0.185.1"
+    "svgpath": "^2.6.0"
   }
 }
