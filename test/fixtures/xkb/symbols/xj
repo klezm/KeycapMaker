@@ -1,0 +1,12 @@
+default partial alphanumeric_keys
+xkb_symbols "basic" {
+    include "latin"
+    name[Group1]="Test JIS";
+    key <AE13> {[ yen, bar ]};
+    key <HZTG> {[ Zenkaku_Hankaku ]};
+    key <NFER> {[ Muhenkan ]};
+    key <XFER> {[ Henkan_Mode ]};
+    key <HKTG> {[ Hiragana_Katakana ]};
+    key <AB11> {[ backslash, underscore ]};
+    key <AC12> {[ backslash, bar ]};
+};

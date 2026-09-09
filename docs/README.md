@@ -4,7 +4,7 @@
 
 ## Role of Each Subdirectory
 
-- `architecture/`: app structure, SCAD / export contracts, implementation assumptions
+- `architecture/`: app structure, SCAD / export contracts, implementation assumptions, standalone tool contracts
 - `guide/`: local development steps, manual verification steps, operational procedures for updates
 - `decisions/`: a chronological record of adopted decisions
 - `reference/`: terminology and short reference material
@@ -16,10 +16,11 @@
 1. [architecture/overview.md](architecture/overview.md)
 2. [architecture/scad-and-export.md](architecture/scad-and-export.md)
 3. [architecture/project-data.md](architecture/project-data.md)
-4. [guide/development.md](guide/development.md)
-5. [guide/manual-verification.md](guide/manual-verification.md)
-6. [decisions/decision-log.md](decisions/decision-log.md)
-6. `backlog/` and `design/` as needed
+4. [architecture/keyboard-layout-catalog.md](architecture/keyboard-layout-catalog.md)
+5. [guide/development.md](guide/development.md)
+6. [guide/manual-verification.md](guide/manual-verification.md)
+7. [decisions/decision-log.md](decisions/decision-log.md)
+8. `backlog/` and `design/` as needed
 
 ## Operating Rules
 

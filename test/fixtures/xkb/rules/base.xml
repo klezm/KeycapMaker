@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xkbConfigRegistry version="1.1">
+  <modelList>
+    <model><configItem><name>pc105</name><description>Generic 105-key PC</description><vendor>Generic</vendor></configItem></model>
+    <model><configItem><name>jp106</name><description>Japanese 106-key</description><vendor>Generic</vendor></configItem></model>
+  </modelList>
+  <layoutList>
+    <layout>
+      <configItem>
+        <name>xa</name><shortDescription>xa</shortDescription><description>Test ISO</description>
+        <countryList><iso3166Id>DE</iso3166Id></countryList>
+        <languageList><iso639Id>deu</iso639Id></languageList>
+      </configItem>
+      <variantList>
+        <variant><configItem><name>plain</name><description>Test ISO (plain)</description></configItem></variant>
+        <variant><configItem><name>cyclic</name><description>Test ISO (cyclic)</description></configItem></variant>
+      </variantList>
+    </layout>
+    <layout>
+      <configItem>
+        <name>xb</name><description>Test ANSI &amp; friends</description>
+        <countryList><iso3166Id>US</iso3166Id></countryList>
+        <languageList><iso639Id>eng</iso639Id></languageList>
+      </configItem>
+    </layout>
+    <layout>
+      <configItem>
+        <name>xj</name><description>Test JIS</description>
+        <countryList><iso3166Id>JP</iso3166Id></countryList>
+        <languageList><iso639Id>jpn</iso639Id></languageList>
+      </configItem>
+    </layout>
+  </layoutList>
+  <optionList>
+    <group><configItem><name>grp</name><description>Switching to another layout</description></configItem>
+      <option><configItem><name>grp:alt_shift_toggle</name><description>Alt+Shift</description></configItem></option>
+    </group>
+  </optionList>
+</xkbConfigRegistry>

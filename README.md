@@ -19,6 +19,7 @@ The current goal is to keep the existing implementation in a state where it can 
 - Decision log: [docs/decisions/decision-log.md](docs/decisions/decision-log.md)
 - Glossary: [docs/reference/glossary.md](docs/reference/glossary.md)
 - Legend extensibility TODO: [docs/backlog/legend-extensibility-todo.md](docs/backlog/legend-extensibility-todo.md)
+- Keyboard layout catalog: [docs/architecture/keyboard-layout-catalog.md](docs/architecture/keyboard-layout-catalog.md)
 
 ## Repository Assumptions
 
@@ -36,6 +37,7 @@ The current goal is to keep the existing implementation in a state where it can 
 - `public/`: static assets served as-is via GitHub Pages
 - `scad/`: SCAD assets for keycap geometry
 - `docs/`: implementation procedures, research material, and spec notes
+- `tools/`: standalone Node utilities that are not part of the deployed bundle
 - `.github/workflows/`: home for GitHub Actions and GitHub Pages deployment configuration
 
 ## Development
@@ -44,6 +46,8 @@ The current goal is to keep the existing implementation in a state where it can 
 - Dev server: `npm run dev`
 - Verify production build: `npm run build`
 - Check build output: `npm run preview`
+- Run tests: `npm test`
+- Keyboard layout catalog: `npm run layouts -- board de` ([tools/keyboard-layouts](tools/keyboard-layouts/README.md))
 
 ## Branch Operations
 

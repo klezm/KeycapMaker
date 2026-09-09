@@ -1,0 +1,25 @@
+default xkb_types "basic" {
+    type "ONE_LEVEL" { modifiers = None; map[None] = Level1; level_name[Level1] = "Any"; };
+    type "TWO_LEVEL" { modifiers = Shift; map[Shift] = Level2;
+        level_name[Level1] = "Base"; level_name[Level2] = "Shift"; };
+    type "ALPHABETIC" { modifiers = Shift + Lock; map[Shift] = Level2; map[Lock] = Level2;
+        level_name[Level1] = "Base"; level_name[Level2] = "Caps"; };
+    type "FOUR_LEVEL" { modifiers = Shift + LevelThree;
+        map[None] = Level1; map[Shift] = Level2; map[LevelThree] = Level3; map[Shift+LevelThree] = Level4;
+        level_name[Level1] = "Base"; level_name[Level2] = "Shift";
+        level_name[Level3] = "AltGr"; level_name[Level4] = "Shift AltGr"; };
+    type "FOUR_LEVEL_SEMIALPHABETIC" { modifiers = Shift + Lock + LevelThree;
+        map[None] = Level1; map[Shift] = Level2; map[Lock] = Level2;
+        map[LevelThree] = Level3; map[Shift+LevelThree] = Level4;
+        level_name[Level1] = "Base"; level_name[Level2] = "Shift";
+        level_name[Level3] = "AltGr"; level_name[Level4] = "Shift AltGr"; };
+    type "FOUR_LEVEL_ALPHABETIC" { modifiers = Shift + Lock + LevelThree;
+        map[None] = Level1; map[Shift] = Level2; map[LevelThree] = Level3; map[Shift+LevelThree] = Level4;
+        level_name[Level1] = "Base"; level_name[Level2] = "Shift";
+        level_name[Level3] = "AltGr"; level_name[Level4] = "Shift AltGr"; };
+    type "FOUR_LEVEL_PLUS_LOCK" { modifiers = Shift + Lock + LevelThree;
+        map[None] = Level1; map[Shift] = Level2; map[LevelThree] = Level3;
+        map[Shift+LevelThree] = Level4; map[Lock] = Level5;
+        level_name[Level1] = "Base"; level_name[Level2] = "Shift";
+        level_name[Level3] = "AltGr"; level_name[Level4] = "Shift AltGr"; level_name[Level5] = "Lock"; };
+};

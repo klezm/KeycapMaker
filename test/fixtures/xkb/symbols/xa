@@ -1,0 +1,22 @@
+// exercises: include chain, same-file include, explicit type, level3, override
+default partial alphanumeric_keys
+xkb_symbols "basic" {
+    include "latin(type4)"
+    name[Group1]="Test ISO";
+    key <AD02> {[ w, W, doublelowquotemark, guillemotleft ]};
+    key <AE11> {[ ssharp, question, backslash, questiondown, U1E9E ], type[group1]="FOUR_LEVEL_PLUS_LOCK" };
+    key <LSGT> {[ less, greater, bar, dead_belowmacron ]};
+    include "level3(ralt_switch)"
+};
+
+partial alphanumeric_keys
+xkb_symbols "plain" {
+    include "xa(basic)"
+    key <AD02> {[ w, W ]};
+};
+
+partial alphanumeric_keys
+xkb_symbols "cyclic" {
+    include "xa(cyclic)"
+    key <AE01> {[ 1, exclam ]};
+};

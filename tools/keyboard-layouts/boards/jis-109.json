@@ -1,0 +1,1061 @@
+{
+  "schemaVersion": 1,
+  "id": "jis",
+  "label": "JIS",
+  "keyCount": 109,
+  "unit": "u",
+  "unitMillimeters": 19.05,
+  "description": "Japanese 109-key board with an L-shaped Enter, a yen key and kana modifier keys",
+  "keys": [
+    {
+      "keycode": "ESC",
+      "cluster": "function",
+      "row": 0,
+      "x": 0,
+      "y": 0,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "Esc"
+    },
+    {
+      "keycode": "FK01",
+      "cluster": "function",
+      "row": 0,
+      "x": 2,
+      "y": 0,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "F1"
+    },
+    {
+      "keycode": "FK02",
+      "cluster": "function",
+      "row": 0,
+      "x": 3,
+      "y": 0,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "F2"
+    },
+    {
+      "keycode": "FK03",
+      "cluster": "function",
+      "row": 0,
+      "x": 4,
+      "y": 0,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "F3"
+    },
+    {
+      "keycode": "FK04",
+      "cluster": "function",
+      "row": 0,
+      "x": 5,
+      "y": 0,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "F4"
+    },
+    {
+      "keycode": "FK05",
+      "cluster": "function",
+      "row": 0,
+      "x": 6.5,
+      "y": 0,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "F5"
+    },
+    {
+      "keycode": "FK06",
+      "cluster": "function",
+      "row": 0,
+      "x": 7.5,
+      "y": 0,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "F6"
+    },
+    {
+      "keycode": "FK07",
+      "cluster": "function",
+      "row": 0,
+      "x": 8.5,
+      "y": 0,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "F7"
+    },
+    {
+      "keycode": "FK08",
+      "cluster": "function",
+      "row": 0,
+      "x": 9.5,
+      "y": 0,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "F8"
+    },
+    {
+      "keycode": "FK09",
+      "cluster": "function",
+      "row": 0,
+      "x": 11,
+      "y": 0,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "F9"
+    },
+    {
+      "keycode": "FK10",
+      "cluster": "function",
+      "row": 0,
+      "x": 12,
+      "y": 0,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "F10"
+    },
+    {
+      "keycode": "FK11",
+      "cluster": "function",
+      "row": 0,
+      "x": 13,
+      "y": 0,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "F11"
+    },
+    {
+      "keycode": "FK12",
+      "cluster": "function",
+      "row": 0,
+      "x": 14,
+      "y": 0,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "F12"
+    },
+    {
+      "keycode": "PRSC",
+      "cluster": "function",
+      "row": 0,
+      "x": 15.25,
+      "y": 0,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "Print Screen"
+    },
+    {
+      "keycode": "SCLK",
+      "cluster": "function",
+      "row": 0,
+      "x": 16.25,
+      "y": 0,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "Scroll Lock"
+    },
+    {
+      "keycode": "PAUS",
+      "cluster": "function",
+      "row": 0,
+      "x": 17.25,
+      "y": 0,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "Pause"
+    },
+    {
+      "keycode": "TLDE",
+      "cluster": "main",
+      "row": 1,
+      "x": 0,
+      "y": 1.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AE01",
+      "cluster": "main",
+      "row": 1,
+      "x": 1,
+      "y": 1.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AE02",
+      "cluster": "main",
+      "row": 1,
+      "x": 2,
+      "y": 1.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AE03",
+      "cluster": "main",
+      "row": 1,
+      "x": 3,
+      "y": 1.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AE04",
+      "cluster": "main",
+      "row": 1,
+      "x": 4,
+      "y": 1.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AE05",
+      "cluster": "main",
+      "row": 1,
+      "x": 5,
+      "y": 1.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AE06",
+      "cluster": "main",
+      "row": 1,
+      "x": 6,
+      "y": 1.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AE07",
+      "cluster": "main",
+      "row": 1,
+      "x": 7,
+      "y": 1.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AE08",
+      "cluster": "main",
+      "row": 1,
+      "x": 8,
+      "y": 1.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AE09",
+      "cluster": "main",
+      "row": 1,
+      "x": 9,
+      "y": 1.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AE10",
+      "cluster": "main",
+      "row": 1,
+      "x": 10,
+      "y": 1.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AE11",
+      "cluster": "main",
+      "row": 1,
+      "x": 11,
+      "y": 1.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AE12",
+      "cluster": "main",
+      "row": 1,
+      "x": 12,
+      "y": 1.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AE13",
+      "cluster": "main",
+      "row": 1,
+      "x": 13,
+      "y": 1.5,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "¥"
+    },
+    {
+      "keycode": "BKSP",
+      "cluster": "main",
+      "row": 1,
+      "x": 14,
+      "y": 1.5,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "Backspace"
+    },
+    {
+      "keycode": "INS",
+      "cluster": "navigation",
+      "row": 1,
+      "x": 15.25,
+      "y": 1.5,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "Insert"
+    },
+    {
+      "keycode": "HOME",
+      "cluster": "navigation",
+      "row": 1,
+      "x": 16.25,
+      "y": 1.5,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "Home"
+    },
+    {
+      "keycode": "PGUP",
+      "cluster": "navigation",
+      "row": 1,
+      "x": 17.25,
+      "y": 1.5,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "Page Up"
+    },
+    {
+      "keycode": "NMLK",
+      "cluster": "numpad",
+      "row": 1,
+      "x": 18.5,
+      "y": 1.5,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "Num Lock"
+    },
+    {
+      "keycode": "KPDV",
+      "cluster": "numpad",
+      "row": 1,
+      "x": 19.5,
+      "y": 1.5,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "/"
+    },
+    {
+      "keycode": "KPMU",
+      "cluster": "numpad",
+      "row": 1,
+      "x": 20.5,
+      "y": 1.5,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "*"
+    },
+    {
+      "keycode": "KPSU",
+      "cluster": "numpad",
+      "row": 1,
+      "x": 21.5,
+      "y": 1.5,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "−"
+    },
+    {
+      "keycode": "TAB",
+      "cluster": "main",
+      "row": 2,
+      "x": 0,
+      "y": 2.5,
+      "width": 1.5,
+      "height": 1.0,
+      "fallbackLabel": "Tab"
+    },
+    {
+      "keycode": "AD01",
+      "cluster": "main",
+      "row": 2,
+      "x": 1.5,
+      "y": 2.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AD02",
+      "cluster": "main",
+      "row": 2,
+      "x": 2.5,
+      "y": 2.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AD03",
+      "cluster": "main",
+      "row": 2,
+      "x": 3.5,
+      "y": 2.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AD04",
+      "cluster": "main",
+      "row": 2,
+      "x": 4.5,
+      "y": 2.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AD05",
+      "cluster": "main",
+      "row": 2,
+      "x": 5.5,
+      "y": 2.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AD06",
+      "cluster": "main",
+      "row": 2,
+      "x": 6.5,
+      "y": 2.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AD07",
+      "cluster": "main",
+      "row": 2,
+      "x": 7.5,
+      "y": 2.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AD08",
+      "cluster": "main",
+      "row": 2,
+      "x": 8.5,
+      "y": 2.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AD09",
+      "cluster": "main",
+      "row": 2,
+      "x": 9.5,
+      "y": 2.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AD10",
+      "cluster": "main",
+      "row": 2,
+      "x": 10.5,
+      "y": 2.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AD11",
+      "cluster": "main",
+      "row": 2,
+      "x": 11.5,
+      "y": 2.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AD12",
+      "cluster": "main",
+      "row": 2,
+      "x": 12.5,
+      "y": 2.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "RTRN",
+      "cluster": "main",
+      "row": 2,
+      "x": 13.5,
+      "y": 2.5,
+      "width": 1.5,
+      "height": 1,
+      "shape": "jis-enter",
+      "secondaryRect": {
+        "x": 13.75,
+        "y": 3.5,
+        "width": 1.25,
+        "height": 1
+      },
+      "fallbackLabel": "Enter"
+    },
+    {
+      "keycode": "DELE",
+      "cluster": "navigation",
+      "row": 2,
+      "x": 15.25,
+      "y": 2.5,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "Delete"
+    },
+    {
+      "keycode": "END",
+      "cluster": "navigation",
+      "row": 2,
+      "x": 16.25,
+      "y": 2.5,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "End"
+    },
+    {
+      "keycode": "PGDN",
+      "cluster": "navigation",
+      "row": 2,
+      "x": 17.25,
+      "y": 2.5,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "Page Down"
+    },
+    {
+      "keycode": "KP7",
+      "cluster": "numpad",
+      "row": 2,
+      "x": 18.5,
+      "y": 2.5,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "7"
+    },
+    {
+      "keycode": "KP8",
+      "cluster": "numpad",
+      "row": 2,
+      "x": 19.5,
+      "y": 2.5,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "8"
+    },
+    {
+      "keycode": "KP9",
+      "cluster": "numpad",
+      "row": 2,
+      "x": 20.5,
+      "y": 2.5,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "9"
+    },
+    {
+      "keycode": "KPAD",
+      "cluster": "numpad",
+      "row": 2,
+      "x": 21.5,
+      "y": 2.5,
+      "width": 1,
+      "height": 2,
+      "fallbackLabel": "+"
+    },
+    {
+      "keycode": "CAPS",
+      "cluster": "main",
+      "row": 3,
+      "x": 0,
+      "y": 3.5,
+      "width": 1.75,
+      "height": 1.0,
+      "fallbackLabel": "Caps Lock"
+    },
+    {
+      "keycode": "AC01",
+      "cluster": "main",
+      "row": 3,
+      "x": 1.75,
+      "y": 3.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AC02",
+      "cluster": "main",
+      "row": 3,
+      "x": 2.75,
+      "y": 3.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AC03",
+      "cluster": "main",
+      "row": 3,
+      "x": 3.75,
+      "y": 3.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AC04",
+      "cluster": "main",
+      "row": 3,
+      "x": 4.75,
+      "y": 3.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AC05",
+      "cluster": "main",
+      "row": 3,
+      "x": 5.75,
+      "y": 3.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AC06",
+      "cluster": "main",
+      "row": 3,
+      "x": 6.75,
+      "y": 3.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AC07",
+      "cluster": "main",
+      "row": 3,
+      "x": 7.75,
+      "y": 3.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AC08",
+      "cluster": "main",
+      "row": 3,
+      "x": 8.75,
+      "y": 3.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AC09",
+      "cluster": "main",
+      "row": 3,
+      "x": 9.75,
+      "y": 3.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AC10",
+      "cluster": "main",
+      "row": 3,
+      "x": 10.75,
+      "y": 3.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AC11",
+      "cluster": "main",
+      "row": 3,
+      "x": 11.75,
+      "y": 3.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "BKSL",
+      "cluster": "main",
+      "row": 3,
+      "x": 12.75,
+      "y": 3.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "KP4",
+      "cluster": "numpad",
+      "row": 3,
+      "x": 18.5,
+      "y": 3.5,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "4"
+    },
+    {
+      "keycode": "KP5",
+      "cluster": "numpad",
+      "row": 3,
+      "x": 19.5,
+      "y": 3.5,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "5"
+    },
+    {
+      "keycode": "KP6",
+      "cluster": "numpad",
+      "row": 3,
+      "x": 20.5,
+      "y": 3.5,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "6"
+    },
+    {
+      "keycode": "LFSH",
+      "cluster": "main",
+      "row": 4,
+      "x": 0,
+      "y": 4.5,
+      "width": 2.25,
+      "height": 1.0,
+      "fallbackLabel": "Shift"
+    },
+    {
+      "keycode": "AB01",
+      "cluster": "main",
+      "row": 4,
+      "x": 2.25,
+      "y": 4.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AB02",
+      "cluster": "main",
+      "row": 4,
+      "x": 3.25,
+      "y": 4.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AB03",
+      "cluster": "main",
+      "row": 4,
+      "x": 4.25,
+      "y": 4.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AB04",
+      "cluster": "main",
+      "row": 4,
+      "x": 5.25,
+      "y": 4.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AB05",
+      "cluster": "main",
+      "row": 4,
+      "x": 6.25,
+      "y": 4.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AB06",
+      "cluster": "main",
+      "row": 4,
+      "x": 7.25,
+      "y": 4.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AB07",
+      "cluster": "main",
+      "row": 4,
+      "x": 8.25,
+      "y": 4.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AB08",
+      "cluster": "main",
+      "row": 4,
+      "x": 9.25,
+      "y": 4.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AB09",
+      "cluster": "main",
+      "row": 4,
+      "x": 10.25,
+      "y": 4.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AB10",
+      "cluster": "main",
+      "row": 4,
+      "x": 11.25,
+      "y": 4.5,
+      "width": 1.0,
+      "height": 1.0
+    },
+    {
+      "keycode": "AB11",
+      "cluster": "main",
+      "row": 4,
+      "x": 12.25,
+      "y": 4.5,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "\\"
+    },
+    {
+      "keycode": "RTSH",
+      "cluster": "main",
+      "row": 4,
+      "x": 13.25,
+      "y": 4.5,
+      "width": 1.75,
+      "height": 1.0,
+      "fallbackLabel": "Shift"
+    },
+    {
+      "keycode": "UP",
+      "cluster": "navigation",
+      "row": 4,
+      "x": 16.25,
+      "y": 4.5,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "↑"
+    },
+    {
+      "keycode": "KP1",
+      "cluster": "numpad",
+      "row": 4,
+      "x": 18.5,
+      "y": 4.5,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "1"
+    },
+    {
+      "keycode": "KP2",
+      "cluster": "numpad",
+      "row": 4,
+      "x": 19.5,
+      "y": 4.5,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "2"
+    },
+    {
+      "keycode": "KP3",
+      "cluster": "numpad",
+      "row": 4,
+      "x": 20.5,
+      "y": 4.5,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "3"
+    },
+    {
+      "keycode": "KPEN",
+      "cluster": "numpad",
+      "row": 4,
+      "x": 21.5,
+      "y": 4.5,
+      "width": 1,
+      "height": 2,
+      "fallbackLabel": "Enter"
+    },
+    {
+      "keycode": "LCTL",
+      "cluster": "main",
+      "row": 5,
+      "x": 0,
+      "y": 5.5,
+      "width": 1.25,
+      "height": 1.0,
+      "fallbackLabel": "Ctrl"
+    },
+    {
+      "keycode": "LWIN",
+      "cluster": "main",
+      "row": 5,
+      "x": 1.25,
+      "y": 5.5,
+      "width": 1.25,
+      "height": 1.0,
+      "fallbackLabel": "Super"
+    },
+    {
+      "keycode": "LALT",
+      "cluster": "main",
+      "row": 5,
+      "x": 2.5,
+      "y": 5.5,
+      "width": 1.25,
+      "height": 1.0,
+      "fallbackLabel": "Alt"
+    },
+    {
+      "keycode": "MUHE",
+      "cluster": "main",
+      "row": 5,
+      "x": 3.75,
+      "y": 5.5,
+      "width": 1.25,
+      "height": 1.0,
+      "fallbackLabel": "無変換"
+    },
+    {
+      "keycode": "SPCE",
+      "cluster": "main",
+      "row": 5,
+      "x": 5,
+      "y": 5.5,
+      "width": 3.25,
+      "height": 1.0,
+      "fallbackLabel": "Space"
+    },
+    {
+      "keycode": "HENK",
+      "cluster": "main",
+      "row": 5,
+      "x": 8.25,
+      "y": 5.5,
+      "width": 1.25,
+      "height": 1.0,
+      "fallbackLabel": "変換"
+    },
+    {
+      "keycode": "HKTG",
+      "cluster": "main",
+      "row": 5,
+      "x": 9.5,
+      "y": 5.5,
+      "width": 1.25,
+      "height": 1.0,
+      "fallbackLabel": "かな"
+    },
+    {
+      "keycode": "RALT",
+      "cluster": "main",
+      "row": 5,
+      "x": 10.75,
+      "y": 5.5,
+      "width": 1.25,
+      "height": 1.0,
+      "fallbackLabel": "Alt Gr"
+    },
+    {
+      "keycode": "RWIN",
+      "cluster": "main",
+      "row": 5,
+      "x": 12,
+      "y": 5.5,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "Super"
+    },
+    {
+      "keycode": "MENU",
+      "cluster": "main",
+      "row": 5,
+      "x": 13,
+      "y": 5.5,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "Menu"
+    },
+    {
+      "keycode": "RCTL",
+      "cluster": "main",
+      "row": 5,
+      "x": 14,
+      "y": 5.5,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "Ctrl"
+    },
+    {
+      "keycode": "LEFT",
+      "cluster": "navigation",
+      "row": 5,
+      "x": 15.25,
+      "y": 5.5,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "←"
+    },
+    {
+      "keycode": "DOWN",
+      "cluster": "navigation",
+      "row": 5,
+      "x": 16.25,
+      "y": 5.5,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "↓"
+    },
+    {
+      "keycode": "RGHT",
+      "cluster": "navigation",
+      "row": 5,
+      "x": 17.25,
+      "y": 5.5,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "→"
+    },
+    {
+      "keycode": "KP0",
+      "cluster": "numpad",
+      "row": 5,
+      "x": 18.5,
+      "y": 5.5,
+      "width": 2,
+      "height": 1.0,
+      "fallbackLabel": "0"
+    },
+    {
+      "keycode": "KPDL",
+      "cluster": "numpad",
+      "row": 5,
+      "x": 20.5,
+      "y": 5.5,
+      "width": 1.0,
+      "height": 1.0,
+      "fallbackLabel": "."
+    }
+  ]
+}

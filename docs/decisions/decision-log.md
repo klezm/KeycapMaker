@@ -2,6 +2,15 @@
 
 Records adopted design decisions in chronological order. This is not a day-to-day progress memo — it only records content that future maintenance and extension work will rely on as a given.
 
+## 2026-09-09 - Keyboard layout variations come from xkeyboard-config via a committed snapshot
+
+- Conclusion:
+  `tools/keyboard-layouts/` derives every keyboard layout variation from the local **xkeyboard-config** installation: layouts, variants, models and options from `rules/*.xml`, per-key symbols from `symbols/`, the modifier behind each level from `types/`, physical key identity from `keycodes/`, and keysym characters from `keysymdef.h`. The generated result is **committed** under `data/`, and the physical board geometry for ANSI / ISO / JIS / ABNT is **hand-authored** under `boards/`. Only Group 1 and the first four levels (Base, Shift, AltGr, Shift+AltGr) are kept; deeper layouts are truncated and flagged rather than silently cut. The runtime reader imports nothing from `node:` and takes injected loaders, so the same module serves the CLI and, later, the browser.
+- Rationale:
+  xkeyboard-config is the only complete, maintained source for this data, but it exists only on Linux systems that have it installed, and the app is a static GitHub Pages site with no server-side processing, so a browser can never run a generator — committing the snapshot is what makes the data usable at all. Reading `types/` rather than assuming a fixed level order is what lets a legend be labelled `AltGr` instead of `level 3`, which is the difference between data and a printable keycap. Board geometry is hand-authored because XKB's own `geometry/` files describe vendor-specific physical models rather than the four standard form factors, and because the L-shaped ISO and JIS Enter needs two rectangles to avoid overlapping the key below it. Four levels covers every mainstream national layout while keeping type resolution tractable.
+- Related:
+  [../architecture/keyboard-layout-catalog.md](../architecture/keyboard-layout-catalog.md)
+
 ## 2026-07-15 - Treat negative dishDepth as a raised form on the existing curved surface
 
 - Conclusion:

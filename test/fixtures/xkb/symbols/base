@@ -1,0 +1,9 @@
+// shared base, stands in for the real pc file
+default partial alphanumeric_keys
+xkb_symbols "basic" {
+    key <SPCE> {[ space ]};
+    key <RTRN> {[ Return ]};
+    key <BKSP> {[ BackSpace, Terminate_Server ]};
+    key <LSGT> {[ less, greater ]};
+    key <AD01> {[ q, Q ]};
+};

@@ -1,0 +1,13 @@
+default xkb_keycodes "evdev" {
+    <AD01> = 24;
+    <AE13> = 132;
+    <AB11> = 97;
+    <HKTG> = 101;
+    <HENK> = 100;
+    <MUHE> = 102;
+    <LSGT> = 94;
+    <BKSL> = 51;
+    <TLDE> = 49;
+    alias <AC12> = <BKSL>;
+    alias <HZTG> = <TLDE>;
+};
