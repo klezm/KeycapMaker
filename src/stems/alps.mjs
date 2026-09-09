@@ -12,6 +12,7 @@ export const spec = {
   name: "Alps / Matias",
   mounts: ["mx"],
   height: 3.5,
+  footprint: { width: OUTER_WIDTH, depth: OUTER_DEPTH },
   description: "Rectangular socket for Alps and Matias switch posts.",
 };
 

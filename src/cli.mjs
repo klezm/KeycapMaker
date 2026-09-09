@@ -8,6 +8,8 @@ import { SIZES, formatSize } from "./sizes.mjs";
 import { QUALITY_PRESETS } from "./engine.mjs";
 import { DEFAULTS } from "./keycap.mjs";
 import { FORMATS, expandMatrix, runBatch } from "./batch.mjs";
+import { STABILIZER_SPANS, AUTO, NONE } from "./stabilizers.mjs";
+import { MOUNT_FAMILIES } from "./sizes.mjs";
 
 const USAGE = `keycap-forge -- blank keycap models for every profile and stem
 
@@ -22,6 +24,13 @@ Selection (comma separated, or "all"):
   --size <units>         default: 1            e.g. 1,1.25,6.25
   --stem <ids>           default: mx           e.g. mx,box,choc-v1
   --all                  every profile, row, size and stem
+
+Stems on wide keys:
+  --stabilizers <mode>   default: auto         auto, none, or a span in units
+
+A key 2u or wider gets a stabiliser stem either side of the switch, at the
+spacing its width calls for. "none" builds a single centre stem; a number sets
+the span explicitly, so --stabilizers 2 puts them 2 units apart.
 
 Output:
   --out <dir>            default: ./out
@@ -51,6 +60,7 @@ const OPTION_SPEC = {
   wall: { type: "string" },
   "top-thickness": { type: "string" },
   jobs: { type: "string" },
+  stabilizers: { type: "string" },
   "dry-run": { type: "boolean" },
   help: { type: "boolean", short: "h" },
 };
@@ -110,6 +120,19 @@ export function parseSizes(value) {
   return [...new Set(sizes)];
 }
 
+/** `--stabilizers` takes auto, none, or an explicit span in units. */
+export function parseStabilizers(value) {
+  if (value === undefined || value === AUTO) return AUTO;
+  if (value === NONE) return NONE;
+  const span = Number(value);
+  if (!Number.isFinite(span) || span < 0) {
+    throw new Error(
+      `--stabilizers must be "${AUTO}", "${NONE}" or a span in units, received "${value}"`,
+    );
+  }
+  return span;
+}
+
 function parseNumber(value, fallback, label) {
   if (value === undefined) return fallback;
   const parsed = Number(value);
@@ -142,6 +165,7 @@ export function resolveOptions(values) {
     wall: parseNumber(values.wall, DEFAULTS.wall, "wall"),
     topThickness: parseNumber(values["top-thickness"], DEFAULTS.topThickness, "top-thickness"),
     stemSlop: parseNumber(values["stem-slop"], DEFAULTS.stemSlop, "stem-slop"),
+    stabilizers: parseStabilizers(values.stabilizers),
     jobs: Math.max(1, Math.round(parseNumber(values.jobs, os.availableParallelism(), "jobs"))),
     dryRun: values["dry-run"] === true,
   };
@@ -180,6 +204,33 @@ function listCommand() {
   console.log(table(["id", "name", "mount", "rows", "home height", "dish"], profileRows));
   console.log("\nStems\n");
   console.log(table(["id", "name", "mounts", "height", "notes"], stemRows));
+  console.log("\nStabiliser stems\n");
+  console.log(
+    table(
+      ["key width", "stems", "span (units)", "MX span", "Choc span"],
+      [
+        ["under 2u", "1", "-", "-", "-"],
+        ...STABILIZER_SPANS.map((entry, index) => {
+          const next = STABILIZER_SPANS[index + 1];
+          const range = next ? `${entry.minUnits}u to ${next.minUnits}u` : `${entry.minUnits}u and up`;
+          return [
+            range,
+            "3",
+            `${entry.spanUnits}`,
+            `${(entry.spanUnits * MOUNT_FAMILIES.mx.pitch).toFixed(2)} mm`,
+            `${(entry.spanUnits * MOUNT_FAMILIES.choc.pitch).toFixed(2)} mm`,
+          ];
+        }),
+      ],
+    ),
+  );
+  console.log(
+    "\nStabiliser inserts take the same stem the switch does, so a wide key is\n" +
+      "the same post repeated. MX spans are the standard Cherry figures; Choc\n" +
+      "spans are derived from the 18 mm Choc pitch -- check them against your\n" +
+      "hardware, and override with --stabilizers <span>.",
+  );
+
   console.log(`\nSizes (units): ${SIZES.join(", ")}`);
   console.log(`Formats: ${FORMATS.join(", ")}`);
   console.log(`Quality: ${Object.keys(QUALITY_PRESETS).join(", ")}`);
@@ -215,13 +266,16 @@ async function generateCommand(options) {
   results.sort((a, b) => a.name.localeCompare(b.name));
   console.log(
     table(
-      ["model", "profile", "row", "size", "stem", "w x d x h (mm)", "volume mm3", "tris"],
+      ["model", "profile", "row", "size", "stem", "stems", "w x d x h (mm)", "volume mm3", "tris"],
       results.map((result) => [
         result.name,
         result.profile,
         getProfile(result.profile).sculpted ? `R${result.row}` : "-",
         formatSize(result.units),
         result.stem,
+        result.stats.stems > 1
+          ? `${result.stats.stems} @ ${result.stats.stemSpan.toFixed(1)}mm`
+          : `${result.stats.stems}`,
         `${result.stats.width.toFixed(2)} x ${result.stats.depth.toFixed(2)} x ${result.stats.height.toFixed(2)}`,
         result.stats.volume.toFixed(0),
         result.stats.triangles,

@@ -39,12 +39,26 @@ export async function dishCutter(spec, lower = 0) {
   let cutter;
 
   if (spec.dish.type === "spherical") {
-    const radius = dishRadius(topPlateMaxRadius(spec), depth);
-    cutter = Manifold.sphere(radius, segmentsForRadius(radius)).translate([
+    // Size the sphere to the profile's own 1u plate, then sweep it along the
+    // extra width. Scaling the radius to a widened plate instead would flatten
+    // wide caps almost completely -- a 6.25u DSA would scoop 0.02 mm rather
+    // than the 0.99 mm a 1u does. Sweeping keeps the front-to-back arc the
+    // profile's own at every point along the length, which is what a real
+    // sculpted spacebar is.
+    const sweep = (spec.widthGrowth ?? 0) / 2;
+    const radius = dishRadius(
+      topPlateMaxRadius({ ...spec, topWidth: spec.topWidth - 2 * sweep }),
+      depth,
+    );
+    const sphere = Manifold.sphere(radius, segmentsForRadius(radius)).translate([
       0,
       0,
       radius - depth,
     ]);
+    cutter =
+      sweep > 0
+        ? Manifold.hull([sphere.translate([-sweep, 0, 0]), sphere.translate([sweep, 0, 0])])
+        : sphere;
   } else if (spec.dish.type === "cylindrical") {
     // Curves front-to-back only, so the span that matters is the plate depth.
     const radius = dishRadius(halfDepth, depth);

@@ -13,6 +13,7 @@ export const spec = {
   name: "Kailh Choc v1",
   mounts: ["choc"],
   height: 3.0,
+  footprint: { width: OUTER_WIDTH, depth: OUTER_DEPTH },
   description: "Twin rectangular sockets for the two posts on a Choc v1 switch.",
 };
 

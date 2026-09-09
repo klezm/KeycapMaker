@@ -3,6 +3,7 @@ export const spec = {
   name: "No stem",
   mounts: ["mx", "choc"],
   height: 0,
+  footprint: { width: 0, depth: 0 },
   description: "A hollow cap with no mount, for gluing on your own stem or testing a shell.",
 };
 

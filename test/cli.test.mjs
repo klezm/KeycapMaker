@@ -4,7 +4,7 @@ import { mkdtemp, readFile, readdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
-import { parseList, parseRows, parseSizes, resolveOptions, main } from "../src/cli.mjs";
+import { parseList, parseRows, parseSizes, parseStabilizers, resolveOptions, main } from "../src/cli.mjs";
 import { expandMatrix, outputName, runBatch, FORMATS } from "../src/batch.mjs";
 import { profileIds } from "../src/profiles/index.mjs";
 import { stemIds } from "../src/stems/index.mjs";
@@ -84,10 +84,57 @@ test("geometry flags are parsed as numbers and validated", () => {
   assert.throws(() => resolveOptions({ format: "obj" }), /Unknown format "obj"/);
 });
 
+test("the stabiliser flag accepts auto, none and an explicit span", () => {
+  assert.equal(parseStabilizers(undefined), "auto");
+  assert.equal(parseStabilizers("auto"), "auto");
+  assert.equal(parseStabilizers("none"), "none");
+  assert.equal(parseStabilizers("5.25"), 5.25);
+  assert.equal(parseStabilizers("0"), 0);
+  assert.throws(() => parseStabilizers("wide"), /must be "auto", "none" or a span/);
+  assert.throws(() => parseStabilizers("-2"), /must be "auto", "none" or a span/);
+  assert.equal(resolveOptions({}).stabilizers, "auto", "auto is the default");
+  assert.equal(resolveOptions({ stabilizers: "none" }).stabilizers, "none");
+});
+
 test("output names carry the row only where the row changes the shape", () => {
   assert.equal(outputName({ profile: "cherry", row: 3, units: 1, stem: "mx" }), "cherry_r3_1u_mx");
   assert.equal(outputName({ profile: "dsa", row: 3, units: 1, stem: "mx" }), "dsa_1u_mx");
   assert.equal(outputName({ profile: "oem", row: 1, units: 6.25, stem: "box" }), "oem_r1_6.25u_box");
+});
+
+test("output names mark a stabiliser setting only when it deviates", () => {
+  const wide = { profile: "oem", row: 1, units: 6.25, stem: "mx" };
+  assert.equal(outputName(wide), "oem_r1_6.25u_mx");
+  assert.equal(outputName({ ...wide, stabilizers: "auto" }), "oem_r1_6.25u_mx");
+  assert.equal(outputName({ ...wide, stabilizers: "none" }), "oem_r1_6.25u_mx_nostab");
+  assert.equal(outputName({ ...wide, stabilizers: 2 }), "oem_r1_6.25u_mx_stab2u");
+  // A 1u key has no stabilisers either way, so nothing to mark.
+  assert.equal(outputName({ ...wide, units: 1, stabilizers: "none" }), "oem_r1_1u_mx");
+});
+
+test("combinations whose stems will not fit are skipped, not failed", () => {
+  const { jobs, skipped } = expandMatrix({
+    profiles: ["choc"],
+    rows: [3],
+    sizes: [1, 2, 6.25],
+    stems: ["choc-v1", "choc-v2"],
+  });
+  const names = jobs.map((job) => job.name);
+  assert.ok(!names.includes("choc_2u_choc-v1"), "a Choc v1 stem does not fit a 2u Choc cap");
+  assert.ok(names.includes("choc_2u_choc-v2"), "the narrower v2 stem does fit");
+  assert.ok(names.includes("choc_6.25u_choc-v1"), "a wide Choc cap has room for v1");
+  assert.ok(skipped.some((reason) => /would breach the sidewall/.test(reason)));
+
+  // Turning stabilisers off makes the same combination buildable.
+  const relaxed = expandMatrix({
+    profiles: ["choc"],
+    rows: [3],
+    sizes: [2],
+    stems: ["choc-v1"],
+    stabilizers: "none",
+  });
+  assert.equal(relaxed.jobs.length, 1);
+  assert.equal(relaxed.jobs[0].name, "choc_2u_choc-v1_nostab");
 });
 
 test("the matrix drops impossible combinations and says why", () => {
@@ -226,6 +273,8 @@ test("the CLI surface answers for itself", async () => {
   assert.match((await run(["help"])).output, /keycapgen generate/);
 
   const listed = await run(["list"]);
+  assert.match(listed.output, /Stabiliser stems/);
+  assert.match(listed.output, /114\.30 mm/, "the 7u Cherry span should be listed");
   for (const profile of profileIds()) assert.match(listed.output, new RegExp(`\\b${profile}\\b`));
   for (const stem of stemIds()) assert.match(listed.output, new RegExp(stem.replace("-", "\\-")));
   for (const format of FORMATS) assert.match(listed.output, new RegExp(format));

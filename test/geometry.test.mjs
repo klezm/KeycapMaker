@@ -115,6 +115,49 @@ test("the finished cap matches the footprint and height it declares", async () =
   }
 });
 
+test("a spherical dish keeps its scoop however wide the key gets", async () => {
+  // Sizing the dish to a widened plate would flatten wide caps almost to
+  // nothing; the sphere is swept along the length instead, so the front-to-back
+  // arc stays the profile's own.
+  const sag = (units) => {
+    const spec = resolveSpec("dsa", 3, units);
+    const sweep = spec.widthGrowth / 2;
+    const radius = dishRadius(
+      topPlateMaxRadius({ ...spec, topWidth: spec.topWidth - 2 * sweep }),
+      spec.dish.depth,
+    );
+    const halfDepth = spec.topDepth / 2;
+    return radius - Math.sqrt(radius * radius - halfDepth * halfDepth);
+  };
+
+  const reference = sag(1);
+  assert.ok(reference > 0.9, `a 1u DSA should scoop about 1 mm, got ${reference}`);
+  for (const units of [2, 3, 6.25, 7]) {
+    assert.ok(
+      Math.abs(sag(units) - reference) < 1e-6,
+      `${units}u scoops ${sag(units).toFixed(3)} mm, expected ${reference.toFixed(3)} mm`,
+    );
+  }
+});
+
+test("wide caps still reach their declared height across the whole top", async () => {
+  for (const units of [1, 6.25, 7]) {
+    const spec = resolveSpec("dsa", 3, units);
+    const { solid, stats } = await buildKeycap({
+      profile: "dsa",
+      row: 3,
+      units,
+      stem: "none",
+      quality: "draft",
+    });
+    assert.ok(
+      Math.abs(stats.height - spec.height) < 0.05,
+      `${units}u is ${stats.height} mm tall, expected ${spec.height}`,
+    );
+    solid.delete();
+  }
+});
+
 test("walls and roof honour the requested thickness", async () => {
   const wall = 2.0;
   const topThickness = 1.8;

@@ -50,6 +50,7 @@ export function resolveSpec(profileId, row, units, options = {}) {
     baseWidth: base.width,
     baseDepth: base.depth,
     topWidth: profile.topWidth + widthGrowth,
+    widthGrowth,
     topDepth: profile.topDepth,
     height: profile.homeHeight + sculpt.rise * scale,
     tilt: sculpt.tilt,

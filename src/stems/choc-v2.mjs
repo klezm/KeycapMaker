@@ -9,6 +9,7 @@ export const spec = {
   name: "Kailh Choc v2",
   mounts: ["choc"],
   height: 3.0,
+  footprint: { width: DIAMETER, depth: DIAMETER },
   description:
     "Cherry cross slot on a short post, for Choc v2 switches, which take MX-style stems at low-profile height.",
 };

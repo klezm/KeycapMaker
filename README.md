@@ -67,6 +67,52 @@ always bonded to the cap rather than stacked against it.
 MX-mount profiles take MX-family stems and Choc profiles take Choc stems;
 `none` fits either. Combinations that cannot exist are skipped, with a reason.
 
+## Stems on wide keys
+
+A key 2u or wider does not ride on one stem. It rides on a switch in the
+middle and a stabiliser at each end, and Cherry stabiliser inserts take the
+same stem the switch does -- so a wide cap is the same post repeated at the
+spacing its width calls for. That happens automatically:
+
+| key width | stems | span | MX | Choc |
+|---|---|---|---|---|
+| under 2u | 1 | -- | -- | -- |
+| 2u to 3u | 3 | 1.25u | 23.81 mm | 22.50 mm |
+| 3u to 6u | 3 | 2u | 38.10 mm | 36.00 mm |
+| 6u to 6.25u | 3 | 5u | 95.25 mm | 90.00 mm |
+| 6.25u to 7u | 3 | 5.25u | 100.01 mm | 94.50 mm |
+| 7u and up | 3 | 6u | 114.30 mm | 108.00 mm |
+
+Spans are whole multiples of the switch pitch, which is exactly where the
+familiar millimetre figures come from -- 1.25u x 19.05 mm is the 23.8 mm every
+2u stabiliser uses, and 6u x 19.05 mm is the 114.3 mm of a 7u spacebar. **The
+MX figures are the standard Cherry spacings. The Choc figures are derived the
+same way from the 18 mm Choc pitch and are not verified against Choc
+stabiliser hardware** -- measure yours, and override if they differ.
+
+`--stabilizers` controls this:
+
+```
+--stabilizers auto     one switch plus stabilisers by width (default)
+--stabilizers none     a single centre stem, whatever the width
+--stabilizers 2        stabilisers exactly 2 units apart
+```
+
+Only a deviation from `auto` changes the filename, so
+`--stabilizers none` gives `cherry_r3_6.25u_mx_nostab.stl` and
+`--stabilizers 2` gives `cherry_r3_6.25u_mx_stab2u.stl`.
+
+Positions are checked against the cavity before anything is built: a stem that
+would put its socket through a sidewall is refused with the position that
+fails, and in a batch run that combination is skipped with the reason rather
+than killing the run. A Choc v1 stem is 8.5 mm wide, for instance, so it does
+not fit alongside a stabiliser on a 2u Choc cap -- but the narrower v2 stem
+does, and so does v1 with `--stabilizers none`.
+
+On narrow stabilised keys the top of a post can merge into the sidewall. That
+is intentional and makes the cap stronger; the socket itself always keeps
+clear of the wall, which is what the fit check enforces.
+
 ## Usage
 
 ```
@@ -84,6 +130,7 @@ Selection flags take a comma-separated list or `all`:
 | `--size` | 1 | `--size 1,1.25,6.25` |
 | `--stem` | mx | `--stem mx,box,choc-v1` |
 | `--all` | -- | every profile, row, size and stem |
+| `--stabilizers` | auto | `auto`, `none`, or a span in units |
 
 Output and geometry:
 
@@ -126,7 +173,8 @@ and triangle count, so a bad number is visible without opening a slicer.
   smoother top than printing upright. On resin, print upside down (stem up)
   with supports on the flat side.
 - **Walls.** 1.5 mm walls with a 1.2 mm roof are the default and print well.
-- Wide caps get a single centre stem. Stabiliser stems are not generated.
+- **Wide caps print with three stems.** Check the stabiliser span matches your
+  hardware before printing a full set -- `keycapgen list` prints the table.
 
 ## Development
 
@@ -142,6 +190,7 @@ The pieces, in the order a cap is built:
 |---|---|
 | `src/profiles/data.mjs` | the dimension tables and the sculpt curve |
 | `src/sizes.mjs` | unit widths per mount family |
+| `src/stabilizers.mjs` | stem positions on wide keys |
 | `src/geometry/section.mjs` | rounded-rectangle rings, segment budgets |
 | `src/geometry/shell.mjs` | the ring stack from base to tilted top plate |
 | `src/geometry/loft.mjs` | ring stack to a closed solid |
@@ -155,7 +204,8 @@ The pieces, in the order a cap is built:
 The tests check geometry, not just plumbing: every profile-and-stem
 combination has to build a valid solid, the finished cap has to match the
 footprint and height it declares, the cross slot is measured against a probe
-one hair under and one hair over the switch stem, and written STL and 3MF
+one hair under and one hair over the switch stem, every stem position on a
+wide key is probed for a real post with a usable slot, and written STL and 3MF
 files are read back and rebuilt into solids to confirm they survived the trip.
 
 ## Provenance and licensing

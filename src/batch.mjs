@@ -3,10 +3,11 @@ import path from "node:path";
 import { Worker } from "node:worker_threads";
 import { fileURLToPath } from "node:url";
 
-import { buildKeycap } from "./keycap.mjs";
-import { getProfile } from "./profiles/index.mjs";
+import { buildKeycap, stemFitProblem, DEFAULTS } from "./keycap.mjs";
+import { getProfile, resolveSpec } from "./profiles/index.mjs";
 import { stemFitsMount, getStem } from "./stems/index.mjs";
 import { formatSize } from "./sizes.mjs";
+import { stemLayout, stabilizerToken, AUTO } from "./stabilizers.mjs";
 import { toBinaryStl } from "./export/stl.mjs";
 import { to3mf } from "./export/3mf.mjs";
 
@@ -17,9 +18,9 @@ export const FORMATS = ["stl", "3mf"];
  * stem, because their rows are the same shape -- writing five identical
  * models under five names would only waste disk and confuse the comparison.
  */
-export function outputName({ profile, row, units, stem }) {
+export function outputName({ profile, row, units, stem, stabilizers = AUTO }) {
   const rowToken = getProfile(profile).sculpted ? `_r${row}` : "";
-  return `${profile}${rowToken}_${formatSize(units)}_${stem}`;
+  return `${profile}${rowToken}_${formatSize(units)}_${stem}${stabilizerToken(units, stabilizers)}`;
 }
 
 /**
@@ -29,7 +30,14 @@ export function outputName({ profile, row, units, stem }) {
  * row a profile does not have, or a stem that does not fit its mount. The
  * reasons come back in `skipped` so the CLI can report them.
  */
-export function expandMatrix({ profiles, rows, sizes, stems }) {
+export function expandMatrix({
+  profiles,
+  rows,
+  sizes,
+  stems,
+  stabilizers = AUTO,
+  wall = DEFAULTS.wall,
+}) {
   const jobs = [];
   const skipped = [];
   const seen = new Set();
@@ -47,7 +55,18 @@ export function expandMatrix({ profiles, rows, sizes, stems }) {
           continue;
         }
         for (const units of sizes) {
-          const job = { profile: profileId, row, units, stem };
+          const job = { profile: profileId, row, units, stem, stabilizers };
+          const spec = resolveSpec(profileId, row, units, { wall });
+          const problem = stemFitProblem({
+            spec,
+            stemSpec: getStem(stem).spec,
+            layout: stemLayout(units, profile.mount, stabilizers),
+            wall,
+          });
+          if (problem) {
+            skipped.push(`${profileId} ${formatSize(units)} + ${stem}: ${problem}`);
+            continue;
+          }
           const name = outputName(job);
           if (seen.has(name)) continue;
           seen.add(name);
@@ -70,6 +89,7 @@ export async function renderJob(job, options) {
     topThickness: options.topThickness,
     stemSlop: options.stemSlop,
     quality: options.quality,
+    stabilizers: job.stabilizers ?? options.stabilizers,
   });
 
   const label = `${spec.profileName} ${spec.sculpted === false ? "" : `R${job.row} `}${formatSize(job.units)} ${job.stem}`;

@@ -9,6 +9,7 @@ export const spec = {
   name: "Box Cherry (square)",
   mounts: ["mx"],
   height: 4.0,
+  footprint: { width: SIDE, depth: SIDE },
   description:
     "Square post with a Cherry cross slot, sized for Kailh Box switches. Prints more reliably than the round post on FDM.",
 };

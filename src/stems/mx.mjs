@@ -9,6 +9,7 @@ export const spec = {
   name: "Cherry MX (round)",
   mounts: ["mx"],
   height: 4.0,
+  footprint: { width: DIAMETER, depth: DIAMETER },
   description: "Round post with a Cherry cross slot. The default MX mount.",
 };
 
