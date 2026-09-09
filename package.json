@@ -1,0 +1,35 @@
+{
+  "name": "keycap-forge",
+  "version": "0.1.0",
+  "description": "Generate blank 3D-printable keycap models for every profile and stem type",
+  "type": "module",
+  "license": "Apache-2.0",
+  "bin": {
+    "keycapgen": "bin/keycapgen.mjs"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "files": [
+    "bin",
+    "src",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node --test \"test/*.test.mjs\"",
+    "list": "node bin/keycapgen.mjs list",
+    "generate": "node bin/keycapgen.mjs generate"
+  },
+  "keywords": [
+    "keycap",
+    "keyboard",
+    "3d-printing",
+    "stl",
+    "3mf",
+    "cad",
+    "mechanical-keyboard"
+  ],
+  "dependencies": {
+    "manifold-3d": "^3.5.3"
+  }
+}
