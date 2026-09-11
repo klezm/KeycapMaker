@@ -162,6 +162,13 @@ slot empty rather than shifting its neighbours, so row numbers line up across
 every column, and a uniform profile contributes the single shape it has rather
 than five copies of it.
 
+Both arranged axes are labelled along the edges of the stage: profile names with
+their home-row heights under each column, `R1` to `R5` beside each row. The
+labels are HTML over the canvas rather than drawn geometry, so they stay upright
+and crisp while the caps turn, and they track their column when you pan or zoom.
+With both controls on one axis the row labels move to the opposite edge so the
+two sets cannot collide.
+
 **Each cap turns about its own zero point.** Dragging rotates the caps, not the
 camera, so the slots never move: every cap shows the identical angle it would
 show on its own, and profiles stay directly comparable at any rotation. Put

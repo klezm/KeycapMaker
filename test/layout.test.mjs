@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { arrangeSlots, pitchFor, swingRadius, AXES, SLOT_GAP } from "../src/viewer/layout.js";
+import { arrangeSlots, axisTicks, pitchFor, swingRadius, AXES, SLOT_GAP } from "../src/viewer/layout.js";
 import { mat4 } from "../src/viewer/client-gl.js";
 
 const PROFILE_ORDER = ["dsa", "xda", "cherry", "sa"];
@@ -136,4 +136,97 @@ test("a cap's slot does not move, whatever the rotation", () => {
       );
     }
   }
+});
+
+/* ----------------------------------------------------------- axis labels --- */
+
+const ticksFrom = (picks, profileAxis, rowAxis) =>
+  axisTicks({ slots: place(picks, profileAxis, rowAxis), profileAxis, rowAxis });
+
+test("an axis gets one tick per column, wherever that column's caps sit", () => {
+  const picks = [
+    { profile: "dsa", row: 3 },
+    { profile: "cherry", row: 1 },
+    { profile: "cherry", row: 3 },
+    { profile: "cherry", row: 5 },
+    { profile: "sa", row: 1 },
+  ];
+  const ticks = ticksFrom(picks, "x", "y");
+
+  assert.deepEqual(ticks.profiles.map((tick) => tick.id), ["dsa", "cherry", "sa"]);
+  assert.deepEqual(ticks.rows.map((tick) => tick.row), [1, 3, 5]);
+
+  // Cherry appears three times but gets one label, on its column.
+  const slots = place(picks, "x", "y");
+  const cherryColumn = offsetOf(slots, "cherry", 3)[0];
+  assert.equal(ticks.profiles.find((tick) => tick.id === "cherry").coord, cherryColumn);
+  // And a row's tick sits on that row's line.
+  assert.equal(ticks.rows.find((tick) => tick.row === 1).coord, offsetOf(slots, "cherry", 1)[2]);
+});
+
+test("ticks run in the order they appear on screen", () => {
+  const ticks = ticksFrom(
+    [
+      { profile: "sa", row: 3 },
+      { profile: "dsa", row: 3 },
+      { profile: "cherry", row: 3 },
+    ],
+    "x",
+    "off",
+  );
+  const coords = ticks.profiles.map((tick) => tick.coord);
+  assert.deepEqual([...coords].sort((a, b) => a - b), coords, "ticks must be sorted along the axis");
+  assert.deepEqual(ticks.profiles.map((tick) => tick.id), ["dsa", "cherry", "sa"]);
+});
+
+test("an axis that is off gets no labels at all", () => {
+  const picks = [{ profile: "dsa", row: 3 }, { profile: "cherry", row: 3 }];
+
+  const profilesOnly = ticksFrom(picks, "x", "off");
+  assert.equal(profilesOnly.rows.length, 0);
+  assert.equal(profilesOnly.rowEdge, null);
+  assert.equal(profilesOnly.profileEdge, "bottom");
+
+  const nothing = ticksFrom(picks, "off", "off");
+  assert.deepEqual(nothing.profiles, []);
+  assert.deepEqual(nothing.rows, []);
+  assert.equal(nothing.profileEdge, null);
+});
+
+test("the two label sets never share an edge", () => {
+  // Perpendicular axes take the natural edge for each.
+  const perpendicular = ticksFrom([{ profile: "dsa", row: 3 }], "x", "y");
+  assert.equal(perpendicular.profileEdge, "bottom");
+  assert.equal(perpendicular.rowEdge, "left");
+
+  const swapped = ticksFrom([{ profile: "dsa", row: 3 }], "y", "x");
+  assert.equal(swapped.profileEdge, "left");
+  assert.equal(swapped.rowEdge, "bottom");
+
+  // Sharing one axis would put them on top of each other, so rows move across.
+  for (const axis of ["x", "y"]) {
+    const shared = ticksFrom([{ profile: "dsa", row: 3 }], axis, axis);
+    assert.notEqual(shared.rowEdge, shared.profileEdge, `${axis}: labels would collide`);
+    assert.equal(shared.rowEdge, axis === "x" ? "top" : "right");
+  }
+});
+
+test("on one shared line a profile is labelled at the centre of its block", () => {
+  const picks = [
+    { profile: "cherry", row: 1 },
+    { profile: "cherry", row: 2 },
+    { profile: "cherry", row: 3 },
+    { profile: "sa", row: 1 },
+  ];
+  const slots = place(picks, "x", "x");
+  const ticks = axisTicks({ slots, profileAxis: "x", rowAxis: "x" });
+
+  const cherry = ticks.profiles.find((tick) => tick.id === "cherry");
+  const spread = [1, 2, 3].map((row) => offsetOf(slots, "cherry", row)[0]);
+  assert.equal(cherry.coord, (Math.min(...spread) + Math.max(...spread)) / 2, "under the group");
+
+  // Each profile block repeats the rows, so a row label belongs to a cap --
+  // keying by the number alone would collapse every R1 into one label.
+  assert.equal(ticks.rows.length, picks.length);
+  assert.deepEqual(ticks.rows.map((tick) => tick.row), [1, 2, 3, 1]);
 });

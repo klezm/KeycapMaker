@@ -110,3 +110,67 @@ export function swingRadius(box) {
     ].map((corner) => Math.hypot(corner[0], corner[1], corner[2])),
   );
 }
+
+/** Which stage edge a set of labels runs along. */
+const DEFAULT_EDGE = { x: "bottom", y: "left" };
+const OPPOSITE_EDGE = { bottom: "top", left: "right" };
+
+/**
+ * The label positions for an arrangement: one tick per column and per row,
+ * with the stage edge each set belongs to.
+ *
+ * A column holds many caps, so ticks are deduplicated by coordinate. With both
+ * axes running along one line, a profile's tick sits at the centre of its block
+ * of row slots, so its name lands under the group rather than under its first
+ * cap. The two sets never share an edge: whichever would collide moves to the
+ * opposite side.
+ *
+ * @param {object} options
+ * @param {Array<{pick: object, offset: number[]}>} options.slots placed caps
+ * @param {"off"|"x"|"y"} options.profileAxis
+ * @param {"off"|"x"|"y"} options.rowAxis
+ */
+export function axisTicks({ slots, profileAxis, rowAxis }) {
+  const stacked = profileAxis !== "off" && profileAxis === rowAxis;
+  const profiles = ticksFor(slots, profileAxis, (pick) => pick.profile, (pick) => pick.profile);
+  // On one shared line each profile block repeats the rows, so a row tick
+  // belongs to a cap rather than to a row number: keying by the number alone
+  // would collapse every R1 in the arrangement into one label in the middle.
+  const rows = ticksFor(
+    slots,
+    rowAxis,
+    stacked ? (pick) => pick.profile + "|" + pick.row : (pick) => pick.row,
+    (pick) => pick.row,
+  );
+
+  const profileEdge = profileAxis === "off" ? null : DEFAULT_EDGE[profileAxis];
+  let rowEdge = rowAxis === "off" ? null : DEFAULT_EDGE[rowAxis];
+  if (rowEdge && rowEdge === profileEdge) rowEdge = OPPOSITE_EDGE[rowEdge];
+
+  return {
+    profiles: profiles.map(({ label, coord }) => ({ id: label, coord })),
+    rows: rows.map(({ label, coord }) => ({ row: label, coord })),
+    profileEdge,
+    rowEdge,
+  };
+}
+
+function ticksFor(slots, axis, keyOf, labelOf) {
+  if (axis === "off") return [];
+  const index = WORLD_INDEX[axis];
+  const spans = new Map();
+  for (const slot of slots) {
+    const key = keyOf(slot.pick);
+    const at = slot.offset[index];
+    const span = spans.get(key);
+    if (span) {
+      span.min = Math.min(span.min, at);
+      span.max = Math.max(span.max, at);
+    } else {
+      spans.set(key, { min: at, max: at, label: labelOf(slot.pick) });
+    }
+  }
+  return [...spans.values()]
+    .map((span) => ({ label: span.label, coord: (span.min + span.max) / 2 }))
+    .sort((a, b) => a.coord - b.coord);
+}

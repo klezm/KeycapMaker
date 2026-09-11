@@ -110,6 +110,8 @@ test("the page carries its own styles, markup and code", () => {
   assert.match(html, /<script type="module">/);
   assert.match(html, /createRenderer/, "the renderer should be inlined");
   assert.match(html, /function arrangeSlots/, "the layout module should be inlined");
+  assert.match(html, /function axisTicks/, "axis labelling should be inlined");
+  assert.match(html, /id="axis-labels"/, "the label layer should be in the markup");
   assert.ok(!/^\s*import /m.test(html), "no module imports may survive the bundling");
   assert.match(html, /prefers-color-scheme: dark/, "the page should follow the viewer's theme");
   assert.ok(!/<script[^>]+src=/.test(html), "the page must not load anything externally");
@@ -244,4 +246,29 @@ test("the view command bakes a file the CLI reports honestly", async () => {
   assert.match(html, /^<!doctype html>/);
   assert.match(lines.join("\n"), /1 cap\(s\) baked into/);
   assert.match(lines.join("\n"), /needs no server/);
+});
+
+test("projecting a point matches the matrices the viewer builds", async () => {
+  const { mat4 } = await import("../src/viewer/client-gl.js");
+
+  // Identity leaves a point alone, with w = 1 so the divide is a no-op.
+  assert.deepEqual(mat4.transformPoint(mat4.identity(), [2, 3, 4]), [2, 3, 4, 1]);
+  assert.deepEqual(mat4.transformPoint(mat4.translation([10, -1, 0]), [2, 3, 4]), [12, 2, 4, 1]);
+
+  // A quarter turn about Z sends +X to +Y.
+  const turned = mat4.transformPoint(mat4.rotationZ(Math.PI / 2), [1, 0, 0]);
+  assert.ok(Math.abs(turned[0]) < 1e-6 && Math.abs(turned[1] - 1) < 1e-6, `got ${turned}`);
+
+  // Through a real view and projection, a point on the camera axis lands dead
+  // centre, and one to its right lands right of centre after the w divide.
+  const view = mat4.lookAt([0, -100, 0], [0, 0, 0], [0, 0, 1]);
+  const projection = mat4.perspective(Math.PI / 4, 1.5, 0.5, 4000);
+  const viewProjection = mat4.multiply(projection, view);
+
+  const centre = mat4.transformPoint(viewProjection, [0, 0, 0]);
+  assert.ok(Math.abs(centre[0] / centre[3]) < 1e-6, "the axis point is centred");
+  assert.ok(centre[3] > 0, "and in front of the camera");
+
+  const right = mat4.transformPoint(viewProjection, [20, 0, 0]);
+  assert.ok(right[0] / right[3] > 0, "a point to the right projects right of centre");
 });

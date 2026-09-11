@@ -1,5 +1,5 @@
 import { mat4, createRenderer } from "./client-gl.js";
-import { arrangeSlots, pitchFor, swingRadius } from "./layout.js";
+import { arrangeSlots, axisTicks, pitchFor, swingRadius } from "./layout.js";
 
 const data = JSON.parse(document.getElementById("keycap-data").textContent);
 const { catalogue, mode, baked } = data;
@@ -155,6 +155,12 @@ const GROUND_RADIUS = 26;
 /** Kept inside half a slot so neighbouring patches do not run into each other. */
 let groundRadius = GROUND_RADIUS;
 
+/** Distance from the stage edge to the label strip, in pixels. */
+const EDGE_PAD = 10;
+
+/** Axis labels: built when the arrangement changes, moved every frame. */
+let labels = [];
+
 /** The fixed direction the camera looks from: along +Y, with Z up. */
 const CAMERA_DIRECTION = [0, -1, 0];
 
@@ -243,6 +249,98 @@ const VIEWS = {
   under: { theta: 0, phi: -0.75, ortho: false },
 };
 
+/* ------------------------------------------------------------- labels --- */
+
+/**
+ * Build a label per column and per row of the current arrangement.
+ *
+ * Only the elements are made here; where they sit is worked out each frame,
+ * because it follows the camera. It does not follow the rotation: the slots
+ * stay put in world space while the caps turn, so these stay put too.
+ */
+function buildLabels() {
+  const host = document.getElementById("axis-labels");
+  const stage = document.getElementById("stage");
+  host.replaceChildren();
+  labels = [];
+  stage.classList.toggle("labelled", arranging());
+  if (!arranging()) return;
+
+  const ticks = axisTicks({
+    slots: placed,
+    profileAxis: state.arrange.profiles,
+    rowAxis: state.arrange.rows,
+  });
+
+  const add = (name, value, axis, coord, edge) => {
+    const element = document.createElement("div");
+    element.className = "axis-label";
+    element.dataset.edge = edge;
+    const title = document.createElement("span");
+    title.className = "axis-name";
+    title.textContent = name;
+    element.append(title);
+    if (value) {
+      const detail = document.createElement("span");
+      detail.className = "axis-value";
+      detail.textContent = value;
+      element.append(detail);
+    }
+    host.append(element);
+    labels.push({ element, axis, coord, edge });
+  };
+
+  for (const tick of ticks.profiles) {
+    const profile = profileById.get(tick.id);
+    // Twelve columns is not much room, so drop any parenthetical -- "Choc (low
+    // profile)" would otherwise sit across both its neighbours.
+    const short = profile.name.replace(/\s*\(.*\)\s*$/, "");
+    add(short, profile.homeHeight.toFixed(1) + " mm", state.arrange.profiles, tick.coord, ticks.profileEdge);
+  }
+  for (const tick of ticks.rows) {
+    add("R" + tick.row, null, state.arrange.rows, tick.coord, ticks.rowEdge);
+  }
+}
+
+/**
+ * Slide each label along its edge to sit under its own column or beside its own
+ * row. The tick's other coordinate is taken from the camera target, which only
+ * has to put the point inside the frustum: the edge supplies the rest.
+ */
+function positionLabels(viewProjection) {
+  if (labels.length === 0) return;
+  const width = canvas.clientWidth;
+  const height = canvas.clientHeight;
+
+  for (const label of labels) {
+    const point =
+      label.axis === "x"
+        ? [label.coord, 0, camera.target[2]]
+        : [camera.target[0], 0, label.coord];
+    const clip = mat4.transformPoint(viewProjection, point);
+    if (clip[3] <= 0) {
+      label.element.hidden = true;
+      continue;
+    }
+    label.element.hidden = false;
+
+    const screen =
+      label.axis === "x"
+        ? ((clip[0] / clip[3]) * 0.5 + 0.5) * width
+        : (1 - ((clip[1] / clip[3]) * 0.5 + 0.5)) * height;
+    const limit = label.axis === "x" ? width : height;
+    const along = Math.max(EDGE_PAD, Math.min(limit - EDGE_PAD, screen));
+
+    const anchor = {
+      bottom: [along, height - EDGE_PAD, "translate(-50%, -100%)"],
+      top: [along, EDGE_PAD, "translate(-50%, 0)"],
+      left: [EDGE_PAD, along, "translate(0, -50%)"],
+      right: [width - EDGE_PAD, along, "translate(-100%, -50%)"],
+    }[label.edge];
+    label.element.style.transform = `translate(${anchor[0]}px, ${anchor[1]}px) ${anchor[2]}`;
+  }
+}
+
 /* ----------------------------------------------------------- rendering --- */
 
 function readPalette() {
@@ -277,8 +375,11 @@ function renderFrame() {
   }));
   if (pinned) models.push({ model: pinned, color: palette.ghost, alpha: 0.32, transform: rotation });
 
+  const projection = viewProjection(aspect);
+  positionLabels(projection);
+
   renderer.draw({
-    viewProjection: viewProjection(aspect),
+    viewProjection: projection,
     palette,
     grounds: state.grid ? transforms : [],
     gridFade: groundRadius,
@@ -653,6 +754,7 @@ function placeAll() {
     offset: slot.offset,
   }));
   frame();
+  buildLabels();
 }
 
 let lastMesh = null;

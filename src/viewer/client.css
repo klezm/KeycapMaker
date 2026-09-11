@@ -146,6 +146,40 @@ button.profile:disabled { opacity: 0.32; cursor: not-allowed; }
 #stage { position: relative; background: radial-gradient(120% 110% at 50% 0%, var(--stage-1), var(--stage-2)); }
 canvas { display: block; width: 100%; height: 100%; touch-action: none; }
 
+/* Axis labels for an arrangement. HTML rather than drawn geometry: the caps
+   turn but these must not, and text in the DOM stays upright and crisp for
+   free. Never interactive -- a drag that starts on a label still rotates. */
+#axis-labels {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.axis-label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.25;
+  white-space: nowrap;
+  font-size: 11px;
+  color: var(--ink-dim);
+  font-variant-numeric: tabular-nums;
+}
+.axis-label[data-edge="left"] { align-items: flex-start; }
+.axis-label[data-edge="right"] { align-items: flex-end; }
+.axis-label .axis-value {
+  font-size: 10px;
+  color: var(--ink-faint);
+}
+
+/* Keep the corner panels clear of the label strip. */
+#stage.labelled #stats { bottom: 44px; }
+#stage.labelled #hint { bottom: 44px; }
+
 .overlay {
   position: absolute;
   background: var(--panel);

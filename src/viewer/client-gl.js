@@ -77,6 +77,17 @@ export const mat4 = {
     return out;
   },
 
+  /**
+   * A point through a matrix, in clip space. Column-major, to match multiply:
+   * the w it returns is what a projection needs dividing by.
+   */
+  transformPoint(m, point) {
+    const [x, y, z] = point;
+    return [0, 1, 2, 3].map(
+      (row) => m[row] * x + m[4 + row] * y + m[8 + row] * z + m[12 + row],
+    );
+  },
+
   lookAt(eye, target, up) {
     const z = normalize([eye[0] - target[0], eye[1] - target[1], eye[2] - target[2]]);
     const x = normalize(cross(up, z));
