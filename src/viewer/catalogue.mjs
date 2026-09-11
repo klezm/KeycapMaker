@@ -1,4 +1,4 @@
-import { PROFILES, resolveSpec } from "../profiles/index.mjs";
+import { PROFILES, resolveSpec, homeRowOf } from "../profiles/index.mjs";
 import { STEMS } from "../stems/index.mjs";
 import { SIZES, MOUNT_FAMILIES } from "../sizes.mjs";
 import { STABILIZER_SPANS, stabilizerSpanUnits } from "../stabilizers.mjs";
@@ -36,7 +36,7 @@ function fitConflicts(mode) {
 export function buildCatalogue() {
   return {
     profiles: PROFILES.map((profile) => {
-      const homeRow = profile.rows.includes(3) ? 3 : profile.rows[0];
+      const homeRow = homeRowOf(profile);
       return {
         id: profile.id,
         name: profile.name,

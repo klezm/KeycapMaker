@@ -10,6 +10,7 @@ import { profileIds } from "../src/profiles/index.mjs";
 import { stemIds } from "../src/stems/index.mjs";
 import { SIZES, formatSize } from "../src/sizes.mjs";
 import { readZip } from "../src/export/zip.mjs";
+import { buildCatalogue } from "../src/viewer/catalogue.mjs";
 import { inspectBinaryStl } from "../src/export/stl.mjs";
 
 async function workspace() {
@@ -154,7 +155,7 @@ test("the matrix drops impossible combinations and says why", () => {
   assert.ok(skipped.some((reason) => /does not fit a choc mount/.test(reason)));
 });
 
-test("uniform profiles collapse their rows to one model", () => {
+test("uniform profiles collapse their rows to one model, filed at the home row", () => {
   const { jobs } = expandMatrix({
     profiles: ["dsa"],
     rows: [1, 2, 3, 4, 5],
@@ -162,6 +163,25 @@ test("uniform profiles collapse their rows to one model", () => {
     stems: ["mx"],
   });
   assert.equal(jobs.length, 1, "five rows of a uniform profile is one shape");
+
+  // Which row it is filed under matters even though the shape does not depend
+  // on it: a standalone page stores caps by row and the viewer looks them up by
+  // the profile's home row. Filing it under whichever row came first hid every
+  // uniform profile from a baked arrangement.
+  assert.equal(jobs[0].row, 3, "a uniform profile is recorded at its home row");
+  assert.equal(
+    jobs[0].row,
+    buildCatalogue().profiles.find((profile) => profile.id === "dsa").homeRow,
+    "the job and the viewer's catalogue must agree on the row",
+  );
+
+  // Asking for a single row that is not the home row files it there anyway.
+  const single = expandMatrix({ profiles: ["dsa"], rows: [1], sizes: [1], stems: ["mx"] });
+  assert.equal(single.jobs[0].row, 3);
+
+  // Sculpted profiles keep the row asked for.
+  const sculpted = expandMatrix({ profiles: ["cherry"], rows: [1], sizes: [1], stems: ["mx"] });
+  assert.equal(sculpted.jobs[0].row, 1);
 });
 
 test("the full matrix covers every profile and stem", () => {

@@ -10,6 +10,17 @@ export function profileIds() {
   return PROFILES.map((profile) => profile.id);
 }
 
+/**
+ * The row a profile is quoted at: its home row where it has one, otherwise the
+ * first it does have. A uniform profile has one shape, and this is the row that
+ * stands for it everywhere -- filenames, the viewer's catalogue, and the keys a
+ * standalone page stores its caps under. They have to agree or a baked page
+ * looks a cap up under a row it was never stored at.
+ */
+export function homeRowOf(profile) {
+  return profile.rows.includes(3) ? 3 : profile.rows[0];
+}
+
 export function getProfile(id) {
   const profile = BY_ID.get(id);
   if (!profile) {

@@ -4,7 +4,7 @@ import { Worker } from "node:worker_threads";
 import { fileURLToPath } from "node:url";
 
 import { buildKeycap, stemFitProblem, DEFAULTS } from "./keycap.mjs";
-import { getProfile, resolveSpec } from "./profiles/index.mjs";
+import { getProfile, resolveSpec, homeRowOf } from "./profiles/index.mjs";
 import { stemFitsMount, getStem } from "./stems/index.mjs";
 import { formatSize } from "./sizes.mjs";
 import { stemLayout, stabilizerToken, AUTO } from "./stabilizers.mjs";
@@ -59,8 +59,12 @@ export function expandMatrix({
           continue;
         }
         for (const units of sizes) {
-          const job = { profile: profileId, row, units, stem, stabilizers, homing };
-          const spec = resolveSpec(profileId, row, units, { wall });
+          // A uniform profile has one shape whatever row is asked for, so it is
+          // recorded at its home row. Leaving it on whichever row happened to
+          // come first would file it under a row nothing else looks it up by.
+          const filedRow = profile.sculpted ? row : homeRowOf(profile);
+          const job = { profile: profileId, row: filedRow, units, stem, stabilizers, homing };
+          const spec = resolveSpec(profileId, filedRow, units, { wall });
           const problem = stemFitProblem({
             spec,
             stemSpec: getStem(stem).spec,
