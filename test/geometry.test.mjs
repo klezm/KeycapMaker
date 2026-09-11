@@ -2,10 +2,10 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { buildKeycap } from "../src/keycap.mjs";
-import { getEngine } from "../src/engine.mjs";
+import { getEngine, applyQuality, QUALITY_PRESETS } from "../src/engine.mjs";
 import { PROFILES, resolveSpec } from "../src/profiles/index.mjs";
 import { STEMS, stemFitsMount } from "../src/stems/index.mjs";
-import { dishRadius, topPlateMaxRadius } from "../src/geometry/dish.mjs";
+import { dishCutter, dishRadius, topPlateMaxRadius } from "../src/geometry/dish.mjs";
 import { roundedRectRing, ringPointCount, segmentsForRadius } from "../src/geometry/section.mjs";
 import { loftRings } from "../src/geometry/loft.mjs";
 
@@ -155,6 +155,124 @@ test("wide caps still reach their declared height across the whole top", async (
       `${units}u is ${stats.height} mm tall, expected ${spec.height}`,
     );
     solid.delete();
+  }
+});
+
+/** How far the finished dish strays from the sphere it is meant to be. */
+function dishError(solid, spec) {
+  const radius = dishRadius(topPlateMaxRadius(spec), spec.dish.depth);
+  const centre = spec.height - spec.dish.depth + radius;
+  const mesh = solid.getMesh();
+  let worst = 0;
+  for (let t = 0; t < mesh.triVerts.length; t += 3) {
+    const corners = [0, 1, 2].map((i) => {
+      const at = mesh.triVerts[t + i] * mesh.numProp;
+      return [mesh.vertProperties[at], mesh.vertProperties[at + 1], mesh.vertProperties[at + 2]];
+    });
+    // Only facets whose corners sit on the ideal sphere are part of the dish.
+    const onDish = corners.every(
+      (point) => Math.abs(Math.hypot(point[0], point[1], point[2] - centre) - radius) < 0.02,
+    );
+    if (!onDish) continue;
+    const middle = [0, 1, 2].map((axis) => (corners[0][axis] + corners[1][axis] + corners[2][axis]) / 3);
+    worst = Math.max(worst, Math.abs(Math.hypot(middle[0], middle[1], middle[2] - centre) - radius));
+  }
+  return worst;
+}
+
+test("quality reaches the top surface, not only the sidewalls", async () => {
+  // The dish forms the whole top of the cap, and it is sized from its own
+  // radius rather than the kernel's global segment count -- so unless the
+  // quality preset carries a deviation budget, turning quality up leaves the
+  // surface people actually touch exactly as it was.
+  const spec = resolveSpec("dsa", 3, 1);
+  const measured = [];
+
+  for (const quality of ["draft", "standard", "fine"]) {
+    const preset = await applyQuality(quality);
+    const cutter = await dishCutter(spec, 0);
+    const { solid } = await buildKeycap({
+      profile: "dsa",
+      row: 3,
+      units: 1,
+      stem: "none",
+      quality,
+    });
+    measured.push({
+      quality,
+      budget: preset.deviation,
+      cutterTriangles: cutter.numTri(),
+      error: dishError(solid, spec),
+    });
+    solid.delete();
+  }
+
+  for (let i = 1; i < measured.length; i += 1) {
+    const finer = measured[i];
+    const coarser = measured[i - 1];
+    assert.ok(
+      finer.cutterTriangles > coarser.cutterTriangles,
+      `${finer.quality} should tessellate the dish more finely than ${coarser.quality}`,
+    );
+    assert.ok(
+      finer.error < coarser.error,
+      `${finer.quality} dish is off by ${finer.error.toFixed(4)} mm, no better than ${coarser.quality}`,
+    );
+  }
+  for (const entry of measured) {
+    assert.ok(entry.error > 0, `${entry.quality}: nothing was measured`);
+    assert.ok(
+      entry.error <= entry.budget,
+      `${entry.quality} dish is off by ${entry.error.toFixed(4)} mm, over its ${entry.budget} mm budget`,
+    );
+  }
+
+  // A cylindrical dish is a prism inscribed in its own circle, so its worst
+  // deviation is exactly the arc sagitta -- no need to measure a mesh for it.
+  for (const quality of ["draft", "standard", "fine"]) {
+    const preset = await applyQuality(quality);
+    for (const radius of [16.9, 27.6]) {
+      const segments = segmentsForRadius(radius);
+      const deviation = radius * (1 - Math.cos(Math.PI / segments));
+      assert.ok(
+        deviation <= preset.deviation,
+        `${quality}: an R${radius} cylindrical dish is off by ${deviation.toFixed(5)} mm`,
+      );
+    }
+  }
+  await applyQuality("standard");
+});
+
+test("every quality preset is complete and ordered", () => {
+  const order = ["draft", "standard", "fine"];
+  assert.deepEqual(Object.keys(QUALITY_PRESETS), order);
+  for (const [index, name] of order.entries()) {
+    const preset = QUALITY_PRESETS[name];
+    for (const field of ["deviation", "segments", "stations", "cornerSegments"]) {
+      assert.ok(Number.isFinite(preset[field]) && preset[field] > 0, `${name}.${field}`);
+    }
+    if (index === 0) continue;
+    const coarser = QUALITY_PRESETS[order[index - 1]];
+    assert.ok(preset.deviation < coarser.deviation, `${name} should allow less deviation`);
+    assert.ok(preset.stations > coarser.stations, `${name} should use more stations`);
+    assert.ok(preset.cornerSegments > coarser.cornerSegments, `${name} should round corners finer`);
+  }
+});
+
+test("subdivision follows the radius, and never comes back as NaN", async () => {
+  await applyQuality("standard");
+  // A 22 mm dish sphere and a 2.75 mm stem post should not be cut the same way.
+  assert.ok(
+    segmentsForRadius(21.8) > segmentsForRadius(2.75),
+    "a larger circle needs more segments for the same accuracy",
+  );
+  assert.ok(segmentsForRadius(21.8, 0.005) > segmentsForRadius(21.8, 0.08), "a tighter budget, more segments");
+
+  // A missing or broken budget has to fall back, not poison the arithmetic:
+  // NaN segments silently hands the decision to the kernel's global default.
+  for (const bad of [undefined, Number.NaN, 0, -1]) {
+    const segments = segmentsForRadius(10, bad);
+    assert.ok(Number.isInteger(segments) && segments >= 16, `budget ${bad} gave ${segments}`);
   }
 });
 

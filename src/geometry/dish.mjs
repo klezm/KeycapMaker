@@ -1,5 +1,5 @@
 import { getEngine } from "../engine.mjs";
-import { segmentsForRadius } from "./section.mjs";
+import { segmentsForRadius, segmentsForSphere } from "./section.mjs";
 
 /**
  * Radius of the arc that sags `depth` over a half-span of `halfSpan`.
@@ -50,7 +50,7 @@ export async function dishCutter(spec, lower = 0) {
       topPlateMaxRadius({ ...spec, topWidth: spec.topWidth - 2 * sweep }),
       depth,
     );
-    const sphere = Manifold.sphere(radius, segmentsForRadius(radius)).translate([
+    const sphere = Manifold.sphere(radius, segmentsForSphere(radius)).translate([
       0,
       0,
       radius - depth,

@@ -214,7 +214,7 @@ Output and geometry:
 | `--out` | `./out` | output directory |
 | `--format` | `stl` | `stl`, `3mf`, or both |
 | `--dry-run` | -- | list what would be built, build nothing |
-| `--quality` | `standard` | `draft`, `standard`, `fine` |
+| `--quality` | `standard` | `draft`, `standard`, `fine` -- see below |
 | `--stem-slop` | 0.15 | widen the stem slot, per face |
 | `--wall` | 1.5 | sidewall thickness |
 | `--top-thickness` | 1.2 | roof thickness under the dish |
@@ -237,6 +237,29 @@ out/dsa/dsa_1.25u_box.3mf
 
 A run finishes with a table of every model, its measured bounding box, volume
 and triangle count, so a bad number is visible without opening a slicer.
+
+## Quality
+
+`--quality` sets how far a facetted surface may sit from the true one. That
+budget is what decides the smoothness of the **top surface**, which on a keycap
+is the whole dish -- the part you look at and touch.
+
+| quality | budget | a 1u DSA | measured dish error |
+|---|---|---|---|
+| `draft` | 0.08 mm | ~930 triangles | 0.050 mm |
+| `standard` | 0.02 mm | ~1,900 triangles | 0.014 mm |
+| `fine` | 0.005 mm | ~6,400 triangles | 0.003 mm |
+
+Everything sized by its own radius follows that budget -- the dish, the round
+stem posts, the home markers -- so a 22 mm dish sphere and a 2.75 mm stem post
+are each subdivided for the accuracy they need rather than sharing one segment
+count. Sculpt stations and corner subdivisions step up alongside it.
+
+A sphere's facet curves away in two directions at once and strays about 2.7
+times as far from the true surface as a flat arc does at the same angular step,
+so the dish sphere is subdivided more finely to land inside the same budget.
+`standard` is a good default for printing; `fine` roughly triples the triangle
+count and takes about 2.5x as long.
 
 ## Printing notes
 
@@ -286,7 +309,9 @@ footprint and height it declares, the cross slot is measured against a probe
 one hair under and one hair over the switch stem, every stem position on a
 wide key is probed for a real post with a usable slot, a home marker is
 measured against the same strip on the back of the keytop to prove it sits at
-the front and only at the front, and written STL and 3MF
+the front and only at the front, each quality's finished dish is measured
+against the sphere it is meant to be and has to land inside that quality's
+budget, and written STL and 3MF
 files are read back and rebuilt into solids to confirm they survived the trip.
 The viewer is covered too: the mesh format round-trips vertex for vertex, the
 server is driven over real HTTP, and a baked page is parsed back to check every

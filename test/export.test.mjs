@@ -99,9 +99,12 @@ test("STL facet normals point outwards", async () => {
     }
     assert.ok(Math.abs(length - 1) < 1e-3, `facet ${t} normal is not unit length`);
   }
-  // Booleans leave a few zero-area facets behind. Slicers ignore them, but a
-  // large share would mean the mesh had gone wrong somewhere upstream.
-  assert.ok(degenerate < count * 0.05, `${degenerate} of ${count} facets are degenerate`);
+  // Booleans leave a few zero-area facets behind. Slicers ignore them, and the
+  // round-trip test below is what proves the mesh is sound; this is a sanity
+  // bound. The absolute number is what stays put -- the share of the mesh it
+  // represents rises as the quality setting tessellates more coarsely.
+  assert.ok(degenerate < 200, `${degenerate} degenerate facets is far more than booleans leave`);
+  assert.ok(degenerate < count * 0.1, `${degenerate} of ${count} facets are degenerate`);
 
   // The top face of a keycap must face up, never down.
   const topFacing = [];
