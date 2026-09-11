@@ -2,6 +2,7 @@ import { PROFILES, resolveSpec } from "../profiles/index.mjs";
 import { STEMS } from "../stems/index.mjs";
 import { SIZES, MOUNT_FAMILIES } from "../sizes.mjs";
 import { STABILIZER_SPANS, stabilizerSpanUnits } from "../stabilizers.mjs";
+import { HOMING_TYPES } from "../homing.mjs";
 import { DEFAULTS, stemFitProblem } from "../keycap.mjs";
 import { stemLayout, AUTO, NONE } from "../stabilizers.mjs";
 
@@ -59,6 +60,7 @@ export function buildCatalogue() {
       units,
       stabilizerSpanUnits: stabilizerSpanUnits(units),
     })),
+    homing: HOMING_TYPES,
     mounts: MOUNT_FAMILIES,
     stabilizerSpans: STABILIZER_SPANS,
     conflicts: {
@@ -71,6 +73,7 @@ export function buildCatalogue() {
       units: 1,
       stem: "mx",
       stabilizers: DEFAULTS.stabilizers,
+      homing: DEFAULTS.homing,
     },
   };
 }

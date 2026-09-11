@@ -93,8 +93,10 @@ body {
 
 .chips { display: flex; flex-wrap: wrap; gap: 5px; }
 
-button.chip {
+.chip {
   font: inherit;
+  text-decoration: none;
+  display: inline-block;
   font-size: 12px;
   color: var(--ink);
   background: var(--chip);
@@ -104,14 +106,14 @@ button.chip {
   cursor: pointer;
   transition: background 0.1s, border-color 0.1s, color 0.1s;
 }
-button.chip:hover:not(:disabled) { border-color: var(--accent); }
-button.chip[aria-pressed="true"] {
+.chip:hover:not(:disabled) { border-color: var(--accent); }
+.chip[aria-pressed="true"] {
   background: var(--accent-soft);
   border-color: var(--accent);
   color: var(--accent);
   font-weight: 600;
 }
-button.chip:disabled { opacity: 0.32; cursor: not-allowed; }
+.chip:disabled { opacity: 0.32; cursor: not-allowed; }
 
 /* profile rows carry more information than a plain chip */
 .profiles { display: flex; flex-direction: column; gap: 1px; }

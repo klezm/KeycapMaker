@@ -24,6 +24,7 @@ function readRequest(params, options) {
     units,
     stem: params.get("stem") ?? "mx",
     stabilizers: Number.isFinite(span) && stabilizers !== "" ? span : stabilizers,
+    homing: params.get("homing") ?? DEFAULTS.homing,
     wall: options.wall,
     topThickness: options.topThickness,
     stemSlop: options.stemSlop,

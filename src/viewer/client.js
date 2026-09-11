@@ -13,13 +13,13 @@ const stemById = new Map(catalogue.stems.map((entry) => [entry.id, entry]));
 const bakedPicks =
   mode === "baked"
     ? Object.keys(baked.models).map((key) => {
-        const [profile, row, units, stem, stabilizers] = key.split("|");
-        return { profile, row: Number(row), units: Number(units), stem, stabilizers };
+        const [profile, row, units, stem, stabilizers, homing] = key.split("|");
+        return { profile, row: Number(row), units: Number(units), stem, stabilizers, homing };
       })
     : null;
 
 const keyOf = (pick) =>
-  [pick.profile, pick.row, pick.units, pick.stem, pick.stabilizers].join("|");
+  [pick.profile, pick.row, pick.units, pick.stem, pick.stabilizers, pick.homing].join("|");
 
 // Open on something the page actually carries.
 const opening =
@@ -31,6 +31,7 @@ const state = {
   units: catalogue.defaults.units,
   stem: catalogue.defaults.stem,
   stabilizers: catalogue.defaults.stabilizers,
+  homing: catalogue.defaults.homing,
   ortho: false,
   spin: false,
   grid: true,
@@ -126,6 +127,7 @@ async function fetchModel(pick) {
     units: String(pick.units),
     stem: pick.stem,
     stabilizers: String(pick.stabilizers),
+    homing: pick.homing,
   });
   const response = await fetch("api/model?" + query.toString());
   if (!response.ok) throw new Error((await response.text()) || "The model could not be built.");
@@ -323,6 +325,22 @@ function buildStabilizerChips() {
   }
 }
 
+function buildHomingChips() {
+  const host = document.getElementById("homing-chips");
+  host.replaceChildren();
+  for (const marker of catalogue.homing) {
+    host.append(
+      chip(
+        marker.name,
+        marker.id === state.homing,
+        !offers({ homing: marker.id }),
+        () => select({ homing: marker.id }),
+        marker.description,
+      ),
+    );
+  }
+}
+
 function buildViewButtons() {
   const host = document.getElementById("views");
   host.replaceChildren();
@@ -395,6 +413,7 @@ function refreshControls() {
   buildSizeChips();
   buildStemChips();
   buildStabilizerChips();
+  buildHomingChips();
   buildViewButtons();
   buildCompareButtons();
   const links = document.getElementById("downloads");
@@ -405,6 +424,7 @@ function refreshControls() {
       units: String(state.units),
       stem: state.stem,
       stabilizers: String(state.stabilizers),
+      homing: state.homing,
     }).toString();
     for (const anchor of links.querySelectorAll("a")) {
       anchor.href = "api/model." + anchor.dataset.format + "?" + query;
@@ -415,7 +435,8 @@ function refreshControls() {
 function describe(pick) {
   const profile = profileById.get(pick.profile);
   const row = profile.sculpted ? " R" + pick.row : "";
-  return profile.name + row + " " + pick.units + "u " + stemById.get(pick.stem).name;
+  const homing = pick.homing === "none" ? "" : " + " + pick.homing;
+  return profile.name + row + " " + pick.units + "u " + stemById.get(pick.stem).name + homing;
 }
 
 /**
@@ -449,7 +470,7 @@ function select(change) {
 }
 
 function matchScore(pick, target) {
-  return ["profile", "row", "units", "stem", "stabilizers"].reduce(
+  return ["profile", "row", "units", "stem", "stabilizers", "homing"].reduce(
     (score, field) => score + (pick[field] === target[field] ? 1 : 0),
     0,
   );
@@ -499,6 +520,7 @@ function showStats(stats) {
     ["size", stats.width.toFixed(2) + " x " + stats.depth.toFixed(2) + " x " + stats.height.toFixed(2) + " mm"],
     ["volume", Math.round(stats.volume) + " mm3"],
     ["stems", stats.stems + (stats.stemSpan > 0 ? " at " + stats.stemSpan.toFixed(1) + " mm" : "")],
+    ["homing", stats.homing === "none" ? "none" : stats.homing],
     ["triangles", String(stats.triangles)],
   ];
   const host = document.getElementById("stats");

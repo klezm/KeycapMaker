@@ -6,6 +6,7 @@ import { loftRings } from "./geometry/loft.mjs";
 import { dishCutter } from "./geometry/dish.mjs";
 import { stemLayout, AUTO } from "./stabilizers.mjs";
 import { getEngine } from "./engine.mjs";
+import { getHoming, homingFeature, scoopDepth, HOMING_SHAPE } from "./homing.mjs";
 
 /**
  * How far up into the roof the stem post is buried, as a fraction of the roof
@@ -30,6 +31,7 @@ export const DEFAULTS = {
   stemSlop: 0.15,
   quality: DEFAULT_QUALITY,
   stabilizers: AUTO,
+  homing: "none",
 };
 
 /**
@@ -93,8 +95,15 @@ export async function buildKeycap({
   stemSlop = DEFAULTS.stemSlop,
   quality = DEFAULTS.quality,
   stabilizers = DEFAULTS.stabilizers,
+  homing = DEFAULTS.homing,
 }) {
+  getHoming(homing);
   const spec = resolveSpec(profile, row, units, { wall, topThickness });
+  // A deep-dish marker is not something added to the cap: the cap's own dish is
+  // cut deeper. Applying it here means the shell, the cavity and the stem bond
+  // all follow the deeper surface together.
+  spec.dish = { ...spec.dish, depth: spec.dish.depth + scoopDepth(homing) };
+  spec.homing = homing;
   const stem = getStem(stemId);
   if (!stemFitsMount(stemId, spec.mount)) {
     throw new Error(
@@ -107,6 +116,17 @@ export async function buildKeycap({
   }
   if (topThickness >= spec.height) {
     throw new Error(`Roof thickness ${topThickness} mm exceeds the ${profile} R${row} height`);
+  }
+  if (spec.dish.depth + topThickness >= spec.height) {
+    throw new Error(
+      `A ${homing} marker deepens the ${profile} R${row} dish to ${spec.dish.depth.toFixed(2)} mm, ` +
+        `which leaves no room under a ${topThickness} mm roof`,
+    );
+  }
+  if (homing === "groove" && HOMING_SHAPE.grooveDepth >= topThickness) {
+    throw new Error(
+      `A recessed bar is ${HOMING_SHAPE.grooveDepth} mm deep and would cut through a ${topThickness} mm roof`,
+    );
   }
 
   const { stations, cornerSegments } = await applyQuality(quality);
@@ -145,6 +165,10 @@ export async function buildKeycap({
     solid = solid.add(Manifold.union(posts).subtract(bondCutter));
   }
 
+  const marker = await homingFeature(spec, homing);
+  if (marker.add) solid = solid.add(marker.add);
+  if (marker.subtract) solid = solid.subtract(marker.subtract);
+
   solid = solid.simplify(SIMPLIFY_TOLERANCE);
 
   const status = solid.status();
@@ -162,6 +186,7 @@ export async function buildKeycap({
     spec,
     layout,
     stats: {
+      homing,
       stems: stemBody ? layout.length : 0,
       stemSpan: layout.length > 1 ? layout.at(-1).x - layout[0].x : 0,
       triangles: solid.numTri(),

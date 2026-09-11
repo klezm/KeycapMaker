@@ -8,7 +8,7 @@ import { buildKeycap } from "../src/keycap.mjs";
 import { encodeMesh, decodeMesh } from "../src/viewer/mesh-format.mjs";
 import { buildCatalogue } from "../src/viewer/catalogue.mjs";
 import { renderViewer, renderDocument } from "../src/viewer/page.mjs";
-import { bakeViewer } from "../src/viewer/bake.mjs";
+import { bakeViewer, bakeKey } from "../src/viewer/bake.mjs";
 import { createViewerServer } from "../src/viewer/server.mjs";
 import { expandMatrix } from "../src/batch.mjs";
 import { profileIds } from "../src/profiles/index.mjs";
@@ -217,9 +217,9 @@ test("a baked page carries its caps and needs nothing else", async () => {
     html.slice(html.indexOf('id="keycap-data">') + 'id="keycap-data">'.length).split("</script>")[0],
   );
   for (const job of jobs) {
-    const key = [job.profile, job.row, job.units, job.stem, job.stabilizers].join("|");
-    assert.ok(payload.baked.models[key], `${job.name} is missing from the page`);
-    assert.ok(payload.baked.models[key].stats.triangles > 0);
+    const entry = payload.baked.models[bakeKey(job)];
+    assert.ok(entry, `${job.name} is missing from the page`);
+    assert.ok(entry.stats.triangles > 0);
   }
 });
 

@@ -10,6 +10,7 @@ import { QUALITY_PRESETS } from "./engine.mjs";
 import { DEFAULTS } from "./keycap.mjs";
 import { FORMATS, expandMatrix, runBatch } from "./batch.mjs";
 import { STABILIZER_SPANS, AUTO, NONE } from "./stabilizers.mjs";
+import { HOMING_TYPES, homingIds } from "./homing.mjs";
 import { startViewer } from "./viewer/server.mjs";
 import { bakeViewer } from "./viewer/bake.mjs";
 import { MOUNT_FAMILIES } from "./sizes.mjs";
@@ -31,6 +32,13 @@ Selection (comma separated, or "all"):
 
 Stems on wide keys:
   --stabilizers <mode>   default: auto         auto, none, or a span in units
+
+Home keys:
+  --homing <kind>        default: none         none, bar, dot, groove, scoop
+
+A tactile marker for F, J and numpad 5. "bar" and "dot" are raised, "groove"
+is cut in, and "scoop" adds no feature but deepens the dish, which is how the
+sculpted spherical profiles mark their home row.
 
 A key 2u or wider gets a stabiliser stem either side of the switch, at the
 spacing its width calls for. "none" builds a single centre stem; a number sets
@@ -73,6 +81,7 @@ const OPTION_SPEC = {
   "top-thickness": { type: "string" },
   jobs: { type: "string" },
   stabilizers: { type: "string" },
+  homing: { type: "string" },
   port: { type: "string" },
   bake: { type: "string" },
   "dry-run": { type: "boolean" },
@@ -180,6 +189,7 @@ export function resolveOptions(values) {
     topThickness: parseNumber(values["top-thickness"], DEFAULTS.topThickness, "top-thickness"),
     stemSlop: parseNumber(values["stem-slop"], DEFAULTS.stemSlop, "stem-slop"),
     stabilizers: parseStabilizers(values.stabilizers),
+    homing: parseList(values.homing ?? "none", homingIds(), "homing")[0],
     jobs: Math.max(1, Math.round(parseNumber(values.jobs, os.availableParallelism(), "jobs"))),
     dryRun: values["dry-run"] === true,
     port: Math.round(parseNumber(values.port, 8080, "port")),
@@ -247,6 +257,14 @@ function listCommand() {
       "hardware, and override with --stabilizers <span>.",
   );
 
+  console.log("\nHome key markers\n");
+  console.log(
+    table(
+      ["id", "what it is"],
+      HOMING_TYPES.map((entry) => [entry.id, entry.description]),
+    ),
+  );
+
   console.log(`\nSizes (units): ${SIZES.join(", ")}`);
   console.log(`Formats: ${FORMATS.join(", ")}`);
   console.log(`Quality: ${Object.keys(QUALITY_PRESETS).join(", ")}`);
@@ -282,7 +300,7 @@ async function generateCommand(options) {
   results.sort((a, b) => a.name.localeCompare(b.name));
   console.log(
     table(
-      ["model", "profile", "row", "size", "stem", "stems", "w x d x h (mm)", "volume mm3", "tris"],
+      ["model", "profile", "row", "size", "stem", "stems", "homing", "w x d x h (mm)", "volume mm3", "tris"],
       results.map((result) => [
         result.name,
         result.profile,
@@ -292,6 +310,7 @@ async function generateCommand(options) {
         result.stats.stems > 1
           ? `${result.stats.stems} @ ${result.stats.stemSpan.toFixed(1)}mm`
           : `${result.stats.stems}`,
+        result.stats.homing === "none" ? "-" : result.stats.homing,
         `${result.stats.width.toFixed(2)} x ${result.stats.depth.toFixed(2)} x ${result.stats.height.toFixed(2)}`,
         result.stats.volume.toFixed(0),
         result.stats.triangles,

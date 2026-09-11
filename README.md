@@ -133,6 +133,8 @@ What it gives you:
 - **Orbit, zoom and pan**, plus Iso / Front / Side / Top / **Under** presets.
   Under is where the stems are, and the one to use for checking a spacebar.
 - **Ortho** projection, for comparing profile silhouettes honestly.
+- A **Home key marker** control, so you can see the bar or the deep dish
+  before committing a set to the printer.
 - **Pin as ghost** keeps the current cap on screen, translucent, while you
   switch to another -- pin a DSA, click SA, and the height difference is
   immediate. The camera frames both, so nothing runs off the top.
@@ -151,6 +153,38 @@ Only the baked combinations are selectable; the viewer greys out the rest.
 
 The viewer has no dependencies of its own -- the renderer is WebGL2 written
 directly, so the page works offline and nothing is fetched from a CDN.
+
+## Home key markers
+
+F, J and numpad 5 need something you can find without looking. `--homing`
+picks which kind:
+
+| id | what it is |
+|---|---|
+| `none` | an ordinary key (default) |
+| `bar` | a ridge across the front of the keytop -- the Cherry and OEM answer |
+| `dot` | a single bump near the front, common on numpad 5 and low-profile sets |
+| `groove` | the bar cut into the surface instead of raised |
+| `scoop` | no added feature: the dish itself is cut deeper, as SA and DSA mark home |
+
+```
+keycapgen generate --profile cherry --row 3 --homing bar    # an F or J key
+keycapgen generate --profile sa --row 3 --homing scoop
+```
+
+The raised bar is 6.0 x 1.2 mm and stands 0.5 mm proud; the dot is 1.8 mm
+across at the same height; the recess is 0.4 mm deep; the deep dish adds
+1.2 mm of scoop. All of them sit 1.9 mm in from the front edge of the keytop.
+
+The marker is built from the cap's own dish cutter rather than from a box, so
+it follows the dish and the row's tilt exactly and keeps an even thickness
+across a curved top -- a box would leave a wedge, thick at one end and sunk
+into the surface at the other. A marker that will not fit is refused rather
+than built: a recess deeper than the roof, or a deep dish that would leave no
+material under it.
+
+Marked caps are named apart from plain ones, so an F key and a D key can live
+in the same directory: `cherry_r3_1u_mx_homing-bar.stl`.
 
 ## Usage
 
@@ -171,6 +205,7 @@ Selection flags take a comma-separated list or `all`:
 | `--stem` | mx | `--stem mx,box,choc-v1` |
 | `--all` | -- | every profile, row, size and stem |
 | `--stabilizers` | auto | `auto`, `none`, or a span in units |
+| `--homing` | none | `none`, `bar`, `dot`, `groove`, `scoop` |
 
 Output and geometry:
 
@@ -233,6 +268,7 @@ The pieces, in the order a cap is built:
 | `src/profiles/data.mjs` | the dimension tables and the sculpt curve |
 | `src/sizes.mjs` | unit widths per mount family |
 | `src/stabilizers.mjs` | stem positions on wide keys |
+| `src/homing.mjs` | tactile markers for the home keys |
 | `src/geometry/section.mjs` | rounded-rectangle rings, segment budgets |
 | `src/geometry/shell.mjs` | the ring stack from base to tilted top plate |
 | `src/geometry/loft.mjs` | ring stack to a closed solid |
@@ -248,7 +284,9 @@ The tests check geometry, not just plumbing: every profile-and-stem
 combination has to build a valid solid, the finished cap has to match the
 footprint and height it declares, the cross slot is measured against a probe
 one hair under and one hair over the switch stem, every stem position on a
-wide key is probed for a real post with a usable slot, and written STL and 3MF
+wide key is probed for a real post with a usable slot, a home marker is
+measured against the same strip on the back of the keytop to prove it sits at
+the front and only at the front, and written STL and 3MF
 files are read back and rebuilt into solids to confirm they survived the trip.
 The viewer is covered too: the mesh format round-trips vertex for vertex, the
 server is driven over real HTTP, and a baked page is parsed back to check every
