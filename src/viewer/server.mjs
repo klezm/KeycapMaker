@@ -7,7 +7,9 @@ import { encodeMesh } from "./mesh-format.mjs";
 import { buildCatalogue } from "./catalogue.mjs";
 import { renderViewer, renderDocument } from "./page.mjs";
 
-const CACHE_LIMIT = 48;
+// Wide enough to hold a full arrangement -- every profile and every row -- so
+// turning one on does not evict the caps it is still drawing.
+const CACHE_LIMIT = 128;
 
 /** Turn query parameters into builder options, rejecting anything malformed. */
 function readRequest(params, options) {

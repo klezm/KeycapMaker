@@ -109,6 +109,8 @@ test("the page carries its own styles, markup and code", () => {
   assert.match(html, /id="canvas"/);
   assert.match(html, /<script type="module">/);
   assert.match(html, /createRenderer/, "the renderer should be inlined");
+  assert.match(html, /function arrangeSlots/, "the layout module should be inlined");
+  assert.ok(!/^\s*import /m.test(html), "no module imports may survive the bundling");
   assert.match(html, /prefers-color-scheme: dark/, "the page should follow the viewer's theme");
   assert.ok(!/<script[^>]+src=/.test(html), "the page must not load anything externally");
   assert.ok(!/https?:\/\//.test(html.replace(/schemas\.[a-z.]+/g, "")), "no external URLs");

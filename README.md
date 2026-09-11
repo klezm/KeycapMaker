@@ -135,6 +135,7 @@ What it gives you:
 - **Ortho** projection, for comparing profile silhouettes honestly.
 - A **Home key marker** control, so you can see the bar or the deep dish
   before committing a set to the printer.
+- **Arrange** the whole catalogue instead of one cap -- see below.
 - **Pin as ghost** keeps the current cap on screen, translucent, while you
   switch to another -- pin a DSA, click SA, and the height difference is
   immediate. The camera frames both, so nothing runs off the top.
@@ -145,6 +146,33 @@ What it gives you:
 
 Shading is flat, computed per facet from the mesh itself, so what you see is
 the geometry a slicer would get rather than a smoothed impression of it.
+
+### Arranging the catalogue
+
+`Arrange profiles` and `Arrange rows` lay caps out instead of showing one:
+either control can go on the X axis (across the screen) or the Y axis (up it),
+so profiles across and rows up gives a contact sheet of the whole catalogue in
+one frame. Set both to the same axis and rows become the minor step inside each
+profile, giving one long line grouped by profile.
+
+Every cap in an arrangement shares the selected size, stem and home marker; a
+profile that cannot take the selected stem quietly uses one it can, so lining
+up profiles never drops the low-profile one. A profile with no R5 leaves that
+slot empty rather than shifting its neighbours, so row numbers line up across
+every column, and a uniform profile contributes the single shape it has rather
+than five copies of it.
+
+**Each cap turns about its own zero point.** Dragging rotates the caps, not the
+camera, so the slots never move: every cap shows the identical angle it would
+show on its own, and profiles stay directly comparable at any rotation. Put
+profiles on X and hit `Front` for a true orthographic strip of all twelve
+silhouettes side by side, bases aligned.
+
+That pivot also applies with a single cap, which is the one visible change to
+the old behaviour: a cap now turns about its base rather than the middle of its
+bounding box. Each cap carries its own small patch of ground, which turns with
+it -- one shared floor cannot work once caps are spread out, because rotating a
+single plane about the world origin tips it away from every slot but the middle.
 
 `--bake <file>` writes a **standalone page** instead of serving one: the caps
 the selection flags choose are built and folded into a single HTML file with

@@ -4,17 +4,19 @@ import { fileURLToPath } from "node:url";
 const read = (name) => readFileSync(fileURLToPath(new URL(name, import.meta.url)), "utf8");
 
 /**
- * The viewer ships as one page with no external requests, so its two client
- * modules are concatenated into a single inline module here. `client.js`
- * imports only from `client-gl.js`, so dropping the import and the export
- * keywords is all the bundling this needs.
+ * The viewer ships as one page with no external requests, so its client modules
+ * are concatenated into a single inline module here. They only import from each
+ * other, so dropping the imports and the export keywords is all the bundling
+ * this needs. Order matters: `client.js` uses the other two.
  */
+const CLIENT_MODULES = ["./client-gl.js", "./layout.js", "./client.js"];
+
 function clientScript() {
-  const gl = read("./client-gl.js").replace(/^export /gm, "");
-  const app = read("./client.js")
-    .replace(/^import .*?;$/gm, "")
-    .replace(/^export /gm, "");
-  return gl + "\n" + app;
+  return CLIENT_MODULES.map((name) =>
+    read(name)
+      .replace(/^import .*?;$/gm, "")
+      .replace(/^export /gm, ""),
+  ).join("\n");
 }
 
 /** JSON safe to drop inside a <script> element. */

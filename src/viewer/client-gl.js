@@ -39,6 +39,44 @@ export const mat4 = {
     return out;
   },
 
+  translation(offset) {
+    const out = mat4.identity();
+    out[12] = offset[0];
+    out[13] = offset[1];
+    out[14] = offset[2];
+    return out;
+  },
+
+  rotationX(angle) {
+    const c = Math.cos(angle);
+    const s = Math.sin(angle);
+    return new Float32Array([1, 0, 0, 0, 0, c, s, 0, 0, -s, c, 0, 0, 0, 0, 1]);
+  },
+
+  rotationZ(angle) {
+    const c = Math.cos(angle);
+    const s = Math.sin(angle);
+    return new Float32Array([c, s, 0, 0, -s, c, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
+  },
+
+  /** The matrix's rotation with its translation dropped. */
+  rotationOf(m) {
+    const out = new Float32Array(m);
+    out[12] = 0;
+    out[13] = 0;
+    out[14] = 0;
+    return out;
+  },
+
+  /** Transpose of the upper 3x3, which inverts it when it is a rotation. */
+  transposeRotation(m) {
+    const out = mat4.identity();
+    for (let row = 0; row < 3; row += 1) {
+      for (let col = 0; col < 3; col += 1) out[col * 4 + row] = m[row * 4 + col];
+    }
+    return out;
+  },
+
   lookAt(eye, target, up) {
     const z = normalize([eye[0] - target[0], eye[1] - target[1], eye[2] - target[2]]);
     const x = normalize(cross(up, z));
@@ -66,18 +104,26 @@ function normalize(v) {
 const MESH_VERTEX = `#version 300 es
 in vec3 position;
 uniform mat4 viewProjection;
-out vec3 worldPosition;
+uniform mat4 model;
+out vec3 localPosition;
 void main() {
-  worldPosition = position;
-  gl_Position = viewProjection * vec4(position, 1.0);
+  localPosition = position;
+  gl_Position = viewProjection * model * vec4(position, 1.0);
 }`;
 
 // Normals come from screen-space derivatives rather than vertex data: the mesh
 // is exactly what a slicer would receive, so shading it per facet shows the
 // real geometry instead of a smoothed impression of it.
+//
+// The derivative is taken of the cap's own untransformed position, not of where
+// it ended up in the world. The lights below are fixed vectors, so working in
+// each cap's own frame keeps every cap in an arrangement lit exactly as it is
+// when viewed alone -- which is the whole point of lining them up. Taking the
+// normal in world space would instead pin the lighting to the viewer, and a
+// cap's shading would slide around as it turned.
 const MESH_FRAGMENT = `#version 300 es
 precision highp float;
-in vec3 worldPosition;
+in vec3 localPosition;
 uniform vec3 baseColor;
 uniform vec3 skyColor;
 uniform vec3 groundColor;
@@ -85,7 +131,7 @@ uniform float alpha;
 out vec4 fragColor;
 
 void main() {
-  vec3 normal = normalize(cross(dFdx(worldPosition), dFdy(worldPosition)));
+  vec3 normal = normalize(cross(dFdx(localPosition), dFdy(localPosition)));
   vec3 key = normalize(vec3(-0.55, -0.7, 0.85));
   vec3 fill = normalize(vec3(0.75, 0.25, 0.35));
 
@@ -104,10 +150,11 @@ void main() {
 const LINE_VERTEX = `#version 300 es
 in vec3 position;
 uniform mat4 viewProjection;
+uniform mat4 model;
 out vec2 groundPosition;
 void main() {
   groundPosition = position.xy;
-  gl_Position = viewProjection * vec4(position, 1.0);
+  gl_Position = viewProjection * model * vec4(position, 1.0);
 }`;
 
 // The fade has to be computed per fragment. Done per vertex it would be
@@ -171,6 +218,7 @@ export function createRenderer(canvas) {
 
   const meshUniforms = {
     viewProjection: gl.getUniformLocation(meshProgram, "viewProjection"),
+    model: gl.getUniformLocation(meshProgram, "model"),
     baseColor: gl.getUniformLocation(meshProgram, "baseColor"),
     skyColor: gl.getUniformLocation(meshProgram, "skyColor"),
     groundColor: gl.getUniformLocation(meshProgram, "groundColor"),
@@ -180,6 +228,7 @@ export function createRenderer(canvas) {
     viewProjection: gl.getUniformLocation(lineProgram, "viewProjection"),
     lineColor: gl.getUniformLocation(lineProgram, "lineColor"),
     fadeRadius: gl.getUniformLocation(lineProgram, "fadeRadius"),
+    model: gl.getUniformLocation(lineProgram, "model"),
   };
 
   const gridBuffer = gl.createBuffer();
@@ -231,7 +280,7 @@ export function createRenderer(canvas) {
     return canvas.clientWidth / Math.max(canvas.clientHeight, 1);
   }
 
-  function draw({ viewProjection, models, palette, showGrid, gridFade = 95 }) {
+  function draw({ viewProjection, models, palette, grounds = [], gridFade = 95 }) {
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -241,13 +290,20 @@ export function createRenderer(canvas) {
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
-    if (showGrid) {
+    // One patch of ground per cap, carried by the same transform the cap has.
+    // A single shared floor cannot work once the caps are spread out: rotating
+    // one plane about the world origin tips it away from every slot but the
+    // middle, leaving the outer caps floating above it or sunk into it.
+    if (grounds.length > 0) {
       gl.useProgram(lineProgram);
       gl.uniformMatrix4fv(lineUniforms.viewProjection, false, viewProjection);
       gl.uniform3fv(lineUniforms.lineColor, palette.grid);
       gl.uniform1f(lineUniforms.fadeRadius, gridFade);
       gl.bindVertexArray(gridVao);
-      gl.drawArrays(gl.LINES, 0, gridData.length / 3);
+      for (const transform of grounds) {
+        gl.uniformMatrix4fv(lineUniforms.model, false, transform);
+        gl.drawArrays(gl.LINES, 0, gridData.length / 3);
+      }
     }
 
     gl.useProgram(meshProgram);
@@ -259,12 +315,14 @@ export function createRenderer(canvas) {
     // so it reads through whatever is in front of it -- the point of pinning
     // one profile is to see it against another, and a shorter profile would
     // otherwise be completely hidden inside a taller one.
+    const identity = mat4.identity();
     for (const entry of models) {
       if (!entry.model) continue;
       const solid = entry.alpha >= 1;
       gl.depthMask(solid);
       if (solid) gl.enable(gl.DEPTH_TEST);
       else gl.disable(gl.DEPTH_TEST);
+      gl.uniformMatrix4fv(meshUniforms.model, false, entry.transform ?? identity);
       gl.uniform3fv(meshUniforms.baseColor, entry.color);
       gl.uniform1f(meshUniforms.alpha, entry.alpha);
       gl.bindVertexArray(entry.model.vao);
