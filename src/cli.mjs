@@ -1,4 +1,5 @@
 import path from "node:path";
+import { writeFile } from "node:fs/promises";
 import { parseArgs } from "node:util";
 import os from "node:os";
 
@@ -9,6 +10,8 @@ import { QUALITY_PRESETS } from "./engine.mjs";
 import { DEFAULTS } from "./keycap.mjs";
 import { FORMATS, expandMatrix, runBatch } from "./batch.mjs";
 import { STABILIZER_SPANS, AUTO, NONE } from "./stabilizers.mjs";
+import { startViewer } from "./viewer/server.mjs";
+import { bakeViewer } from "./viewer/bake.mjs";
 import { MOUNT_FAMILIES } from "./sizes.mjs";
 
 const USAGE = `keycap-forge -- blank keycap models for every profile and stem
@@ -16,6 +19,7 @@ const USAGE = `keycap-forge -- blank keycap models for every profile and stem
 Usage:
   keycapgen list                       Show profiles, rows, sizes and stems
   keycapgen generate [options]         Build models
+  keycapgen view [options]             Browse the catalogue in a browser
   keycapgen help
 
 Selection (comma separated, or "all"):
@@ -44,6 +48,14 @@ Geometry:
   --top-thickness <mm>   default: ${DEFAULTS.topThickness}       roof thickness under the dish
   --jobs <n>             default: CPU count    worker threads
 
+Viewing:
+  --port <n>             default: 8080         port for "view"
+  --bake <file>          write a standalone HTML page instead of serving it
+
+"view" builds each cap as you ask for it, so every combination is reachable
+straight away. "--bake" instead builds the caps the selection flags choose and
+folds them into one self-contained file that needs no server.
+
 Rows run R1 (bottom row) to R5 (number row); R3 is the home row. Profiles with
 uniform rows ignore the row and emit a single model per size and stem.`;
 
@@ -61,6 +73,8 @@ const OPTION_SPEC = {
   "top-thickness": { type: "string" },
   jobs: { type: "string" },
   stabilizers: { type: "string" },
+  port: { type: "string" },
+  bake: { type: "string" },
   "dry-run": { type: "boolean" },
   help: { type: "boolean", short: "h" },
 };
@@ -168,6 +182,8 @@ export function resolveOptions(values) {
     stabilizers: parseStabilizers(values.stabilizers),
     jobs: Math.max(1, Math.round(parseNumber(values.jobs, os.availableParallelism(), "jobs"))),
     dryRun: values["dry-run"] === true,
+    port: Math.round(parseNumber(values.port, 8080, "port")),
+    bake: values.bake,
   };
 }
 
@@ -291,6 +307,36 @@ async function generateCommand(options) {
   reportSkipped(skipped);
 }
 
+async function viewCommand(options) {
+  if (!options.bake) {
+    await startViewer(options);
+    console.log(`Keycap viewer running at http://127.0.0.1:${options.port}`);
+    console.log("Every profile, row, size and stem is built on request. Ctrl-C to stop.");
+    return;
+  }
+
+  const { jobs, skipped } = expandMatrix(options);
+  if (jobs.length === 0) {
+    throw new Error("Nothing to bake: every requested combination was filtered out");
+  }
+  const started = Date.now();
+  const showProgress = process.stderr.isTTY === true;
+  const { html, count, meshBytes } = await bakeViewer(jobs, options, (done, total, job) => {
+    if (!showProgress) return;
+    process.stderr.write(`\r[${String(done).padStart(String(total).length)}/${total}] ${job.name.padEnd(32)}`);
+  });
+  if (showProgress) process.stderr.write("\n");
+
+  await writeFile(options.bake, html);
+  console.log(
+    `${count} cap(s) baked into ${options.bake} ` +
+      `(${(html.length / 1e6).toFixed(2)} MB, ${(meshBytes / 1e6).toFixed(2)} MB of it geometry, ` +
+      `${((Date.now() - started) / 1000).toFixed(1)}s)`,
+  );
+  console.log("Open it in a browser: it needs no server and no network.");
+  reportSkipped(skipped);
+}
+
 function reportSkipped(skipped) {
   if (skipped.length === 0) return;
   const unique = [...new Set(skipped)];
@@ -315,8 +361,12 @@ export async function main(argv) {
     listCommand();
     return 0;
   }
+  if (command === "view") {
+    await viewCommand(resolveOptions(values));
+    return 0;
+  }
   if (command !== "generate") {
-    throw new Error(`Unknown command "${command}". Try: list, generate, help`);
+    throw new Error(`Unknown command "${command}". Try: list, generate, view, help`);
   }
   await generateCommand(resolveOptions(values));
   return 0;

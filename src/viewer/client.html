@@ -1,0 +1,47 @@
+<div id="app">
+  <aside id="panel">
+    <div class="brand">
+      <h1>Keycap Forge</h1>
+      <span>{{subtitle}}</span>
+    </div>
+
+    <div class="group">
+      <h2>Profile</h2>
+      <div class="profiles" id="profile-list"></div>
+    </div>
+
+    <div class="group">
+      <h2>Row</h2>
+      <div class="chips" id="row-chips"></div>
+    </div>
+
+    <div class="group">
+      <h2>Size</h2>
+      <div class="chips" id="size-chips"></div>
+    </div>
+
+    <div class="group">
+      <h2>Stem</h2>
+      <div class="chips" id="stem-chips"></div>
+    </div>
+
+    <div class="group">
+      <h2>Stems on wide keys</h2>
+      <div class="chips" id="stab-chips"></div>
+    </div>
+{{downloads}}
+  </aside>
+
+  <main id="stage">
+    <canvas id="canvas"></canvas>
+    <div class="overlay" id="title-card">
+      <h2 id="title-name">&nbsp;</h2>
+      <p id="title-note">&nbsp;</p>
+    </div>
+    <div class="overlay" id="views"></div>
+    <div class="overlay" id="compare-chips"></div>
+    <dl class="overlay" id="stats"></dl>
+    <div id="hint">drag to orbit &middot; scroll to zoom &middot; shift-drag to pan<br>arrows switch profile and row</div>
+    <div id="message" hidden></div>
+  </main>
+</div>

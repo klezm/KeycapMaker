@@ -8,6 +8,7 @@ no browser -- point it at an output directory and it writes STL and 3MF files.
 npm install
 node bin/keycapgen.mjs list
 node bin/keycapgen.mjs generate --profile dsa,cherry,sa --row all --format stl,3mf
+node bin/keycapgen.mjs view          # browse the whole catalogue in a browser
 ```
 
 Geometry is built with [manifold-3d](https://github.com/elalish/manifold), the
@@ -113,11 +114,50 @@ On narrow stabilised keys the top of a post can merge into the sidewall. That
 is intentional and makes the cap stronger; the socket itself always keeps
 clear of the wall, which is what the fit check enforces.
 
+## Viewing
+
+```
+keycapgen view                       Browse at http://127.0.0.1:8080
+keycapgen view --port 3000
+keycapgen view --bake preview.html --profile all --row all
+```
+
+`view` starts a small local server and opens the catalogue in a browser: pick a
+profile, row, size and stem from the sidebar and the cap appears. Nothing is
+pre-rendered -- a cap takes tens of milliseconds to build, so each one is
+generated on request and cached, and every combination is reachable straight
+away. Combinations that cannot exist are greyed out with the reason.
+
+What it gives you:
+
+- **Orbit, zoom and pan**, plus Iso / Front / Side / Top / **Under** presets.
+  Under is where the stems are, and the one to use for checking a spacebar.
+- **Ortho** projection, for comparing profile silhouettes honestly.
+- **Pin as ghost** keeps the current cap on screen, translucent, while you
+  switch to another -- pin a DSA, click SA, and the height difference is
+  immediate. The camera frames both, so nothing runs off the top.
+- A **19.05 mm switch grid** on the floor, so sizes read at a glance.
+- Live measurements: bounding box, volume, stem count and stabiliser span.
+- **Download** the cap on screen as STL or 3MF.
+- Arrow keys step through profiles and rows; space toggles the turntable.
+
+Shading is flat, computed per facet from the mesh itself, so what you see is
+the geometry a slicer would get rather than a smoothed impression of it.
+
+`--bake <file>` writes a **standalone page** instead of serving one: the caps
+the selection flags choose are built and folded into a single HTML file with
+the geometry embedded. It needs no server and no network, so it travels well.
+Only the baked combinations are selectable; the viewer greys out the rest.
+
+The viewer has no dependencies of its own -- the renderer is WebGL2 written
+directly, so the page works offline and nothing is fetched from a CDN.
+
 ## Usage
 
 ```
 keycapgen list                       Show profiles, rows, sizes and stems
 keycapgen generate [options]         Build models
+keycapgen view [options]             Browse the catalogue in a browser
 keycapgen help
 ```
 
@@ -144,6 +184,8 @@ Output and geometry:
 | `--wall` | 1.5 | sidewall thickness |
 | `--top-thickness` | 1.2 | roof thickness under the dish |
 | `--jobs` | CPU count | worker threads |
+| `--port` | 8080 | port for `view` |
+| `--bake` | -- | write a standalone page instead of serving |
 
 Sizes are 1, 1.25, 1.5, 1.75, 2, 2.25, 2.75, 3, 6.25 and 7 units; `--size`
 also accepts any other positive number. A bare `generate` builds a 1u MX cap
@@ -198,6 +240,7 @@ The pieces, in the order a cap is built:
 | `src/stems/` | one module per mount, plus shared slot helpers |
 | `src/keycap.mjs` | assembly: shell, dish, cavity, stem |
 | `src/export/` | binary STL, 3MF, and a small ZIP writer |
+| `src/viewer/` | the browser viewer: renderer, page, server, bake |
 | `src/batch.mjs` | matrix expansion and the worker pool |
 | `src/cli.mjs` | argument parsing and reporting |
 
@@ -207,6 +250,9 @@ footprint and height it declares, the cross slot is measured against a probe
 one hair under and one hair over the switch stem, every stem position on a
 wide key is probed for a real post with a usable slot, and written STL and 3MF
 files are read back and rebuilt into solids to confirm they survived the trip.
+The viewer is covered too: the mesh format round-trips vertex for vertex, the
+server is driven over real HTTP, and a baked page is parsed back to check every
+cap asked for is actually in it.
 
 ## Provenance and licensing
 
