@@ -180,13 +180,15 @@ const VIEWS = {
 
 function readPalette() {
   const style = getComputedStyle(document.documentElement);
-  const dark = style.getPropertyValue("--ink").trim().startsWith("#e");
+  const dark = style.getPropertyValue("--ink").trim().toLowerCase().startsWith("#e");
   return {
     sky: dark ? [0.3, 0.31, 0.36] : [0.46, 0.47, 0.5],
     ground: dark ? [0.07, 0.07, 0.09] : [0.2, 0.19, 0.18],
-    grid: dark ? [0.42, 0.4, 0.48] : [0.55, 0.53, 0.5],
-    cap: dark ? [0.78, 0.76, 0.73] : [0.90, 0.88, 0.85],
-    ghost: dark ? [0.45, 0.68, 0.95] : [0.2, 0.45, 0.85],
+    grid: dark ? [0.39, 0.45, 0.48] : [0.5, 0.54, 0.56],
+    cap: dark ? [0.78, 0.78, 0.77] : [0.90, 0.90, 0.89],
+    // Amber, deliberately away from the accent: a pinned ghost is a second cap
+    // to read against, not a selected control.
+    ghost: dark ? [0.96, 0.68, 0.28] : [0.85, 0.52, 0.12],
   };
 }
 
