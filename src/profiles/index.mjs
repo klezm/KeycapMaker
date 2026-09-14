@@ -1,5 +1,6 @@
 import { PROFILES, SCULPT_ROWS } from "./data.mjs";
 import { footprint } from "../sizes.mjs";
+import { applyModifiers } from "../modifiers.mjs";
 
 const BY_ID = new Map(PROFILES.map((profile) => [profile.id, profile]));
 
@@ -52,7 +53,10 @@ export function resolveSpec(profileId, row, units, options = {}) {
   // the same sidewall taper as a 1u cap instead of turning into a wedge.
   const widthGrowth = base.width - footprint(1, profile.mount).width;
 
-  return {
+  const topWidth = profile.topWidth + widthGrowth;
+  const topDepth = profile.topDepth;
+
+  const spec = {
     profile: profile.id,
     profileName: profile.name,
     mount: profile.mount,
@@ -60,9 +64,19 @@ export function resolveSpec(profileId, row, units, options = {}) {
     units,
     baseWidth: base.width,
     baseDepth: base.depth,
-    topWidth: profile.topWidth + widthGrowth,
+    topWidth,
     widthGrowth,
-    topDepth: profile.topDepth,
+    topDepth,
+    // The top plate is carried as four independent edges as well as spans, so a
+    // taper applied to one side alone has somewhere to live. Everything that
+    // only needs a span keeps reading topWidth and topDepth.
+    topEdges: {
+      left: -topWidth / 2,
+      right: topWidth / 2,
+      front: sculpt.shift - topDepth / 2,
+      back: sculpt.shift + topDepth / 2,
+    },
+    topOffsetX: 0,
     height: profile.homeHeight + sculpt.rise * scale,
     tilt: sculpt.tilt,
     topOffsetY: sculpt.shift,
@@ -72,6 +86,11 @@ export function resolveSpec(profileId, row, units, options = {}) {
     dish: { ...profile.dish },
     wall: options.wall ?? 1.5,
     topThickness: options.topThickness ?? 1.2,
+    // Set by modifiers; zero means the cap behaves exactly as it always has.
+    skirt: 0,
+    stemHeightDelta: 0,
     notes: profile.notes,
   };
+
+  return applyModifiers(spec, options.modifiers);
 }

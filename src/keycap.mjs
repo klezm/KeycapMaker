@@ -1,12 +1,13 @@
 import { applyQuality, DEFAULT_QUALITY } from "./engine.mjs";
 import { resolveSpec } from "./profiles/index.mjs";
 import { getStem, stemFitsMount } from "./stems/index.mjs";
-import { buildRings } from "./geometry/shell.mjs";
+import { buildRings, shrinkAt } from "./geometry/shell.mjs";
 import { loftRings } from "./geometry/loft.mjs";
 import { dishCutter } from "./geometry/dish.mjs";
 import { stemLayout, AUTO } from "./stabilizers.mjs";
 import { getEngine } from "./engine.mjs";
 import { getHoming, homingFeature, scoopDepth, HOMING_SHAPE } from "./homing.mjs";
+import { validateModifiers, describeModifiers } from "./modifiers.mjs";
 
 /**
  * How far up into the roof the stem post is buried, as a fraction of the roof
@@ -22,6 +23,9 @@ const STEM_BOND_FRACTION = 0.4;
  */
 const SIMPLIFY_TOLERANCE = 1e-6;
 
+/** The shallowest socket that can still hold a switch, in millimetres. */
+const MIN_STEM_DEPTH = 1;
+
 /** Clearance kept between a stem and the inside of the sidewall. */
 const STEM_WALL_CLEARANCE = 0.2;
 
@@ -32,6 +36,7 @@ export const DEFAULTS = {
   quality: DEFAULT_QUALITY,
   stabilizers: AUTO,
   homing: "none",
+  modifiers: {},
 };
 
 /**
@@ -44,7 +49,8 @@ export const DEFAULTS = {
  */
 export function cavityHalfExtent(spec, z, wall) {
   const u = Math.min(1, Math.max(0, z / spec.height));
-  const k = u ** spec.wallBow;
+  // The same curve the loft uses, so a side wall shifts the fit check with it.
+  const k = shrinkAt(spec, u);
   const at = (base, top) => (base - 2 * wall + k * (top - base)) / 2;
   return {
     x: at(spec.baseWidth, spec.topWidth),
@@ -96,9 +102,11 @@ export async function buildKeycap({
   quality = DEFAULTS.quality,
   stabilizers = DEFAULTS.stabilizers,
   homing = DEFAULTS.homing,
+  modifiers = DEFAULTS.modifiers,
 }) {
   getHoming(homing);
-  const spec = resolveSpec(profile, row, units, { wall, topThickness });
+  validateModifiers(modifiers);
+  const spec = resolveSpec(profile, row, units, { wall, topThickness, modifiers });
   // A deep-dish marker is not something added to the cap: the cap's own dish is
   // cut deeper. Applying it here means the shell, the cavity and the stem bond
   // all follow the deeper surface together.
@@ -155,9 +163,28 @@ export async function buildKeycap({
   // repeated at the spacing the key width calls for.
   const layout = stemLayout(units, spec.mount, stabilizers);
   const problem = stemFitProblem({ spec, stemSpec: stem.spec, layout, wall });
-  if (problem) throw new Error(`Cannot build ${profile} R${row} ${units}u: ${problem}`);
+  // Shrinking a cap is the usual way to hit this, and the measurement alone
+  // does not say which slider caused it, so the adjustments in force are
+  // repeated back when there are any.
+  if (problem) {
+    const adjusted = Object.keys(modifiers).length
+      ? ` Adjustments in force: ${describeModifiers(modifiers)}.`
+      : "";
+    throw new Error(`Cannot build ${profile} R${row} ${units}u: ${problem}.${adjusted}`);
+  }
 
-  const stemBody = await stem.build({ slop: stemSlop, top: spec.height + 5 });
+  // A socket deeper than the cap is not an error: the post is trimmed at the
+  // roof either way, which is already how a short profile like DSA seats a full
+  // 4 mm MX stem. Only a socket too shallow to hold a switch is refused.
+  const stemDepth = stem.spec.height + (spec.stemHeightDelta ?? 0);
+  if (stem.spec.height > 0 && stemDepth < MIN_STEM_DEPTH) {
+    throw new Error(
+      `A ${stemId} socket ${stemDepth.toFixed(2)} mm deep is too shallow to hold a switch ` +
+        `(at least ${MIN_STEM_DEPTH} mm)`,
+    );
+  }
+
+  const stemBody = await stem.build({ slop: stemSlop, top: spec.height + 5, depth: stemDepth });
   if (stemBody) {
     const { Manifold } = await getEngine();
     const bondCutter = await dishCutter(spec, topThickness * STEM_BOND_FRACTION);
@@ -170,6 +197,17 @@ export async function buildKeycap({
   if (marker.subtract) solid = solid.subtract(marker.subtract);
 
   solid = solid.simplify(SIMPLIFY_TOLERANCE);
+
+  // Cheap, and it catches every way a combination can conflict -- a taper so
+  // steep the top plate is narrower than the stem, say -- without having to
+  // anticipate each one as its own pre-check. A sound cap is a single closed
+  // body: genus 0.
+  if (solid.genus() !== 0) {
+    throw new Error(
+      `${profile} R${row} ${units}u ${stemId} folds in on itself with these settings. ` +
+        `Something no longer fits inside the cap: ease off the adjustment that shrinks it.`,
+    );
+  }
 
   const status = solid.status();
   if (status !== "NoError") {
@@ -187,6 +225,7 @@ export async function buildKeycap({
     layout,
     stats: {
       homing,
+      stemDepth: stem.spec.height > 0 ? stemDepth : 0,
       stems: stemBody ? layout.length : 0,
       stemSpan: layout.length > 1 ? layout.at(-1).x - layout[0].x : 0,
       triangles: solid.numTri(),

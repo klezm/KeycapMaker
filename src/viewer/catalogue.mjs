@@ -3,7 +3,10 @@ import { STEMS } from "../stems/index.mjs";
 import { SIZES, MOUNT_FAMILIES } from "../sizes.mjs";
 import { STABILIZER_SPANS, stabilizerSpanUnits } from "../stabilizers.mjs";
 import { HOMING_TYPES } from "../homing.mjs";
+import { MODIFIERS, MODIFIER_GROUPS } from "../modifiers.mjs";
+import { QUALITY_PRESETS } from "../engine.mjs";
 import { DEFAULTS, stemFitProblem } from "../keycap.mjs";
+import { DEFAULT_QUALITY } from "../engine.mjs";
 import { stemLayout, AUTO, NONE } from "../stabilizers.mjs";
 
 /**
@@ -33,7 +36,14 @@ function fitConflicts(mode) {
  * Everything the viewer's controls need to know, in one JSON-safe object:
  * what exists, what fits what, and what each choice will produce.
  */
-export function buildCatalogue() {
+/**
+ * Everything the page needs to build its own controls.
+ *
+ * `built` describes how the caps on a standalone page were actually made. The
+ * page cannot rebuild them, so reporting the live defaults there would have it
+ * claim a quality or a wall thickness the models do not have.
+ */
+export function buildCatalogue(built = {}) {
   return {
     profiles: PROFILES.map((profile) => {
       const homeRow = homeRowOf(profile);
@@ -61,6 +71,28 @@ export function buildCatalogue() {
       stabilizerSpanUnits: stabilizerSpanUnits(units),
     })),
     homing: HOMING_TYPES,
+    // Serialised without the apply functions: the page builds its controls from
+    // this, and runs none of the geometry itself.
+    modifiers: MODIFIERS.map(({ id, group, label, unit, min, max, step, hint }) => ({
+      id,
+      group,
+      label,
+      unit,
+      min,
+      max,
+      step,
+      hint,
+    })),
+    modifierGroups: MODIFIER_GROUPS,
+    qualities: Object.keys(QUALITY_PRESETS).map((id) => ({
+      id,
+      deviation: QUALITY_PRESETS[id].deviation,
+    })),
+    settings: [
+      { id: "wall", label: "Wall thickness", unit: "mm", min: 0.6, max: 3, step: 0.05, value: built.wall ?? DEFAULTS.wall },
+      { id: "topThickness", label: "Roof thickness", unit: "mm", min: 0.4, max: 3, step: 0.05, value: built.topThickness ?? DEFAULTS.topThickness },
+      { id: "stemSlop", label: "Stem slop", unit: "mm", min: 0, max: 0.5, step: 0.01, value: built.stemSlop ?? DEFAULTS.stemSlop },
+    ],
     mounts: MOUNT_FAMILIES,
     stabilizerSpans: STABILIZER_SPANS,
     conflicts: {
@@ -74,6 +106,8 @@ export function buildCatalogue() {
       stem: "mx",
       stabilizers: DEFAULTS.stabilizers,
       homing: DEFAULTS.homing,
+      quality: built.quality ?? DEFAULT_QUALITY,
+      modifiers: built.modifiers ?? {},
     },
   };
 }

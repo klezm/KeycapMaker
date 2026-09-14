@@ -27,8 +27,27 @@ const SPHERE_FACET_FACTOR = 3;
  * @returns {Array<[number, number]>} 4 * (cornerSegments + 1) points
  */
 export function roundedRectRing(width, depth, radius, cornerSegments) {
-  const halfW = width / 2;
-  const halfD = depth / 2;
+  return roundedRectFromEdges(
+    { left: -width / 2, right: width / 2, front: -depth / 2, back: depth / 2 },
+    radius,
+    cornerSegments,
+  );
+}
+
+/**
+ * The same outline given as four independent edges rather than a centred span.
+ *
+ * A taper applied to one side alone leaves a plate that is not centred on
+ * anything, so the edges have to be carried separately; `roundedRectRing` is
+ * this with the edges mirrored.
+ *
+ * @param {{left: number, right: number, front: number, back: number}} edges
+ */
+export function roundedRectFromEdges(edges, radius, cornerSegments) {
+  const centreX = (edges.left + edges.right) / 2;
+  const centreY = (edges.front + edges.back) / 2;
+  const halfW = (edges.right - edges.left) / 2;
+  const halfD = (edges.back - edges.front) / 2;
   const r = Math.max(MIN_CORNER_RADIUS, Math.min(radius, halfW, halfD));
   const insetX = halfW - r;
   const insetY = halfD - r;
@@ -46,7 +65,7 @@ export function roundedRectRing(width, depth, radius, cornerSegments) {
   for (const [cx, cy, startAngle] of corners) {
     for (let step = 0; step <= cornerSegments; step += 1) {
       const angle = ((startAngle + (90 * step) / cornerSegments) * Math.PI) / 180;
-      points.push([cx + r * Math.cos(angle), cy + r * Math.sin(angle)]);
+      points.push([centreX + cx + r * Math.cos(angle), centreY + cy + r * Math.sin(angle)]);
     }
   }
   return points;

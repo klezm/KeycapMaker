@@ -11,6 +11,7 @@ import { DEFAULTS } from "./keycap.mjs";
 import { FORMATS, expandMatrix, runBatch } from "./batch.mjs";
 import { STABILIZER_SPANS, AUTO, NONE } from "./stabilizers.mjs";
 import { HOMING_TYPES, homingIds } from "./homing.mjs";
+import { MODIFIERS, parseModifiers, describeModifiers } from "./modifiers.mjs";
 import { startViewer } from "./viewer/server.mjs";
 import { bakeViewer } from "./viewer/bake.mjs";
 import { MOUNT_FAMILIES } from "./sizes.mjs";
@@ -35,6 +36,13 @@ Stems on wide keys:
 
 Home keys:
   --homing <kind>        default: none         none, bar, dot, groove, scoop
+
+Adjusting the shape:
+  --adjust <name>=<mm|deg>   repeatable, and accepts a comma separated list
+
+Adjustments are relative to whatever the profile already is, so one setting
+reads the same across every profile: --adjust height=+2 --adjust taper=-3.
+Run "keycapgen list" for the names, units and ranges.
 
 A tactile marker for F, J and numpad 5. "bar" and "dot" are raised, "groove"
 is cut in, and "scoop" adds no feature but deepens the dish, which is how the
@@ -82,6 +90,7 @@ const OPTION_SPEC = {
   jobs: { type: "string" },
   stabilizers: { type: "string" },
   homing: { type: "string" },
+  adjust: { type: "string", multiple: true },
   port: { type: "string" },
   bake: { type: "string" },
   "dry-run": { type: "boolean" },
@@ -190,6 +199,7 @@ export function resolveOptions(values) {
     stemSlop: parseNumber(values["stem-slop"], DEFAULTS.stemSlop, "stem-slop"),
     stabilizers: parseStabilizers(values.stabilizers),
     homing: parseList(values.homing ?? "none", homingIds(), "homing")[0],
+    modifiers: parseModifiers(values.adjust ?? []),
     jobs: Math.max(1, Math.round(parseNumber(values.jobs, os.availableParallelism(), "jobs"))),
     dryRun: values["dry-run"] === true,
     port: Math.round(parseNumber(values.port, 8080, "port")),
@@ -265,6 +275,20 @@ function listCommand() {
     ),
   );
 
+  console.log("\nAdjustments\n");
+  console.log(
+    table(
+      ["name", "adjusts", "unit", "range"],
+      MODIFIERS.map((entry) => [
+        entry.id,
+        entry.label,
+        entry.unit,
+        `${entry.min} to +${entry.max}`,
+      ]),
+    ),
+  );
+  console.log("\nEach is a delta from the profile's own value, so 0 leaves it alone.");
+
   console.log(`\nSizes (units): ${SIZES.join(", ")}`);
   console.log(`Formats: ${FORMATS.join(", ")}`);
   console.log(`Quality: ${Object.keys(QUALITY_PRESETS).join(", ")}`);
@@ -323,6 +347,8 @@ async function generateCommand(options) {
     `\n${results.length} model(s), ${files} file(s) in ${options.out} ` +
       `(${((Date.now() - started) / 1000).toFixed(1)}s, ${options.jobs} worker(s), ${options.quality} quality)`,
   );
+  const adjustments = describeModifiers(options.modifiers);
+  if (adjustments !== "none") console.log(`Adjustments: ${adjustments}`);
   reportSkipped(skipped);
 }
 

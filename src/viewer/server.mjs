@@ -1,6 +1,8 @@
 import http from "node:http";
 
 import { buildKeycap, DEFAULTS } from "../keycap.mjs";
+import { parseModifiers } from "../modifiers.mjs";
+import { QUALITY_PRESETS } from "../engine.mjs";
 import { toBinaryStl } from "../export/stl.mjs";
 import { to3mf } from "../export/3mf.mjs";
 import { encodeMesh } from "./mesh-format.mjs";
@@ -20,6 +22,21 @@ function readRequest(params, options) {
 
   const stabilizers = params.get("stabilizers") ?? DEFAULTS.stabilizers;
   const span = Number(stabilizers);
+
+  const quality = params.get("quality") ?? options.quality;
+  if (!QUALITY_PRESETS[quality]) {
+    throw new Error(`Unknown quality "${quality}"`);
+  }
+  // A request may set the absolute knobs too; anything it leaves out keeps the
+  // value the server was started with.
+  const number = (name, fallback) => {
+    const raw = params.get(name);
+    if (raw === null || raw === "") return fallback;
+    const value = Number(raw);
+    if (!Number.isFinite(value) || value < 0) throw new Error(`${name} must be a non-negative number`);
+    return value;
+  };
+
   return {
     profile: params.get("profile") ?? "",
     row,
@@ -27,10 +44,11 @@ function readRequest(params, options) {
     stem: params.get("stem") ?? "mx",
     stabilizers: Number.isFinite(span) && stabilizers !== "" ? span : stabilizers,
     homing: params.get("homing") ?? DEFAULTS.homing,
-    wall: options.wall,
-    topThickness: options.topThickness,
-    stemSlop: options.stemSlop,
-    quality: options.quality,
+    modifiers: parseModifiers((params.get("adjust") ?? "").split(",").filter(Boolean)),
+    wall: number("wall", options.wall),
+    topThickness: number("topThickness", options.topThickness),
+    stemSlop: number("stemSlop", options.stemSlop),
+    quality,
   };
 }
 

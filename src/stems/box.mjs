@@ -22,7 +22,7 @@ export async function outerSolid(z0, z1) {
   return Manifold.extrude(outline, z1 - z0).translate([0, 0, z0]);
 }
 
-export async function build({ slop, top = spec.height }) {
-  const post = await outerSolid(0, Math.max(top, spec.height));
-  return post.subtract(await crossSlot({ height: spec.height, slop }));
+export async function build({ slop, top = spec.height, depth = spec.height }) {
+  const post = await outerSolid(0, Math.max(top, depth));
+  return post.subtract(await crossSlot({ height: depth, slop }));
 }

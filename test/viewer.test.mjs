@@ -227,6 +227,29 @@ test("a baked page carries its caps and needs nothing else", async () => {
   }
 });
 
+test("a standalone page reports how its caps were actually built", async () => {
+  // The page cannot rebuild anything, so its controls have to show the settings
+  // the models carry rather than the live defaults.
+  const jobs = [{ profile: "cherry", row: 3, units: 1, stem: "mx" }];
+  const { html } = await bakeViewer(jobs, {
+    quality: "draft",
+    wall: 2,
+    modifiers: { height: 3, taper: -4 },
+  });
+  const payload = JSON.parse(
+    html.slice(html.indexOf('id="keycap-data">') + 'id="keycap-data">'.length).split("</script>")[0],
+  );
+  assert.equal(payload.catalogue.defaults.quality, "draft");
+  assert.deepEqual(payload.catalogue.defaults.modifiers, { height: 3, taper: -4 });
+  const wall = payload.catalogue.settings.find((knob) => knob.id === "wall");
+  assert.equal(wall.value, 2);
+  // And the geometry really was adjusted, not just labelled.
+  const stock = await buildKeycap({ profile: "cherry", row: 3, units: 1, stem: "mx", quality: "draft" });
+  const baked = Object.values(payload.baked.models)[0];
+  assert.ok(baked.stats.volume > stock.stats.volume, "a taller, thicker-walled cap uses more material");
+  stock.solid.delete();
+});
+
 test("the view command bakes a file the CLI reports honestly", async () => {
   const directory = await mkdtemp(path.join(tmpdir(), "keycap-viewer-"));
   const target = path.join(directory, "preview.html");

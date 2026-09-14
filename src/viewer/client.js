@@ -22,6 +22,25 @@ const bakedPicks =
 const keyOf = (pick) =>
   [pick.profile, pick.row, pick.units, pick.stem, pick.stabilizers, pick.homing].join("|");
 
+/** A standalone page carries caps built one way; nothing here can change them. */
+const adjustable = () => mode === "live";
+
+const adjustText = () =>
+  Object.entries(state.modifiers)
+    .filter(([, delta]) => delta !== 0)
+    .map(([id, delta]) => id + "=" + delta)
+    .join(",");
+
+/**
+ * What the caps were built with, as opposed to which cap it is. Two caps of the
+ * same profile at different quality are different geometry, so the uploaded
+ * meshes have to be keyed by this as well.
+ */
+const settingsKey = () =>
+  [state.quality, state.settings.wall, state.settings.topThickness, state.settings.stemSlop, adjustText()].join("|");
+
+const cacheKey = (pick) => keyOf(pick) + "||" + settingsKey();
+
 // Open on something the page actually carries.
 const opening =
   bakedPicks && !baked.models[keyOf(catalogue.defaults)] ? bakedPicks[0] : null;
@@ -33,6 +52,12 @@ const state = {
   stem: catalogue.defaults.stem,
   stabilizers: catalogue.defaults.stabilizers,
   homing: catalogue.defaults.homing,
+  quality: catalogue.defaults.quality,
+  // Absolute values, not deltas: these are not profile properties.
+  settings: Object.fromEntries(catalogue.settings.map((knob) => [knob.id, knob.value])),
+  // Deltas from whatever the profile says, so zero means "leave it alone". A
+  // standalone page starts at whatever its caps were baked with.
+  modifiers: { ...catalogue.defaults.modifiers },
   // Lay the catalogue out on an axis instead of showing one cap.
   arrange: { profiles: "off", rows: "off" },
   ortho: false,
@@ -138,6 +163,11 @@ async function fetchModel(pick) {
     stabilizers: String(pick.stabilizers),
     homing: pick.homing,
   });
+  if (state.quality !== catalogue.defaults.quality) query.set("quality", state.quality);
+  for (const [id, value] of Object.entries(state.settings)) query.set(id, String(value));
+  const adjust = adjustText();
+  if (adjust) query.set("adjust", adjust);
+
   const response = await fetch("api/model?" + query.toString());
   if (!response.ok) throw new Error((await response.text()) || "The model could not be built.");
   const stats = JSON.parse(response.headers.get("X-Keycap-Stats") || "{}");
@@ -160,6 +190,19 @@ const EDGE_PAD = 10;
 
 /** Axis labels: built when the arrangement changes, moved every frame. */
 let labels = [];
+
+/** The sliders, built once at boot so a drag is never interrupted. */
+let knobs = [];
+
+/** Dragging a slider fires continuously; rebuild once the hand settles. */
+let loadTimer = null;
+function scheduleLoad() {
+  clearTimeout(loadTimer);
+  loadTimer = setTimeout(() => {
+    buildKnobReset();
+    load();
+  }, 140);
+}
 
 /** The fixed direction the camera looks from: along +Y, with Z up. */
 const CAMERA_DIRECTION = [0, -1, 0];
@@ -540,6 +583,138 @@ function buildArrangeChips() {
   }
 }
 
+function buildQualityChips() {
+  const host = document.getElementById("quality-chips");
+  host.replaceChildren();
+  for (const quality of catalogue.qualities) {
+    host.append(
+      chip(
+        quality.id,
+        quality.id === state.quality,
+        !adjustable(),
+        () => {
+          state.quality = quality.id;
+          refreshControls();
+          load();
+        },
+        "Facets stay within " + quality.deviation + " mm of the true surface",
+      ),
+    );
+  }
+  if (!adjustable()) {
+    const note = document.createElement("span");
+    note.className = "pmeta";
+    note.textContent = "fixed when the page was built";
+    host.append(note);
+  }
+}
+
+/**
+ * The sliders, built once.
+ *
+ * Rebuilding them on every refresh would tear the element out from under a
+ * drag, so they are made at boot and only their readouts change afterwards.
+ */
+function buildKnobs() {
+  const host = document.getElementById("knobs");
+  const note = document.getElementById("knob-note");
+  host.replaceChildren();
+  knobs = [];
+
+  note.hidden = adjustable();
+  note.textContent = adjustable()
+    ? ""
+    : "A standalone page carries caps built one way. Use the live viewer to adjust them.";
+
+  const section = (title) => {
+    const heading = document.createElement("h3");
+    heading.textContent = title;
+    host.append(heading);
+  };
+
+  const slider = ({ id, label, unit, min, max, step, hint, value, onChange, format }) => {
+    const wrap = document.createElement("label");
+    wrap.className = "knob";
+    const head = document.createElement("span");
+    head.className = "knob-head";
+    const name = document.createElement("span");
+    name.textContent = label;
+    const readout = document.createElement("em");
+    head.append(name, readout);
+
+    const input = document.createElement("input");
+    input.type = "range";
+    input.id = "knob-" + id;
+    input.min = String(min);
+    input.max = String(max);
+    input.step = String(step);
+    input.value = String(value);
+    input.disabled = !adjustable();
+    if (hint) wrap.title = hint;
+
+    const show = () => {
+      const current = Number(input.value);
+      readout.textContent = format(current) + " " + unit;
+      readout.classList.toggle("set", current !== value);
+    };
+    input.addEventListener("input", () => {
+      onChange(Number(input.value));
+      show();
+      scheduleLoad();
+    });
+
+    wrap.append(head, input);
+    host.append(wrap);
+    knobs.push({ input, show, reset: () => { input.value = String(value); onChange(value); show(); } });
+    show();
+  };
+
+  section("thickness and fit");
+  for (const knob of catalogue.settings) {
+    slider({
+      ...knob,
+      onChange: (next) => {
+        state.settings[knob.id] = next;
+      },
+      format: (value) => value.toFixed(2),
+    });
+  }
+
+  for (const group of catalogue.modifierGroups) {
+    const inGroup = catalogue.modifiers.filter((modifier) => modifier.group === group);
+    if (inGroup.length === 0) continue;
+    section(group);
+    for (const modifier of inGroup) {
+      slider({
+        ...modifier,
+        value: catalogue.defaults.modifiers[modifier.id] ?? 0,
+        onChange: (next) => {
+          if (next === 0) delete state.modifiers[modifier.id];
+          else state.modifiers[modifier.id] = next;
+        },
+        format: (value) => (value > 0 ? "+" : "") + value.toFixed(modifier.step < 0.1 ? 2 : 1),
+      });
+    }
+  }
+}
+
+function buildKnobReset() {
+  const host = document.getElementById("knob-reset");
+  host.replaceChildren();
+  const changed = Object.keys(state.modifiers).length > 0 || settingsChanged();
+  host.append(
+    chip("Reset to profile", false, !adjustable() || !changed, () => {
+      for (const knob of knobs) knob.reset();
+      refreshControls();
+      load();
+    }, "Clear every adjustment and put the thicknesses back"),
+  );
+}
+
+function settingsChanged() {
+  return catalogue.settings.some((knob) => state.settings[knob.id] !== knob.value);
+}
+
 function buildViewButtons() {
   const host = document.getElementById("views");
   host.replaceChildren();
@@ -617,6 +792,8 @@ function refreshControls() {
   buildStemChips();
   buildStabilizerChips();
   buildHomingChips();
+  buildQualityChips();
+  buildKnobReset();
   buildArrangeChips();
   buildViewButtons();
   buildCompareButtons();
@@ -732,7 +909,7 @@ function picksFor() {
 /** Give every loaded cap its slot, then fit the view around them. */
 function placeAll() {
   const entries = picksFor()
-    .map((pick) => ({ pick, held: loaded.get(keyOf(pick)) }))
+    .map((pick) => ({ pick, held: loaded.get(cacheKey(pick)) }))
     .filter((entry) => entry.held);
 
   const pitch = pitchFor(entries.map((entry) => entry.held.stats));
@@ -770,7 +947,7 @@ async function load() {
 
   // Drop anything the new selection no longer wants before fetching, so
   // switching size or stem does not hold two arrangements on the GPU at once.
-  const wanted = new Set(picks.map(keyOf));
+  const wanted = new Set(picks.map(cacheKey));
   for (const [key, entry] of loaded) {
     if (wanted.has(key)) continue;
     renderer.dispose(entry.model);
@@ -778,7 +955,7 @@ async function load() {
   }
 
   for (const [index, pick] of picks.entries()) {
-    if (loaded.has(keyOf(pick))) continue;
+    if (loaded.has(cacheKey(pick))) continue;
     showMessage(
       picks.length > 1
         ? "Building " + (index + 1) + " of " + picks.length + "..."
@@ -788,7 +965,7 @@ async function load() {
     try {
       const { mesh, stats } = await fetchModel(pick);
       if (token !== loadToken) return;
-      loaded.set(keyOf(pick), { model: renderer.upload(mesh), stats, mesh });
+      loaded.set(cacheKey(pick), { model: renderer.upload(mesh), stats, mesh });
     } catch (error) {
       if (token === loadToken) showMessage(error.message, true);
       return;
@@ -796,7 +973,7 @@ async function load() {
   }
   if (token !== loadToken) return;
 
-  const single = loaded.get(keyOf(picks[0]));
+  const single = loaded.get(cacheKey(picks[0]));
   lastMesh = single.mesh;
   lastStats = single.stats;
   placeAll();
@@ -842,6 +1019,7 @@ function showStats() {
       ["volume", Math.round(stats.volume) + " mm3"],
       ["stems", stats.stems + (stats.stemSpan > 0 ? " at " + stats.stemSpan.toFixed(1) + " mm" : "")],
       ["homing", stats.homing === "none" ? "none" : stats.homing],
+      ["quality", state.quality],
       ["triangles", String(stats.triangles)],
     );
   }
@@ -934,6 +1112,7 @@ function attachControls() {
 try {
   renderer = createRenderer(canvas);
   attachControls();
+  buildKnobs();
   refreshControls();
   load();
   requestAnimationFrame(renderFrame);

@@ -27,6 +27,7 @@ async function bakeModels(jobs, options, onProgress) {
       topThickness: options.topThickness,
       stemSlop: options.stemSlop,
       quality: options.quality,
+      modifiers: options.modifiers,
     });
     const mesh = encodeMesh(solid);
     solid.delete();
@@ -46,12 +47,12 @@ async function bakeModels(jobs, options, onProgress) {
  */
 export async function bakeViewer(jobs, options = {}, onProgress = () => {}) {
   const { models, meshBytes } = await bakeModels(jobs, options, onProgress);
-  const content = renderViewer({ catalogue: buildCatalogue(), mode: "baked", baked: { models } });
+  const content = renderViewer({ catalogue: buildCatalogue(options), mode: "baked", baked: { models } });
   return { html: renderDocument(content), count: jobs.length, meshBytes };
 }
 
 /** The same page without a document wrapper, for embedding elsewhere. */
 export async function bakeViewerContent(jobs, options = {}, onProgress = () => {}) {
   const { models } = await bakeModels(jobs, options, onProgress);
-  return renderViewer({ catalogue: buildCatalogue(), mode: "baked", baked: { models } });
+  return renderViewer({ catalogue: buildCatalogue(options), mode: "baked", baked: { models } });
 }

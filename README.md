@@ -135,6 +135,8 @@ What it gives you:
 - **Ortho** projection, for comparing profile silhouettes honestly.
 - A **Home key marker** control, so you can see the bar or the deep dish
   before committing a set to the printer.
+- **Shape & fit** sliders for every adjustment below, plus a quality switch:
+  drag and the cap rebuilds, so a taller DSA or a steeper SA is a second away.
 - **Arrange** the whole catalogue instead of one cap -- see below.
 - **Pin as ghost** keeps the current cap on screen, translucent, while you
   switch to another -- pin a DSA, click SA, and the height difference is
@@ -253,6 +255,7 @@ Output and geometry:
 | `--stem-slop` | 0.15 | widen the stem slot, per face |
 | `--wall` | 1.5 | sidewall thickness |
 | `--top-thickness` | 1.2 | roof thickness under the dish |
+| `--adjust` | -- | change the profile's shape -- see below; repeatable |
 | `--jobs` | CPU count | worker threads |
 | `--port` | 8080 | port for `view` |
 | `--bake` | -- | write a standalone page instead of serving |
@@ -272,6 +275,87 @@ out/dsa/dsa_1.25u_box.3mf
 
 A run finishes with a table of every model, its measured bounding box, volume
 and triangle count, so a bad number is visible without opening a slicer.
+
+## Adjusting the shape
+
+Every profile is a fixed table of measurements, and adjustments are **deltas
+from it**, never absolute values. `height=+2` means "two millimetres taller
+than this profile is", so one setting sweeps the whole catalogue and leaves
+each profile recognisable -- a DSA and an SA both 2 mm taller are still a DSA
+and an SA, where setting both to 12 mm would just flatten the comparison. Zero
+means the profile is left alone, which is the default for all of them.
+
+On the command line they go through one repeatable `--adjust`, taking
+`name=value` or a comma-separated list:
+
+```
+keycapgen generate --profile dsa --adjust height=+2 --adjust taper=-3
+keycapgen generate --profile sa --adjust top-width=+1.5,corner-radius=+0.5
+```
+
+One option rather than a flag each keeps negative values away from the argument
+parser, which would otherwise read `-3` as an option of its own.
+
+| name | adjusts | unit | range |
+|---|---|---|---|
+| `height` | cap height | mm | -6 to +12 |
+| `side-wall` | vertical skirt before the taper starts | mm | 0 to +10 |
+| `taper` | wall angle, all four sides | deg | -15 to +12 |
+| `taper-front` `taper-back` `taper-left` `taper-right` | one side each | deg | -15 to +12 |
+| `top-width` `top-depth` | top face size, directly | mm | -6 to +8 |
+| `tilt` | sculpt tilt of the top face | deg | -15 to +15 |
+| `corner-radius` | rounding of the base corners | mm | -0.9 to +4 |
+| `top-corner-radius` | rounding of the top corners | mm | -1.4 to +4 |
+| `dish-depth` | how deep the dish is scooped | mm | -2 to +4 |
+| `stem-height` | depth of the switch socket | mm | -2 to +6 |
+
+`keycapgen list` prints the same table, and a run that used any of them says so
+in its summary. They also travel with the output: the filename gains a sorted
+token per adjustment, so an adjusted cap never overwrites a stock one, and a
+3MF records them in its metadata, which is the only lasting record of how a
+model was made.
+
+```
+out/cherry/cherry_r3_1u_mx_height+2_taper-3.stl
+```
+
+### Taper, and why it is an angle
+
+A profile does not store a wall angle -- it stores a top plate. The angle each
+side implies is recovered from how far that side already leans in over the
+cap's height, and the delta is added to *that*, so the control reads as
+"steeper" or "shallower" rather than replacing the profile's shape. Because the
+angle is measured per side from the profile's own edges, the sculpt shift that
+pushes a row's top face forward is already accounted for, and the four
+single-side names give front/back and left/right asymmetry.
+
+### Side wall
+
+`side-wall` is a vertical skirt at the bottom of the cap, with the taper
+starting above it, which is what lets a stem sit higher than the walls around
+it. The cap keeps its roof and stays closed; only the silhouette changes.
+
+### Thickness and fit
+
+`--wall`, `--top-thickness` and `--stem-slop` stay absolute, in the viewer as
+well. They are not profile properties, so there is nothing for them to be
+relative to, and a delta twin would give two ways to set one number.
+
+### When an adjustment will not fit
+
+Adjustments are clamped where a limit is structural and reported where it is a
+real conflict. A cap will not shrink below its own roof and dish, so `height=-6`
+on a 5 mm Choc simply stops early rather than producing a cap with no inside.
+But pulling the top face in far enough to leave a stabiliser stem outside the
+wall is refused, with the measurement and the adjustments in force:
+
+```
+Cannot build dsa R3 2u: a alps stabilizer stem at x=-11.91 mm would breach the
+sidewall of a dsa 2u cap. Adjustments in force: top-width -6 mm.
+```
+
+A batch run skips such a combination and carries on; the viewer shows the same
+sentence and keeps the last good cap on screen.
 
 ## Quality
 
@@ -295,6 +379,10 @@ times as far from the true surface as a flat arc does at the same angular step,
 so the dish sphere is subdivided more finely to land inside the same budget.
 `standard` is a good default for printing; `fine` roughly triples the triangle
 count and takes about 2.5x as long.
+
+The viewer has the same three settings as chips, so you can see the difference
+rather than infer it from a number: a 1u Cherry goes from 1,336 triangles at
+`draft` through 3,736 at `standard` to 11,682 at `fine`.
 
 ## Printing notes
 

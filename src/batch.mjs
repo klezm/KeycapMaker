@@ -9,6 +9,7 @@ import { stemFitsMount, getStem } from "./stems/index.mjs";
 import { formatSize } from "./sizes.mjs";
 import { stemLayout, stabilizerToken, AUTO } from "./stabilizers.mjs";
 import { getHoming } from "./homing.mjs";
+import { modifierToken, describeModifiers, validateModifiers } from "./modifiers.mjs";
 import { toBinaryStl } from "./export/stl.mjs";
 import { to3mf } from "./export/3mf.mjs";
 
@@ -19,10 +20,21 @@ export const FORMATS = ["stl", "3mf"];
  * stem, because their rows are the same shape -- writing five identical
  * models under five names would only waste disk and confuse the comparison.
  */
-export function outputName({ profile, row, units, stem, stabilizers = AUTO, homing = "none" }) {
+export function outputName({
+  profile,
+  row,
+  units,
+  stem,
+  stabilizers = AUTO,
+  homing = "none",
+  modifiers = {},
+}) {
   const rowToken = getProfile(profile).sculpted ? `_r${row}` : "";
   const homingToken = homing === "none" ? "" : `_homing-${homing}`;
-  return `${profile}${rowToken}_${formatSize(units)}_${stem}${stabilizerToken(units, stabilizers)}${homingToken}`;
+  return (
+    `${profile}${rowToken}_${formatSize(units)}_${stem}` +
+    `${stabilizerToken(units, stabilizers)}${homingToken}${modifierToken(modifiers)}`
+  );
 }
 
 /**
@@ -39,9 +51,11 @@ export function expandMatrix({
   stems,
   stabilizers = AUTO,
   homing = DEFAULTS.homing,
+  modifiers = DEFAULTS.modifiers,
   wall = DEFAULTS.wall,
 }) {
   getHoming(homing);
+  validateModifiers(modifiers);
   const jobs = [];
   const skipped = [];
   const seen = new Set();
@@ -63,8 +77,8 @@ export function expandMatrix({
           // recorded at its home row. Leaving it on whichever row happened to
           // come first would file it under a row nothing else looks it up by.
           const filedRow = profile.sculpted ? row : homeRowOf(profile);
-          const job = { profile: profileId, row: filedRow, units, stem, stabilizers, homing };
-          const spec = resolveSpec(profileId, filedRow, units, { wall });
+          const job = { profile: profileId, row: filedRow, units, stem, stabilizers, homing, modifiers };
+          const spec = resolveSpec(profileId, filedRow, units, { wall, modifiers });
           const problem = stemFitProblem({
             spec,
             stemSpec: getStem(stem).spec,
@@ -99,6 +113,7 @@ export async function renderJob(job, options) {
     quality: options.quality,
     stabilizers: job.stabilizers ?? options.stabilizers,
     homing: job.homing ?? options.homing,
+    modifiers: job.modifiers ?? options.modifiers,
   });
 
   const homingLabel = stats.homing === "none" ? "" : ` ${stats.homing} homing`;
@@ -122,6 +137,7 @@ export async function renderJob(job, options) {
         Title: label.trim(),
         Application: "keycap-forge",
         Description: `Blank keycap. Profile ${spec.profileName}, row ${job.row}, ${formatSize(job.units)}, ${getStem(job.stem).spec.name} stem.`,
+        Adjustments: describeModifiers(job.modifiers ?? options.modifiers),
         LicenseTerms: spec.notes,
       }),
     );
