@@ -1,4 +1,4 @@
-import { applyQuality, DEFAULT_QUALITY } from "./engine.mjs";
+import { applyQuality, DEFAULT_QUALITY, withArena } from "./engine.mjs";
 import { resolveSpec } from "./profiles/index.mjs";
 import { getStem, stemFitsMount } from "./stems/index.mjs";
 import { buildRings, shrinkAt } from "./geometry/shell.mjs";
@@ -91,7 +91,15 @@ export function stemFitProblem({ spec, stemSpec, layout, wall = DEFAULTS.wall })
  *
  * @returns {Promise<{solid: object, spec: object, stats: object}>}
  */
-export async function buildKeycap({
+export async function buildKeycap(options = {}) {
+  return withArena(async (keep) => {
+    const built = await buildOne(options);
+    keep(built.solid);
+    return built;
+  });
+}
+
+async function buildOne({
   profile,
   row,
   units = 1,

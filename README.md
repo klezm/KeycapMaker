@@ -415,6 +415,8 @@ The pieces, in the order a cap is built:
 | `src/sizes.mjs` | unit widths per mount family |
 | `src/stabilizers.mjs` | stem positions on wide keys |
 | `src/homing.mjs` | tactile markers for the home keys |
+| `src/engine.mjs` | the WASM kernel, quality presets, and the arena below |
+| `src/modifiers.mjs` | the adjustment registry every front end reads |
 | `src/geometry/section.mjs` | rounded-rectangle rings, segment budgets |
 | `src/geometry/shell.mjs` | the ring stack from base to tilted top plate |
 | `src/geometry/loft.mjs` | ring stack to a closed solid |
@@ -439,6 +441,25 @@ files are read back and rebuilt into solids to confirm they survived the trip.
 The viewer is covered too: the mesh format round-trips vertex for vertex, the
 server is driven over real HTTP, and a baked page is parsed back to check every
 cap asked for is actually in it.
+
+### Solids live in WebAssembly
+
+Manifold's solids are handles the JavaScript garbage collector knows nothing
+about: dropping the last reference to one leaks it. A cap is built from dozens
+of intermediates -- the shell, the dish cutter, the cavity, each stem, and a
+fresh solid for every boolean and every translate on the way -- so freeing them
+by hand at each call site is a rule that geometry code will eventually forget.
+
+`src/engine.mjs` takes the bookkeeping away instead. Every method that hands
+out a solid registers it with the open **arena**, and `buildKeycap` wraps a
+build in one: when it ends, everything made inside is freed except the cap
+handed to `keep`. Arenas are held per async chain, so two builds in flight at
+once -- two viewer requests, say -- cannot free each other's geometry.
+
+The difference is not marginal. Sixty standard-quality caps grew the process by
+207 MB before and 5 MB after, and `--all` went from being killed part-way
+through to 1,549 models at a 336 MB peak, in half the time. A test measures
+that growth directly rather than counting `delete()` calls.
 
 ## Provenance and licensing
 
