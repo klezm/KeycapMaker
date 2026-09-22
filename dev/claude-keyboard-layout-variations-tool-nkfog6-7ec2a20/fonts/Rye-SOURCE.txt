@@ -1,0 +1,39 @@
+Rye source and license note
+===========================
+
+Review date:
+2026-04-25
+
+Repo first-added date:
+2026-04-22
+
+Source page at review:
+https://github.com/google/fonts/tree/46d8a043641ec6f446cddf39749c0b8d0dc71467/ofl/rye
+
+Bundled download URL:
+https://raw.githubusercontent.com/google/fonts/46d8a043641ec6f446cddf39749c0b8d0dc71467/ofl/rye/Rye-Regular.ttf
+
+Bundled license URL:
+https://raw.githubusercontent.com/google/fonts/46d8a043641ec6f446cddf39749c0b8d0dc71467/ofl/rye/OFL.txt
+
+Bundled files in this repository:
+- Rye-Regular.ttf
+- Rye-OFL.txt
+
+Bundled SHA-256:
+- Rye-Regular.ttf: b7edee5e615ae1b6b07e9d030c1309152bf3672a0e8a2a46293e273730f5adba
+- Rye-OFL.txt: 399b33eb38cdfc76b8665defa5f81d52e8193d630ad5858c893db6bc20031bc9
+
+License evidence:
+- Google Fonts OFL.txt says this Font Software is licensed under the SIL Open Font License, Version 1.1.
+- The bundled TTF nameID 13 says this Font Software is licensed under the SIL Open Font License, Version 1.1.
+
+Font metadata observed from the bundled TTF:
+- nameID 0: Copyright (c) 2010 by Sorkin Type Co with Reserved Font Name Rye. This Font Software is licensed under the SIL Open Font License, Version 1.1.
+- nameID 1: Rye
+- nameID 4: Rye Regular
+- nameID 5: Version 1.001
+- nameID 14: http://scripts.sil.org/OFL
+
+Use note:
+The bundled font is used unmodified as a legend font asset and redistributed with its OFL text. Do not distribute modified versions under the Reserved Font Name "Rye" without permission.

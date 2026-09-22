@@ -1,0 +1,39 @@
+MedievalSharp source and license note
+=====================================
+
+Review date:
+2026-04-25
+
+Repo first-added date:
+2026-04-22
+
+Source page at review:
+https://github.com/google/fonts/tree/46d8a043641ec6f446cddf39749c0b8d0dc71467/ofl/medievalsharp
+
+Bundled download URL:
+https://raw.githubusercontent.com/google/fonts/46d8a043641ec6f446cddf39749c0b8d0dc71467/ofl/medievalsharp/MedievalSharp.ttf
+
+Bundled license URL:
+https://raw.githubusercontent.com/google/fonts/46d8a043641ec6f446cddf39749c0b8d0dc71467/ofl/medievalsharp/OFL.txt
+
+Bundled files in this repository:
+- MedievalSharp-Regular.ttf
+- MedievalSharp-OFL.txt
+
+Bundled SHA-256:
+- MedievalSharp-Regular.ttf: 74cb2e6738bd7703adf120802f68fba0c9ddb9147a08e6847f1005b1e55df5a5
+- MedievalSharp-OFL.txt: 45b1f44d2cb859ea4b7be2f322c57b8ff7be55075c336744e62b5550cd0a97eb
+
+License evidence:
+- Google Fonts OFL.txt says this Font Software is licensed under the SIL Open Font License, Version 1.1.
+- The bundled TTF nameID 13 says this Font Software is licensed under the SIL Open Font License, Version 1.1.
+
+Font metadata observed from the bundled TTF:
+- nameID 0: wmk69 SIL Open Font License v.1.1
+- nameID 1: MedievalSharp
+- nameID 4: MedievalSharp
+- nameID 5: Version 1.0
+- nameID 13: Copyright (c) 2011, wmk69, (wmk69@o2.pl), with Reserved Font Name NovaRound. This Font Software is licensed under the SIL Open Font License, Version 1.1.
+
+Use note:
+The bundled font is used unmodified as a legend font asset and redistributed with its OFL text. Do not distribute modified versions under the Reserved Font Name declared by the upstream license without permission.
