@@ -61,6 +61,72 @@ jobs:
           ref: ${{ env.TARGET_BRANCH }}
           path: source
 
+      - name: Verify branch has a deployable web app
+        env:
+          BRANCH: ${{ env.TARGET_BRANCH }}
+        run: |
+          MISSING=""
+          if [ ! -f source/index.html ]; then
+            MISSING="index.html"
+          fi
+          if ! node -e 'const p = JSON.parse(require("fs").readFileSync("source/package.json", "utf8")); process.exit(p.scripts && p.scripts.build ? 0 : 1)'; then
+            MISSING="${MISSING:+$MISSING and }a \"build\" script in package.json"
+          fi
+          if [ -n "$MISSING" ]; then
+            {
+              echo "### Nothing to deploy from \`$BRANCH\`"
+              echo
+              echo "This workflow deploys the Vite web app, but \`$BRANCH\` is missing $MISSING."
+              echo
+              echo "CLI-only branches have no web app and cannot be deployed to GitHub Pages."
+            } | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          echo "Branch '$BRANCH' has a deployable web app."
+
+      - name: Resolve deploy path
+        env:
+          BRANCH: ${{ env.TARGET_BRANCH }}
+          REPOSITORY: ${{ github.repository }}
+          DEV_DEPLOY: ${{ inputs.dev_deploy }}
+        run: |
+          COMMIT_HASH=$(git -C source rev-parse --short HEAD)
+          COMMIT_DATE=$(git -C source show -s --format=%ci HEAD)
+          SAFE_BRANCH_NAME=$(echo "$BRANCH" | tr '/' '-')
+
+          # Mirror resolveBase() in vite.config.js: project pages live under
+          # /<repo>/, user and org pages (<name>.github.io) live at the root.
+          REPO_NAME="${REPOSITORY#*/}"
+          case "$REPO_NAME" in
+            "" | *.github.io) REPO_BASE="/" ;;
+            *) REPO_BASE="/${REPO_NAME}/" ;;
+          esac
+
+          # A dev deploy is served from a subdirectory, so it has to be built
+          # with that subdirectory as the Vite base. Otherwise every absolute
+          # asset URL - and import.meta.env.BASE_URL, which the OpenSCAD wasm
+          # runtime, the fonts and the binary assets all resolve against -
+          # points back at the root deployment.
+          if [ "$DEV_DEPLOY" = "true" ]; then
+            DEV_DIR="dev/${SAFE_BRANCH_NAME}-${COMMIT_HASH}"
+            BASE_PATH="${REPO_BASE}${DEV_DIR}/"
+          else
+            DEV_DIR=""
+            BASE_PATH="${REPO_BASE}"
+          fi
+
+          echo "Commit:    $COMMIT_HASH"
+          echo "Dev dir:   ${DEV_DIR:-<root>}"
+          echo "Base path: $BASE_PATH"
+
+          {
+            echo "COMMIT_HASH=$COMMIT_HASH"
+            echo "COMMIT_DATE=$COMMIT_DATE"
+            echo "SAFE_BRANCH_NAME=$SAFE_BRANCH_NAME"
+            echo "DEV_DIR=$DEV_DIR"
+            echo "BASE_PATH=$BASE_PATH"
+          } >> "$GITHUB_ENV"
+
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
@@ -82,7 +148,7 @@ jobs:
         env:
           GITHUB_ACTIONS: "true"
           GITHUB_REPOSITORY: ${{ github.repository }}
-        run: npm run build
+        run: npm run build -- --base="${BASE_PATH}"
 
       - name: Checkout gh-pages branch
         id: checkout_pages
@@ -115,16 +181,15 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+          # COMMIT_HASH, COMMIT_DATE and DEV_DIR come from the
+          # "Resolve deploy path" step, which runs before the build so that
+          # DEV_DIR can be fed to Vite as --base.
           if [ "${{ inputs.dev_deploy }}" == "true" ]; then
-            cd ../source
-            COMMIT_HASH=$(git rev-parse --short HEAD)
-            COMMIT_DATE=$(git show -s --format=%ci HEAD)
-            cd ../gh-pages-dir
+            BRANCH_NAME="${TARGET_BRANCH}"
 
-            BRANCH_NAME="${{ env.TARGET_BRANCH }}"
-            SAFE_BRANCH_NAME=$(echo "$BRANCH_NAME" | tr '/' '-')
-            DEV_DIR="dev/${SAFE_BRANCH_NAME}-${COMMIT_HASH}"
-
+            # Replace rather than merge: cp -r would leave stale hashed assets
+            # behind when the same commit is deployed twice.
+            rm -rf "$DEV_DIR"
             mkdir -p "$DEV_DIR"
             cp -r ../source/dist/. "$DEV_DIR/"
 
