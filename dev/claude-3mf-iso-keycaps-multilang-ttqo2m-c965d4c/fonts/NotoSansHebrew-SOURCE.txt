@@ -1,0 +1,59 @@
+Noto Sans Hebrew source and license note
+========================================
+
+Source page:
+https://github.com/google/fonts/tree/main/ofl/notosanshebrew
+
+Bundled download URL:
+https://raw.githubusercontent.com/google/fonts/main/ofl/notosanshebrew/NotoSansHebrew%5Bwdth,wght%5D.ttf
+
+Bundled license URL:
+https://raw.githubusercontent.com/google/fonts/main/ofl/notosanshebrew/OFL.txt
+
+Download date:
+2026-08-09
+
+Review date:
+2026-08-09
+
+Bundled files in this repository:
+- NotoSansHebrew-Variable.ttf
+- NotoSansHebrew-OFL.txt
+
+Bundled SHA-256:
+- NotoSansHebrew-Variable.ttf: 7ef36a2c3593758cdb622e1bdef4f84523e92fbc3ccc667438dd80ff54c2de88
+- NotoSansHebrew-OFL.txt: 9b9fe028b5ba74d231659a1bbaf0ed09b11e759d1ca6a070999e16d151616b47
+
+License evidence:
+- The Google Fonts OFL.txt in the same directory says:
+  Copyright 2022 The Noto Project Authors (https://github.com/notofonts/hebrew)
+  This Font Software is licensed under the SIL Open Font License, Version 1.1.
+- The bundled TTF name table has nameID 13:
+  This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://openfontlicense.org
+
+Font metadata observed from the bundled TTF:
+- nameID 0: Copyright 2024 The Noto Project Authors (https://github.com/notofonts/hebrew)
+- nameID 1: Noto Sans Hebrew Thin
+- nameID 4: Noto Sans Hebrew Thin
+- nameID 5: Version 3.001
+- nameID 14: https://openfontlicense.org
+- nameID 16: Noto Sans Hebrew
+- Variable axes: wght 100-900 (default 100), wdth 62.5-100 (default 100)
+- Named instances: Thin / ExtraLight / Light / Regular / Medium / SemiBold / Bold / ExtraBold / Black
+
+Naming note:
+Unlike the bundled NotoSans-Variable.ttf, whose nameID 1 is the plain family
+"Noto Sans", this font's nameID 1 carries the default instance's weight
+("Noto Sans Hebrew Thin") and the plain family lives in nameID 16. The bundled
+OpenSCAD runtime resolves the `Noto Sans Hebrew` query through the typographic
+family, and an unqualified query renders at Regular rather than at the Thin
+default instance, so the app's usual `<family>:style=<Style>` font queries
+behave the same as they do for the other bundled variable fonts.
+
+Script coverage:
+All 27 Hebrew letters including the five final forms (ך ם ן ף ץ) are present,
+which is what the ISO German + Hebrew keyset legends require.
+
+Use note:
+The bundled font is used unmodified as a legend font asset and redistributed
+with its OFL text.
