@@ -20,6 +20,10 @@ on:
         description: 'Branch to build (defaults to selected workflow branch)'
         required: false
         type: string
+      commit:
+        description: 'Commit to build (optional; defaults to the branch tip). Full or short SHA, must be on the selected branch.'
+        required: false
+        type: string
       dev_deploy:
         description: 'Deploy to a subdirectory in dev/ (leave existing page untouched)'
         required: false
@@ -46,6 +50,7 @@ jobs:
         id: branch_info
         env:
           INPUT_BRANCH: ${{ inputs.branch }}
+          INPUT_COMMIT: ${{ inputs.commit }}
           REF_NAME: ${{ github.ref_name }}
         run: |
           TARGET_BRANCH="${INPUT_BRANCH}"
@@ -53,18 +58,57 @@ jobs:
             TARGET_BRANCH="${REF_NAME}"
           fi
           echo "Target branch: $TARGET_BRANCH"
-          echo "TARGET_BRANCH=$TARGET_BRANCH" >> $GITHUB_ENV
+          echo "Target commit: ${INPUT_COMMIT:-<branch tip>}"
+          {
+            echo "TARGET_BRANCH=$TARGET_BRANCH"
+            echo "TARGET_COMMIT=$INPUT_COMMIT"
+          } >> "$GITHUB_ENV"
 
       - name: Checkout Source Branch
         uses: actions/checkout@v6
         with:
           ref: ${{ env.TARGET_BRANCH }}
           path: source
+          # Full history only when a specific commit was asked for, so that a
+          # short SHA can be resolved. Note the quoted '0': GitHub expressions
+          # treat the number 0 as falsy, so an unquoted `&& 0 || 1` would
+          # always yield 1.
+          fetch-depth: ${{ inputs.commit != '' && '0' || '1' }}
+
+      - name: Check out requested commit
+        if: inputs.commit != ''
+        env:
+          BRANCH: ${{ env.TARGET_BRANCH }}
+          COMMIT: ${{ env.TARGET_COMMIT }}
+        run: |
+          # rev-parse is what makes short SHAs work: fetch-depth 0 above put the
+          # branch's whole history in the checkout, so an abbreviated hash
+          # resolves here even though actions/checkout only accepts full ones.
+          if ! RESOLVED=$(git -C source rev-parse --verify --quiet "${COMMIT}^{commit}"); then
+            {
+              echo "### Commit \`$COMMIT\` not found on \`$BRANCH\`"
+              echo
+              echo "The commit could not be resolved in the history of \`$BRANCH\`."
+              echo "Check the hash, and if the commit lives on another branch,"
+              echo "select that branch as well."
+            } | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+          git -C source checkout --detach --quiet "$RESOLVED"
+          echo "Building $RESOLVED"
+          echo "  $(git -C source show -s --format=%s HEAD)"
 
       - name: Verify branch has a deployable web app
         env:
           BRANCH: ${{ env.TARGET_BRANCH }}
+          COMMIT: ${{ env.TARGET_COMMIT }}
         run: |
+          WHAT="\`$BRANCH\`"
+          if [ -n "$COMMIT" ]; then
+            WHAT="$WHAT at commit \`$(git -C source rev-parse --short HEAD)\`"
+          fi
+
           MISSING=""
           if [ ! -f source/index.html ]; then
             MISSING="index.html"
@@ -74,15 +118,15 @@ jobs:
           fi
           if [ -n "$MISSING" ]; then
             {
-              echo "### Nothing to deploy from \`$BRANCH\`"
+              echo "### Nothing to deploy from $WHAT"
               echo
-              echo "This workflow deploys the Vite web app, but \`$BRANCH\` is missing $MISSING."
+              echo "This workflow deploys the Vite web app, but $WHAT is missing $MISSING."
               echo
               echo "CLI-only branches have no web app and cannot be deployed to GitHub Pages."
             } | tee -a "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
-          echo "Branch '$BRANCH' has a deployable web app."
+          echo "$WHAT has a deployable web app."
 
       - name: Resolve deploy path
         env:
