@@ -271,6 +271,25 @@ test("the view command bakes a file the CLI reports honestly", async () => {
   assert.match(lines.join("\n"), /needs no server/);
 });
 
+test("baking into a directory that does not exist yet creates it", async () => {
+  // What "npm run build" does: the caps take seconds to build, so discovering
+  // the missing directory at the write would waste the whole run.
+  const directory = await mkdtemp(path.join(tmpdir(), "keycap-viewer-"));
+  const target = path.join(directory, "dist", "index.html");
+  const original = console.log;
+  console.log = () => {};
+  try {
+    assert.equal(
+      await main(["view", "--bake", target, "--profile", "dsa", "--row", "3", "--quality", "draft"]),
+      0,
+    );
+  } finally {
+    console.log = original;
+  }
+
+  assert.match(await readFile(target, "utf8"), /^<!doctype html>/);
+});
+
 test("projecting a point matches the matrices the viewer builds", async () => {
   const { mat4 } = await import("../src/viewer/client-gl.js");
 

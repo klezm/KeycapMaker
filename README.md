@@ -188,6 +188,10 @@ the selection flags choose are built and folded into a single HTML file with
 the geometry embedded. It needs no server and no network, so it travels well.
 Only the baked combinations are selectable; the viewer greys out the rest.
 
+`npm run build` bakes the page the project publishes: every profile, every row
+and every stem at 1u, about 10 MB of HTML, into `dist/index.html`. That is what
+the Pages workflow deploys, so the published page is this same standalone file.
+
 The viewer has no dependencies of its own -- the renderer is WebGL2 written
 directly, so the page works offline and nothing is fetched from a CDN.
 
@@ -403,6 +407,7 @@ rather than infer it from a number: a 1u Cherry goes from 1,336 triangles at
 
 ```
 npm test        # node --test over test/
+npm run build   # bake dist/index.html, the page Pages deploys
 npm run list
 npm run generate -- --profile dsa --format stl,3mf
 ```

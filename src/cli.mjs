@@ -1,5 +1,5 @@
 import path from "node:path";
-import { writeFile } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import { parseArgs } from "node:util";
 import os from "node:os";
 
@@ -372,6 +372,10 @@ async function viewCommand(options) {
   });
   if (showProgress) process.stderr.write("\n");
 
+  // The target directory need not exist yet: a build that bakes into "dist/"
+  // would otherwise spend the whole run generating caps only to fail on the
+  // write.
+  await mkdir(path.dirname(options.bake), { recursive: true });
   await writeFile(options.bake, html);
   console.log(
     `${count} cap(s) baked into ${options.bake} ` +

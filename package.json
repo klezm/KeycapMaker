@@ -17,6 +17,7 @@
   ],
   "scripts": {
     "test": "node --test \"test/*.test.mjs\"",
+    "build": "node bin/keycapgen.mjs view --bake dist/index.html --profile all --row all --size 1 --stem all --quality standard",
     "list": "node bin/keycapgen.mjs list",
     "generate": "node bin/keycapgen.mjs generate"
   },
